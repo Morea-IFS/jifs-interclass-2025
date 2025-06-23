@@ -26,8 +26,10 @@
                         <th>CAMPUS</th>
                         <th>SEXO</th>
                         <th>DATA NASC.</th>
+                        {% if perms.app.change_player %}
                         <th>EDITAR</th>
-                        {% if user.is_staff %}
+                        {% endif %}
+                        {% if perms.app.delete_player %}
                         <th>DELETAR</th>
                         {% endif %}
                     </tr>
@@ -39,12 +41,14 @@
                         <td>{{player.get_campus_display}}</td>
                         <td>{{player.get_sexo_display}}</td>
                         <td>{{player.date_nasc}}</td>
+                        {% if perms.app.change_player %}
                         <td>
                             <a href="{% url 'player_edit' player.id %}">
                                 <img src="{% static 'images/icon-edit.svg' %}">
                             </a>
                         </td>
-                        {% if user.is_staff %}
+                        {% endif %}
+                        {% if perms.app.delete_player %}
                         <td>
                             <form method="POST" action="">
                                 {% csrf_token %}
@@ -86,9 +90,6 @@
                     {% endif %}
                 </div>
             </section>
-            <button class="side-bar-buttons-items2" style="background-color: var(--global-seventh-color); margin-top: 20px; margin-bottom: 5vw; padding: 5px; padding-left: 10px; padding-right: 10px; border: 0; border-radius: 7px; font-weight: 600;">
-                <a href="{% url 'manage' %}" style="color: #ffffff; font-size: 25px;">VOLTAR</a>
-            </button>
         </div>
     </div>
 </div>

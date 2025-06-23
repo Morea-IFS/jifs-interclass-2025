@@ -1,219 +1,86 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
-    <link rel="stylesheet" href="{% static 'css/guiate-team.css' %}" />
+{% block head %}
     <title>JIFS ADMIN</title>
-</head>
-<body>
-    <style>
-        .button div{
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            width: 4em; 
-            height: 4em;
-        }
-        .button i{
-            font-size: 1.5em; 
-            display: flex; 
-            justify-content: center;
-        }
-    </style>
-    <div style="display: flex; justify-content: center; padding: 20px;">
-        <h1 style="color: var(--global-header-color);">GERAR <span style="color: #7bff00;">RELATÓRIOS{% if user.is_staff %} E BOLETINS{% endif %}</span></h1>
+    <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
+{% endblock head %}
+
+{% block navbar %}
+<!-- NAVBAR já vem de base.html -->
+{% endblock navbar %}
+
+{% block content %}
+<div class="relatorios-wrapper">
+
+    <div class="relatorios-header">
+        <h1>GERAR <span class="green-text">RELATÓRIOS{% if user.is_staff %} E BOLETINS{% endif %}</span></h1>
     </div>
-    <form method="post" class="grid-container">{% csrf_token %}
-        
+
+    <form method="post" class="relatorios-grid">
+        {% csrf_token %}
+
         {% if user.is_staff %}
-        <button name="all_data" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-laptop-file"></i></div>
-            <span class="btn-text">Dados gerais</span>
-        </button>
+            <button name="all_data" type="submit" class="relatorio-btn">
+                <i class="fas fa-database"></i>
+                <p>Dados gerais</p>
+            </button>
 
-        <button name="all_match" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-file"></i></div>
-            <span class="btn-text">Partidas</span>
-        </button>
+            <button name="all_match" type="submit" class="relatorio-btn">
+                <i class="fas fa-volleyball-ball"></i>
+                <p>Partidas</p>
+            </button>
 
-        <button name="enrollment" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">RELATÓRIO DE INSCRIÇÃO</span>
-        </button>
+            <button name="enrollment" type="submit" class="relatorio-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <p>Inscrições</p>
+            </button>
         {% endif %}
 
-        <button name="all_players" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Todos os atletas</span>
+        <button name="all_players" type="submit" class="relatorio-btn">
+            <i class="fas fa-users"></i>
+            <p>Todos os atletas</p>
         </button>
 
-        <button name="all_players_masc" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do sexo masculino</span>
+        <button name="all_players_masc" type="submit" class="relatorio-btn">
+            <i class="fas fa-male"></i>
+            <p>Atletas masculinos</p>
         </button>
 
-        <button name="all_players_fem" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do sexo feminino</span>
+        <button name="all_players_fem" type="submit" class="relatorio-btn">
+            <i class="fas fa-female"></i>
+            <p>Atletas femininas</p>
         </button>
 
-        <button name="all_eqp" type="submit" class="sport-btn">
-            </i><div><i class="icon fas fa-person-digging"></i></div>
-            <span class="btn-text">Comissão Técnica</span>
+        <button name="all_eqp" type="submit" class="relatorio-btn">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <p>Comissão Técnica</p>
         </button>
 
         {% if user.is_staff %}
-
-        <button name="campus_in" value="4" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Lagarto</span>
-        </button>
-
-        <button name="campus_in" value="0" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Aracaju</span>
-        </button>
-
-        <button name="campus_in" value="8" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Socorro</span>
-        </button>
-
-        <button name="campus_in" value="7" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus São Cristovão</span>
-        </button>
-
-        <button name="campus_in" value="9" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Tobias Barreto</span>
-        </button>
-
-        <button name="campus_in" value="5" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Poço Redondo</span>
-        </button>
-
-        <button name="campus_in" value="1" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Estância</span>
-        </button>
-
-        <button name="campus_in" value="3" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Itabaiana</span>
-        </button>
-
-        <button name="campus_in" value="2" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Glória</span>
-        </button>
-
-        <button name="campus_in" value="6" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Campus Propriá</span>
-        </button>
-        
+            {% for campus_id, campus_nome in campus %}
+                <button name="campus_in" value="{{ campus_id }}" type="submit" class="relatorio-btn">
+                    <i class="fas fa-university"></i>
+                    <p>Campus {{ campus_nome }}</p>
+                </button>
+            {% endfor %}
         {% else %}
-
-        <button name="all_campus" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-school"></i></div>
-            <span class="btn-text">Dados do campus</span>
-        </button>
-
+            <button name="all_campus" type="submit" class="relatorio-btn">
+                <i class="fas fa-university"></i>
+                <p>Dados do Campus</p>
+            </button>
         {% endif %}
 
-        {% if 0 in sports %}
-        <button name="all_players_sport" value="0" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do futsal</span>
-        </button>
-        {% endif %}
+        {% for sport_id, sport_name in sports_general %}
+            {% if sport_id in sports %}
+                <button name="all_players_sport" value="{{ sport_id }}" type="submit" class="relatorio-btn">
+                    <i class="fas fa-running"></i>
+                    <p>{{ sport_name }}</p>
+                </button>
+            {% endif %}
+        {% endfor %}
+    </form>
 
-        {% if 1 in sports %}
-        <button name="all_players_sport" value="1" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do vôlei</span>
-        </button>
-        {% endif %}
 
-        {% if 2 in sports %}
-        <button name="all_players_sport" value="2" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do vôlei Sentado</span>
-        </button>
-        {% endif %}
-
-        {% if 3 in sports %}
-        <button name="all_players_sport" value="3" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do handebol</span>
-        </button>
-        {% endif %}
-
-        {% if 4 in sports %}
-        <button name="all_players_sport" value="4" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do xadrez</span>
-        </button>
-        {% endif %}
-
-        {% if 7 in sports %}
-        <button name="all_players_sport" value="7" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do salto em Distância</span>
-        </button>
-        {% endif %}
-
-        {% if 5 in sports %}
-        <button name="all_players_sport" value="5" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do tênis de Mesa</span>
-        </button>
-        {% endif %}
-
-        {% if 6 in sports %}
-        <button name="all_players_sport" value="6" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas da corrida 100m</span>
-        </button>
-        {% endif %}
-
-        {% if 8 in sports %}
-        <button name="all_players_sport" value="8" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do lançamento de Dardo</span>
-        </button>
-        {% endif %}
-
-        {% if 9 in sports %}
-        <button name="all_players_sport" value="9" type="submit" class="sport-btn">
-            <div><i class="icon fas fa-person"></i></div>
-            <span class="btn-text">Atletas do lançamento de Peso</span>
-        </button>
-        {% endif %}
-
-    </form>      
-    <div style="display: flex; justify-content: center;">
-        <button class="side-bar-buttons-item2 custom-buttons-sport-nav" style="background-color: red; margin-bottom: 1em;">
-            <a href="{% url 'manage' %}">VOLTAR</a>
-        </button>
-    </div>
-    <ul class="notifications"></ul>
-    <script src="{% static 'js/messages.js' %}"></script>
-    <script src="{% static 'js/script.js' %}"></script>
-    {% if messages %}
-    {% for message in messages %}
-        <script>
-            createToast("{{ message.tags }}", "{{ message }}");
-        </script>
-    {% endfor %}
-    {% endif %}
-</body>
-</html>
+</div>
+{% endblock content %}

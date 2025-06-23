@@ -18,7 +18,8 @@
             </h1>
         </div>
 
-        {% if allowed %}
+
+        {% if allowed and perms.app.add_team and perms.app.add_team_sport %}
         <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
             <a href="{% url 'guiate_register_team' %}">CADASTRAR MODALIDADE</a>
         </button>
@@ -42,11 +43,14 @@
                         <th>ESPORTE</th>
                         <th>SEXO</th>
                         <th>JOGADORES</th>
-                        {% if user.is_staff %}
+                        
+                        {% if perms.app.change_team and perms.app.change_team_sport %}
                         <th>EDITAR</th>
+                        {% endif %}
+                        {% if user.is_staff %}
                         <th>STATUS</th>
                         {% endif %}
-                        {% if allowed %}
+                        {% if allowed and perms.app.delete_team and perms.app.delete_team_sport %}
                         <th>DELETAR</th>
                         {% endif %}
                     </tr>
@@ -62,16 +66,17 @@
                         <td>
                             <a style="color: #0099ff;" href="{% url 'team_players_manage' team_sport.id %}">ACESSAR</a>
                         </td>
-                        {% if user.is_staff %}
+                        {% if perms.app.change_team and perms.app.change_team_sport %}
                         <td>
                             <a href="{% url 'team_edit' team_sport.id %}">
                                 <img src="{% static 'images/icon-edit.svg' %}">
                             </a>
                         </td>
-                        <td>{% if team_sport.status %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img
-                                src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
                         {% endif %}
-                        {% if allowed %}
+                        {% if user.is_staff %}
+                        <td>{% if team_sport.status %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                        {% endif %}
+                        {% if allowed and perms.app.delete_team and perms.app.delete_team_sport %}
                         <td>
                             <form method="POST">
                                 {% csrf_token %}
@@ -117,11 +122,6 @@
                     {% endif %}
                 </div>
             </section>
-            
-            <button class="side-bar-buttons-items2 custom-buttons-sport-nav"
-                style="background-color: var(--global-seventh-color); margin: 1.5em;">
-                <a href="{% url 'manage' %}">VOLTAR</a>
-            </button>
         </div>
     </div>
 </div>

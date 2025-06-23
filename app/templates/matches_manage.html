@@ -17,8 +17,8 @@
         <div class="title">
             <h1>GERENCIAMENTO DE PARTIDAS</h1>
         </div>
-        <button class="side-bar-buttons-items2">
-            <a href="{% url 'matches_register' %}">CADASTRO DE PARTIDAS</a>
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
+            <a href="{% url 'matches_register' %}">CADASTRAR PARTIDA</a>
         </button>
         <br><br>
         <div class="all-manage">
@@ -74,9 +74,6 @@
                     {% endfor %}
                 </table>
             </section>
-            <button class="side-bar-buttons-items2" style="background-color: var(--global-seventh-color); margin-top: 40px;">
-                <a href="{% url 'manage' %}">VOLTAR</a>
-            </button>
         </div>
     </div>
 </div>

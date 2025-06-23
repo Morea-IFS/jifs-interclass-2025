@@ -17,7 +17,7 @@
         <div class="title">
             <h1>GERENCIAMENTO DA COMISSÃO TÉCNICA</h1>
         </div>
-        {% if allowed %}
+        {% if allowed and perms.app.add_voluntary %}
         <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
             <a href="{% url 'voluntary_register' %}">CADASTRAR MEMBRO DA COMISSÃO TÉCNICA</a>
         </button>
@@ -35,8 +35,10 @@
                         <th>MATRÍCULA/SIAPE</th>
                         {% if user.is_staff %} <th>CAMPUS</th> {% endif %}
                         <th>FOTO</th>
-                        {% if allowed %}
+                        {% if allowed and perms.app.change_voluntary %}
                         <th>EDITAR</th>
+                        {% endif %}
+                        {% if allowed and perms.app.delete_voluntary %}
                         <th>DELETAR</th> 
                         {% endif %}
                     </tr>
@@ -53,7 +55,7 @@
                         <td>{{voluntary.registration}}</td>
                         {% if user.is_staff %} <td>{{voluntary.get_campus_display}}</td> {% endif %}
                         <td>{% if voluntary.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                        {% if allowed %}
+                        {% if allowed and perms.app.change_voluntary %}
                         <td>
                             {% if not voluntary.type_voluntary == 4 or user.is_staff %}
                             <a href="{% url 'voluntary_edit' voluntary.id %}">
@@ -61,6 +63,8 @@
                             </a>
                             {% endif %}
                         </td>
+                        {% endif %}
+                        {% if allowed and perms.app.delete_voluntary %}
                         <td>
                             {% if not voluntary.type_voluntary == 4 or user.is_staff %}
                             <form method="POST" action="">
@@ -105,9 +109,6 @@
                     {% endif %}
                 </div>
             </section>
-            <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
-                <a href="{% url 'manage' %}">VOLTAR</a>
-            </button>
         </div>
     </div>
 </div>

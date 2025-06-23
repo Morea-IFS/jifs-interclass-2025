@@ -34,8 +34,10 @@
                         <th>FOTO</th>
                         <th>BOLETIN</th>
                         <th>RG</th>
-                        {% if allowed %}
+                        {% if allowed and perms.app.change_player_team_sport and perms.app.change_player %}
                         <th>EDITAR</th>
+                        {% endif %}
+                        {% if allowed and perms.app.delete_player_team_sport and perms.app.delete_player %}
                         <th>REMOVER</th>
                         {% endif %}
                     </tr>
@@ -60,12 +62,14 @@
                                 <img style="width: 1.5em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
                             </a>
                         </td>
-                        {% if allowed %}
+                        {% if allowed and perms.app.change_player_team_sport and perms.app.change_player %}
                         <td>
                             <a href="{% url 'team_player_edit' i.player.id team_sport.id %}">
                                 <img src="{% static 'images/icon-edit.svg' %}">
                             </a>
                         </td>
+                        {% endif %}
+                        {% if allowed and perms.app.delete_player_team_sport and perms.app.delete_player %}
                         <td>
                             <form method="POST" action="">
                                 {% csrf_token %}
@@ -80,7 +84,7 @@
                 </table>
             </section>
             <div style="display: flex; width: auto; height: auto; justify-content: center; align-items: center; gap: 15px;">
-                {% if allowed %}
+                {% if allowed and perms.app.add_player_team_sport and perms.app.add_player %}
                 <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-color-green);">
                     <a href="{% url 'guiate_players_team' team_sport.team.name team_sport.get_sexo_display team_sport.get_sport_display %}" style="color: #ffffff; font-size: 25px;">ADICIONAR MAIS</a>
                 </button> 

@@ -6,9 +6,9 @@ from .decorators import time_restriction
 from django.contrib import messages
 from django.db import IntegrityError
 from django.templatetags.static import static
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login as auth_login, authenticate, logout
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth import login as auth_login, authenticate, logout, get_user_model
 from django.template.loader import render_to_string
 from .forms import Terms_UseForm
 from datetime import date, datetime
@@ -20,6 +20,8 @@ from weasyprint import HTML
 from django.utils import timezone
 from .decorators import terms_accept_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+User = get_user_model()
 
 def has_accepted_terms(user):
     try:
@@ -68,9 +70,8 @@ def login(request):
                 user = authenticate(username=username, password=password)
                 if user:
                     auth_login(request, user)
-                    if Technician.objects.filter(user=user):
-                        technician = Technician.objects.get(user=user)
-                        messages.success(request, f"Seja bem-vindo campus {technician.get_campus_display()}! para navegar, acesse o menu.")
+                    if user.campus:
+                        messages.success(request, f"Seja bem-vindo campus {user.get_campus_display()}! para navegar, acesse o menu.")
                     else:
                         messages.success(request, f"Seja bem-vindo ao sistema novamente {user.username}!")
                     return redirect('Home')
@@ -269,11 +270,19 @@ def attachments(request):
     attachments = Attachments.objects.all()
     return render(request, 'attachments.html', {'attachments': attachments})
 
+def erro_403_customizado(request, exception=None):
+    messages.info(request, "Você não tem permissão para acessar essa página. Contate o administrador.")
+    return redirect('Home')
+
 @login_required(login_url="login")
+@permission_required('app.view_player', raise_exception=True)
 @terms_accept_required
 def player_manage(request):
     if request.method == "GET":
-        player = Player.objects.all().order_by('-id')
+        if request.user.is_staff:
+            player = Player.objects.all().order_by('-id')
+        else:
+            player = Player.objects.filter(admin=request.user).order_by('-id')
         page = request.GET.get('page', 1) 
         paginator = Paginator(player, 20) 
         try:
@@ -299,6 +308,7 @@ def player_manage(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player', raise_exception=True)
 def player_edit(request, id):
     try:
         campus = Campus_types.choices
@@ -335,6 +345,7 @@ def player_edit(request, id):
 @time_restriction("team_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player', raise_exception=True)
 def team_players_edit(request, id, team):
     try:
         team_sport = Team_sport.objects.get(id=team)
@@ -374,6 +385,7 @@ def team_players_edit(request, id, team):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_team', raise_exception=True)
 def team_manage(request):
     try:
         user = User.objects.get(id=request.user.id)
@@ -382,7 +394,6 @@ def team_manage(request):
             campus = ""
         else: 
             team_sports = Team_sport.objects.filter(admin__id=user.id).order_by('team__campus', 'sport', '-sexo')
-            campus = Technician.objects.get(user__id=user.id)
             if len(team_sports) == 0: return redirect('guiate_register_team')
         page = request.GET.get('page', 1) 
         paginator = Paginator(team_sports, 10) 
@@ -394,7 +405,7 @@ def team_manage(request):
         except EmptyPage:
             team_sports_paginated = paginator.page(paginator.num_pages)
         if request.method == "GET":
-            return render(request, 'team_manage.html', {'team_sports': team_sports_paginated, 'campus':campus, 'allowed': allowed_pages(user)})
+            return render(request, 'team_manage.html', {'team_sports': team_sports_paginated, 'campus': User.campus, 'allowed': allowed_pages(user)})
         else:
             team_sport_id = request.POST.get('team_sport_delete')
             team_sport_delete = Team_sport.objects.get(id=team_sport_id)
@@ -428,6 +439,7 @@ def theme_manage(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_team_sport', raise_exception=True)
 def team_edit(request, id):
     team_sport = get_object_or_404(Team_sport, id=id)
     sport = Sport_types.choices
@@ -455,6 +467,7 @@ def team_edit(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_player_team_sport', raise_exception=True)
 def team_players_manage(request, id):
     try:
         team = get_object_or_404(Team_sport, id=id)
@@ -477,6 +490,7 @@ def team_players_manage(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_player_team_sport', raise_exception=True)
 def add_player_team(request, id):
     team = get_object_or_404(Team_sport, id=id)
     players = Player.objects.all()
@@ -499,6 +513,7 @@ def add_player_team(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_match', raise_exception=True)
 def matches_manage(request):
     try:
         matchs = Match.objects.all().prefetch_related('teams__team')
@@ -532,6 +547,7 @@ def matches_manage(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_match', raise_exception=True)
 def matches_edit(request, id):
     try:
         match = get_object_or_404(Match, id=id)
@@ -592,6 +608,7 @@ def matches_edit(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_match', raise_exception=True)
 def matches_register(request):
     team = Team.objects.all()
     sport = Sport_types.choices
@@ -661,84 +678,80 @@ def games(request):
 
 @login_required(login_url="login")
 @terms_accept_required
-def technician_manage(request):
-    technician = Technician.objects.all()
+@permission_required('app.view_user', raise_exception=True)
+def user_manage(request):
+    users = User.objects.all().order_by('-campus')
     if request.method == "GET":
-        if not technician:
+        if not users:
             print("Não há nenhum gestor cadastrado!")
             messages.info(request, "Não há nenhum gestor cadastrado!")
-        return render(request, 'settings/technician_manage.html', {'technician': technician})
+        return render(request, 'settings/user_manage.html', {'users': users})
     else:
         try:
-            technician_id = request.POST.get('technician_delete')
-            technician_delete = Technician.objects.get(id=technician_id)
-            technician_delete.delete()
-            technician_delete.user.delete()
-            messages.info(request, f"{technician_delete.user.username} removido do sistema com sucesso!")
-            return redirect('technician_manage')
+            user_id = request.POST.get('user_delete')
+            user_delete = User.objects.get(id=user_id)
+            user_delete.delete()
+            messages.info(request, f"{user_delete.username} removido do sistema com sucesso!")
+            return redirect('user_manage')
         except Exception as e:
             messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-        return redirect('technician_manage')
+        return redirect('user_manage')
 
 
 @login_required(login_url="login")
 @terms_accept_required
-def technician_register(request):
+@permission_required('app.add_user', raise_exception=True)
+def user_register(request):
     campus = Campus_types.choices
     if request.method == 'GET':
-        return render(request, 'settings/technician_register.html',{'campus':campus})
+        return render(request, 'settings/user_register.html',{'campus':campus})
     else:
         try:
             name = request.POST.get('name')
-            siape = request.POST.get('siape')
             photo = request.FILES.get('photo')
             password = request.POST.get('password')
             campus_id = request.POST.get('campus')
-            user = User.objects.create_user(username=name, password=password)
-            if photo:
-                technician = Technician.objects.create(name=name, user=user, siape=siape, photo=photo, campus=campus_id)
+            if campus_id:
+                user = User.objects.create_user(username=name, password=password, photo=photo, campus=campus_id)
             else:
-                technician = Technician.objects.create(name=name, user=user, siape=siape, campus=campus_id)
-            technician.save()
-            messages.success(request, f"{technician.user.username} cadastrado do sistema com sucesso!")
-            return redirect('technician_manage')
+                user = User.objects.create_user(username=name, password=password, photo=photo)
+            messages.success(request, f"{user.username} cadastrado do sistema com sucesso!")
+            return redirect('user_manage')
         except (TypeError, ValueError):
             messages.error(request, 'Um valor foi informado incorretamente!')
         except IntegrityError as e:
             messages.error(request, 'Algumas informações não foram preenchidas :(')
         except Exception as e:
             messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-        return redirect('technician_register')
+        return redirect('user_register')
 
 @login_required(login_url="login")
 @terms_accept_required
-def technician_edit(request, id):
+@permission_required('app.change_user', raise_exception=True)
+def user_edit(request, id):
     try:
-        technician = get_object_or_404(Technician, id=id)
+        user = get_object_or_404(User, id=id)
         if request.method == 'GET':
-            return render(request, 'settings/technician_edit.html', {'technician': technician,'sexo':Sexo_types.choices, 'campus':Campus_types.choices})            
+            return render(request, 'settings/user_edit.html', {'user': user,'sexo':Sexo_types.choices, 'campus':Campus_types.choices})            
         else:
-            if request.POST.get('name'):
-                technician.name = request.POST.get('name')
-                technician.user.username = str(request.POST.get('name'))
-            if request.POST.get('password'): technician.user.set_password(request.POST.get('password'))
-            technician.siape = request.POST.get('siape')
-            technician.campus = request.POST.get('campus')
+            if request.POST.get('name'): user.username = str(request.POST.get('name'))
+            if request.POST.get('password'): user.set_password(request.POST.get('password'))
+            if request.POST.get('campus'): user.campus = request.POST.get('campus')
             if request.FILES.get('photo'):
-                if technician.photo: 
-                    status = verificar_foto(str(technician.photo))
+                if user.photo: 
+                    status = verificar_foto(str(user.photo))
                     if status:
-                        technician.photo.delete()
-                technician.photo = request.FILES.get('photo')
-            technician.save()
-            technician.user.save()
-            messages.success(request, f"{technician.user.username} do sistema atualizado com sucesso!")
-            return redirect('technician_manage')
+                        user.photo.delete()
+                user.photo = request.FILES.get('photo')
+            user.save()
+            messages.success(request, f"{user.username} do sistema atualizado com sucesso!")
+            return redirect('user_manage')
     except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-    return redirect('technician_manage')
+    return redirect('user_manage')
     
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_voluntary', raise_exception=True)
 def voluntary_manage(request):
     try:
         user = User.objects.get(id=request.user.id)
@@ -781,6 +794,7 @@ def voluntary_manage(request):
 @time_restriction("voluntary_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_voluntary', raise_exception=True)
 def voluntary_register(request):
     user = User.objects.get(id=request.user.id)
     if request.method == 'GET':
@@ -797,23 +811,17 @@ def voluntary_register(request):
             if photo: 
                 status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
                 if status: return redirect('voluntary_register')
-            if request.POST.get('user'): admin = User.objects.get(id=request.POST.get('user')) 
-            else: admin = user
-            if request.user.is_staff:
+            if request.POST.get('user'): 
+                admin = User.objects.get(id=request.POST.get('user')) 
+            else: 
+                admin = user
+            if not request.user.campus:
                 campus_id = request.POST.get('campus')
             else:
-                campus_id = Technician.objects.get(user=user).campus
-            if photo:
-                voluntary = Voluntary.objects.create(type_voluntary=type_voluntary, name=name, registration=registration, admin=admin, photo=photo, campus=campus_id)
-            else:
-                voluntary = Voluntary.objects.create(type_voluntary=type_voluntary, name=name, registration=registration, admin=admin, campus=campus_id)
-            voluntary.save()
+                campus_id = user.campus
+            Voluntary.objects.create(type_voluntary=type_voluntary, name=name, registration=registration, admin=admin, photo=photo, campus=campus_id)
             messages.success(request, "Parabéns, você cadastrou mais um membro da comissão técnica!")
             return redirect('voluntary_manage')
-        except (TypeError, ValueError):
-            messages.error(request, 'Um valor foi informado incorretamente!')
-        except IntegrityError as e:
-            messages.error(request, 'Algumas informações não foram preenchidas :(')
         except Exception as e:
             messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('voluntary_register')
@@ -821,6 +829,7 @@ def voluntary_register(request):
 @time_restriction("voluntary_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_voluntary', raise_exception=True)
 def voluntary_edit(request, id):
     voluntary = get_object_or_404(Voluntary, id=id)
     users = User.objects.all()
@@ -968,6 +977,8 @@ def general_data(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player_match', raise_exception=True)
+@permission_required('app.add_player_match', raise_exception=True)
 def players_in_teams(request, id):
     try:
         match = get_object_or_404(Match, id=id)
@@ -996,10 +1007,12 @@ def players_in_teams(request, id):
             return render(request, 'players_in_teams.html', context)
         else:
             if 'player_delete' in request.POST:
-                player_id = request.POST.get('player_delete')
-                print(player_id)
-                player = Player_match.objects.get(id=player_id)
-                player.delete()
+                if request.user.has_perm('app.delete_player_match'):
+                    player_id = request.POST.get('player_delete')
+                    player = Player_match.objects.get(id=player_id)
+                    player.delete()
+                else:
+                    messages.error(request, "Você não tem permissão para remover o atleta da partida.")
             if 'team-a' in request.POST:
                 for i in player_match_a:
                     number = request.POST.get(f'number_a_{i.id}')        
@@ -1024,6 +1037,8 @@ def players_in_teams(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player_match', raise_exception=True)
+@permission_required('app.view_player_match', raise_exception=True)
 def players_match(request, id):
     team_match = get_object_or_404(Team_match, id=id)
     player_match = Player_match.objects.filter(team_match=team_match)
@@ -1072,6 +1087,9 @@ def players_match(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player_match', raise_exception=True)
+@permission_required('app.add_player_match', raise_exception=True)
+@permission_required('app.view_player', raise_exception=True)
 def add_players_match(request, id):
     team_match = get_object_or_404(Team_match, id=id)
     players = Player.objects.all()
@@ -1106,6 +1124,8 @@ def add_players_match(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.delete_config', raise_exception=True)
+@permission_required('app.view_config', raise_exception=True)
 def projector_manage(request):
     config = Config.objects.filter()
     if request.method == "GET":
@@ -1123,6 +1143,8 @@ def projector_manage(request):
           
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.delete_config', raise_exception=True)
+@permission_required('app.view_config', raise_exception=True)
 def settings_manage(request):
     config = Config.objects.filter()
     if request.method == "GET":
@@ -1140,6 +1162,7 @@ def settings_manage(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_banner', raise_exception=True)
 def banner_register(request):
     if request.method == "GET":
         return render(request, 'settings/banner_register.html')
@@ -1154,6 +1177,9 @@ def banner_register(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_banner', raise_exception=True)
+@permission_required('app.delete_banner', raise_exception=True)
+@permission_required('app.change_banner', raise_exception=True)
 def banner_manage(request):
     banner = Banner.objects.filter()
     if request.method == "GET":
@@ -1272,6 +1298,7 @@ def settings(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_statement', raise_exception=True)
 def statement_register(request):
     if request.method == "GET":
         return render(request, 'settings/statement_register.html')
@@ -1286,6 +1313,10 @@ def statement_register(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_statement', raise_exception=True)
+@permission_required('app.delete_statement', raise_exception=True)
+@permission_required('app.view_statement_user', raise_exception=True)
+@permission_required('app.delete_statement_user', raise_exception=True)
 def statement_manage(request):
     statement = Statement.objects.filter()
     statement_user = Statement_user.objects.all().order_by('statement')
@@ -1307,66 +1338,83 @@ def statement_manage(request):
         return redirect('statement_manage')
 
 @login_required(login_url="login")
+@permission_required('app.view_terms_use', raise_exception=True)
 def chefe_manage(request):
     if request.method == "GET":
         terms = Terms_Use.objects.all()
         return render(request, 'settings/chefe_manage.html',{'terms': terms})
     else:
         try:
-            terms_delete = request.POST.get('terms_delete')
-            term_del = Terms_Use.objects.get(id=terms_delete)
-            term_del.delete()
-            messages.success(request, "Excluido com sucesso!")
+            if request.user.has_perm('app.delete_terms_use'):
+                terms_delete = request.POST.get('terms_delete')
+                term_del = Terms_Use.objects.get(id=terms_delete)
+                term_del.delete()
+                messages.success(request, "Excluido com sucesso!")
+            else:
+                messages.error(request, "Você não tem permissão para remover.")
             return redirect('chefe_manage')
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('chefe_manage')
 
 @login_required(login_url="login")
+@permission_required('app.view_help', raise_exception=True)
 def faq_manage(request):
     if request.method == "GET":
         help = Help.objects.all()
         return render(request, 'settings/faq_manage.html',{'help': help})
     else:
         try:
-            faq_delete = request.POST.get('faq_delete')
-            faq = Help.objects.get(id=faq_delete)
-            faq.delete()
-            messages.success(request, "Excluido com sucesso!")
+            if request.user.has_perm('app.delete_help'):
+                faq_delete = request.POST.get('faq_delete')
+                faq = Help.objects.get(id=faq_delete)
+                faq.delete()
+                messages.success(request, "Excluido com sucesso!")
+            else:
+                messages.error(request, "Você não tem permissão para remover.")
             return redirect('faq_manage')
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('faq_manage')
     
 @login_required(login_url="login")
+@permission_required('app.view_attachments', raise_exception=True)
 def anexo_manage(request):
     if request.method == "GET":
         atack = Attachments.objects.all().order_by('-id')
         return render(request, 'settings/anexo_manage.html',{'atack': atack})
     else: 
         try:
-            atack_delete = request.POST.get('atack_delete')
-            atack = Attachments.objects.get(id=atack_delete)
-            atack.delete()
-            messages.success(request, "Excluido com sucesso!")
+            if request.user.has_perm('app.delete_attachments'):
+                atack_delete = request.POST.get('atack_delete')
+                atack = Attachments.objects.get(id=atack_delete)
+                atack.delete()
+                messages.success(request, "Excluido com sucesso!")
+            else:
+                messages.error(request, "Você não tem permissão para remover.")
             return redirect('anexo_manage')
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('anexo_manage')
     
 @login_required(login_url="login")
+@permission_required('app.view_settings_access', raise_exception=True)
 def enrollment_manage(request):
     if request.method == "GET":
         date_list = Settings_access.objects.all().order_by('-id')
         return render(request, 'settings/enrollment_manage.html',{'date_list': date_list})
     else:
         try:
-            date_delete = request.POST.get('date_delete')
-            settings_access = Settings_access.objects.get(id=date_delete)
-            settings_access.delete()
-            messages.success(request, "Excluido com sucesso!")
+            if request.user.has_perm('app.delete_settings_access'):
+                date_delete = request.POST.get('date_delete')
+                settings_access = Settings_access.objects.get(id=date_delete)
+                settings_access.delete()
+                messages.success(request, "Excluido com sucesso!")
+            else:
+                messages.error(request, "Você não tem permissão para remover.")
             return redirect('enrollment_manage')
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('enrollment_manage')
     
 @login_required(login_url="login")
+@permission_required('app.add_help', raise_exception=True)
 def faq_register(request):
     if request.method == "GET":
         return render(request, 'settings/faq_register.html')
@@ -1381,6 +1429,7 @@ def faq_register(request):
         return redirect('faq_manage')
     
 @login_required(login_url="login") 
+@permission_required('app.add_attachments', raise_exception=True)
 def anexo_register(request):
     if request.method == "GET":
         return render(request, 'settings/anexo_register.html')
@@ -1397,6 +1446,7 @@ def anexo_register(request):
         return redirect('anexo_manage')
     
 @login_required(login_url="login")
+@permission_required('app.add_settings_access', raise_exception=True)
 def enrollment_register(request):
     if request.method == "GET":
         return render(request, 'settings/enrollment_register.html')
@@ -1413,6 +1463,7 @@ def enrollment_register(request):
 
 @login_required(login_url="login")
 @terms_accept_required   
+@permission_required('app.view_config', raise_exception=True)
 def projector_register(request):
     if request.method == "GET":
         return render(request,'projector_register.html')
@@ -1437,6 +1488,7 @@ def projector_register(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_config', raise_exception=True)
 def settings_register(request):
     if request.method == "GET":
         return render(request,'settings_register.html')
@@ -2086,6 +2138,7 @@ def scoreboard_projector(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_badge', raise_exception=True)
 def generator_badge(request):
     try:
         if request.user.is_staff:
@@ -2119,7 +2172,7 @@ def generator_badge(request):
                         messages.error(request, "Não tem nenhum técnico cadastrado!")
                         return redirect('badge')
                     namebadge = f'{ team_sport_badge.get_sport_display() }-{ team_sport_badge.team.get_campus_display() }-jifs'
-                    generate_badges(players, user, '2',namebadge)
+                    return generate_badges(players, user, '2',namebadge)
                 else:
                     if team_badge == 'all_player':
                         players = Player_team_sport.objects.all()
@@ -2127,7 +2180,7 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum atleta cadastrado!")
                             return redirect('badge')
                         namebadge = 'atletas-jifs'
-                        generate_badges(players, user, '2',namebadge)
+                        return generate_badges(players, user, '2',namebadge)
                     elif team_badge == 'all_voluntary':
                         if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=0)
                         else: voluntary = Voluntary.objects.filter(type_voluntary=0, admin=user)
@@ -2136,7 +2189,7 @@ def generator_badge(request):
                             return redirect('badge')
                         print("a: ",voluntary)
                         namebadge = 'voluntarios-jifs'
-                        generate_badges(voluntary, user, '1',namebadge)
+                        return generate_badges(voluntary, user, '1',namebadge)
                     elif team_badge == 'all_organization':
                         if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=2)
                         else: voluntary = Voluntary.objects.filter(type_voluntary=2, admin=user)
@@ -2144,7 +2197,7 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum membro do apoio cadastrado!")
                             return redirect('badge')
                         namebadge = 'apoio-jifs'
-                        generate_badges(voluntary, user, '4',namebadge)
+                        return generate_badges(voluntary, user, '4',namebadge)
                     elif team_badge == 'all_trainee':
                         if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=3)
                         else: voluntary = Voluntary.objects.filter(type_voluntary=3, admin=user)
@@ -2152,7 +2205,7 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum estagiário cadastrado!")
                             return redirect('badge')
                         namebadge = 'estagiario-jifs'
-                        generate_badges(voluntary, user, '4',namebadge)
+                        return generate_badges(voluntary, user, '4',namebadge)
                     elif team_badge == 'all_technician':
                         if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=1)
                         else: voluntary = Voluntary.objects.filter(type_voluntary=1, admin=user)
@@ -2160,7 +2213,7 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum técnico cadastrado!")
                             return redirect('badge')
                         namebadge = 'tecnico-modalidade-jifs'
-                        generate_badges(voluntary, user, '3',namebadge)
+                        return generate_badges(voluntary, user, '3',namebadge)
                     elif team_badge == 'all_head':
                         if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=4)
                         else: voluntary = Voluntary.objects.filter(type_voluntary=4, admin=user)
@@ -2168,7 +2221,7 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum chefe de delegação cadastrado!")
                             return redirect('badge')
                         namebadge = 'chefe-delegacao-jifs'
-                        generate_badges(voluntary, user, '3',namebadge)
+                        return generate_badges(voluntary, user, '3',namebadge)
                     else:
                         for choice in Sport_types.choices:
                             if choice[1] == team_badge:
@@ -2179,15 +2232,15 @@ def generator_badge(request):
                             messages.error(request, "Não tem nenhum atleta cadastrado!")
                             return redirect('badge')
                         namebadge = f'atletas-{team_badge}-jifs'
-                        generate_badges(players, user, '2',namebadge)
-                return redirect('badge')
-            return redirect('badge')
+                        return generate_badges(players, user, '2',namebadge)
     except Exception as e:
         messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('badge')
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_certificate', raise_exception=True)
+@permission_required('app.view_certificate', raise_exception=True)
 def generator_certificate(request):
     try:
         user = User.objects.get(id=request.user.id)
@@ -2251,6 +2304,7 @@ def generator_certificate(request):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('auth.data', raise_exception=True)
 def generator_data(request):
     try:
         user = User.objects.get(id=request.user.id)
@@ -2263,7 +2317,9 @@ def generator_data(request):
             context = {
                 'sexo': Sexo_types.choices,
                 'team_sport': team_sport,
+                'campus': Campus_types.choices,
                 'sports': sports,
+                'sports_general': Sport_types.choices,
             }
             
             print(context)
@@ -2454,17 +2510,13 @@ def generator_data(request):
 @time_restriction("team_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_team', raise_exception=True)
+@permission_required('app.add_team_sport', raise_exception=True)
 def register_team(request):
     sport = Sport_types.choices
     nomes = [nome for _, nome in sport]
-    if Technician.objects.filter(user__id=request.user.id).exists(): 
-        technician = Technician.objects.get(user__id=request.user.id)
-        team_sport = Team_sport.objects.filter(admin=User.objects.get(id=request.user.id))
-        context = {'sport': nomes,'technician':technician}
-        if len(team_sport) == 0:
-            context['button_return_manage'] = True
-    else: 
-        context = {'sport': nomes}
+    context = {'sport': nomes}
+    if len(Team_sport.objects.filter(admin=request.user)) == 0: context['button_return_manage'] = True
     if request.method == 'GET':
         return render(request, 'guiate/team_register_teste.html', context)
     else:
@@ -2473,17 +2525,14 @@ def register_team(request):
 @time_restriction("team_manage")
 @login_required(login_url="login")
 @terms_accept_required  
+@permission_required('app.add_team', raise_exception=True)
+@permission_required('app.add_team_sport', raise_exception=True)
 def team_sexo(request, sport_name):
     try:
         sport_team = {label: value for value, label in Sport_types.choices}
         sport = sport_team[sport_name]
         campus = Campus_types.choices
-        if Technician.objects.filter(user__id=request.user.id).exists(): 
-            technician = Technician.objects.get(user__id=request.user.id)
-            context = {'sport': sport,'technician':technician}
-        else: 
-            context = {'sport': sport}
-
+        context = {'sport': sport}
         if request.method == 'GET':
             return render(request, 'guiate/team_sexo.html', context)
         else:
@@ -2499,12 +2548,11 @@ def team_sexo(request, sport_name):
                 else:
                     team = Team.objects.get(name=campus_name)
             else:
-                if Technician.objects.filter(user__id=request.user.id).exists(): 
-                    technician = Technician.objects.get(user__id=request.user.id)  
-                    if not Team.objects.filter(name=technician.get_campus_display(), campus=technician.campus).exists():
-                        team = Team.objects.create(name=technician.get_campus_display(), campus=technician.campus)
+                if request.user.campus:  
+                    if not Team.objects.filter(name=request.user.get_campus_display(), campus=request.user.campus).exists():
+                        team = Team.objects.create(name=request.user.get_campus_display(), campus=request.user.campus)
                     else:
-                        team = Team.objects.get(name=technician.get_campus_display(), campus=technician.campus)
+                        team = Team.objects.get(name=request.user.get_campus_display(), campus=request.user.campus)
                 else:
                     if not Team.objects.filter(name='Reitoria', campus=10).exists():
                         team = Team.objects.create(name='Reitoria', campus=10)
@@ -2533,6 +2581,8 @@ def team_sexo(request, sport_name):
 @time_restriction("team_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.add_player', raise_exception=True)
+@permission_required('app.add_player_team_sport', raise_exception=True)
 def players_team(request, team_name, team_sexo, sport_name):
     user = User.objects.get(id=request.user.id)
     sport_team = {label: value for value, label in Sport_types.choices}
@@ -2656,6 +2706,8 @@ def players_team(request, team_name, team_sexo, sport_name):
 
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.view_player', raise_exception=True)
+@permission_required('app.view_player_team_sport', raise_exception=True)
 def players_list(request, team_name, team_sexo, sport_name):
     try:
         
@@ -2669,21 +2721,25 @@ def players_list(request, team_name, team_sexo, sport_name):
             return render(request, 'guiate/players_list.html', {'team_sport':team_sport, 'players':players, 'allowed': allowed_pages(request.user)})
         else:
             if 'player_delete' in request.POST:
-                player_id = request.POST.get("player_delete")
-                player = Player_team_sport.objects.get(id=player_id)
-                player.delete()
-                print("eupa")
-                if not Player_team_sport.objects.filter(id=player_id).exists():
-                    print("eupaESSS")
-                    player_table = Player.objects.get(id=player.player.id)
-                    status = verificar_foto(str(player_table.photo))
-                    if status:
-                        player_table.photo.delete()
-                    player_table.bulletin.delete()
-                    player_table.rg.delete()
-                    player_table.delete()
-                messages.success(request, "O jogador foi removido com sucesso!")
-                print("O jogador foi cadastrado no sistema com sucesso!")
+                if request.user.has_perm('app.delete_player_team_sport') and request.user.has_perm('app.delete_player'):
+                    player_id = request.POST.get("player_delete")
+                    player = Player_team_sport.objects.get(id=player_id)
+                    player.delete()
+                    print("eupa")
+                    if not Player_team_sport.objects.filter(id=player_id).exists():
+                        print("eupaESSS")
+                        player_table = Player.objects.get(id=player.player.id)
+                        status = verificar_foto(str(player_table.photo))
+                        if status:
+                            player_table.photo.delete()
+                        player_table.bulletin.delete()
+                        player_table.rg.delete()
+                        player_table.delete()
+                    messages.success(request, "O jogador foi removido com sucesso!")
+                    print("O jogador foi cadastrado no sistema com sucesso!")
+                else:
+                    messages.error(request, "Você não tem permissão para remover.")
+
                 return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(), team_sport.get_sport_display())
             if 'Cancelar' in request.POST:
                 if Player_team_sport.objects.filter(team_sport=team_sport).exists():
@@ -2705,6 +2761,7 @@ def players_list(request, team_name, team_sexo, sport_name):
 @time_restriction("team_manage")
 @login_required(login_url="login")
 @terms_accept_required
+@permission_required('app.change_player', raise_exception=True)
 def player_list_edit(request, team_name, id, team_sexo, sport_name):
     try:
         campus = Campus_types.choices

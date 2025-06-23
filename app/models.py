@@ -1,10 +1,14 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.timezone import localtime
 from django.utils import timezone
+from django.conf import settings
 
 # Create your models here.
+
+# models.py
 
 class Status(models.IntegerChoices):
     shortly = 0, "Em breve"
@@ -72,6 +76,15 @@ class Type_service(models.IntegerChoices):
     trainee = 3, "Estagiário"
     head_delegation = 4,"Chefe de delegação"
 
+class CustomUser(AbstractUser):
+    telefone = models.CharField(max_length=20, blank=True, null=True)
+    date_nasc = models.DateField(blank=True, null=True)
+    photo = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    campus = models.IntegerField(choices=Campus_types.choices, blank=True, null=True)
+
+    def __str__(self):
+        return self.username
+
 class Settings_access(models.Model):
     start = models.DateTimeField()
     end = models.DateTimeField()
@@ -97,14 +110,14 @@ class Player(models.Model):
     registration = models.CharField(max_length=15, default="0000000000")
     cpf = models.CharField(max_length=11, default="00000000000")
     date_nasc = models.DateField(default=timezone.now)
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):    
         return f"{self.name} | {self.sexo} | {self.admin.username}"
     
 class Technician(models.Model):
     name = models.CharField(max_length=100)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     siape = models.CharField(max_length=100, blank=True)
     photo = models.ImageField(upload_to='photo_technician/', default='defaults/person.png', blank=True)
     campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
@@ -118,7 +131,7 @@ class Voluntary(models.Model):
     photo = models.ImageField(upload_to='photo_voluntary/', default='defaults/person.png', blank=True)
     campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
     registration = models.CharField(max_length=11, default="00000000000")
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
     type_voluntary = models.IntegerField(choices=Type_service.choices, default=Type_service.voluntary)
 
     def __str__(self):    
@@ -136,7 +149,7 @@ class Team(models.Model):
 
 class Badge(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.ImageField(upload_to='badge/', blank=True)
 
     def __str__(self):    
@@ -144,7 +157,7 @@ class Badge(models.Model):
     
 class Attachments(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to='attachments/', blank=True)
 
     def __str__(self):    
@@ -152,7 +165,7 @@ class Attachments(models.Model):
 
 class Certificate(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.ImageField(upload_to='certificate/', blank=True)
 
     def __str__(self):    
@@ -161,7 +174,7 @@ class Certificate(models.Model):
 class Team_sport(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     sport = models.IntegerField(choices=Sport_types.choices)
-    admin = models.ForeignKey(User, on_delete=models.CASCADE)
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sexo = models.IntegerField(choices=Sexo_types.choices)
     status = models.BooleanField(default=False)
 
@@ -280,7 +293,7 @@ class Banner(models.Model):
         return f"{self.id} | {self.name} | {self.status}"
 
 class Terms_Use(models.Model):
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     document = models.FileField(upload_to='document_boss/', null=True, blank=True)
     photo = models.FileField(upload_to='photo_boss/', null=True, blank=True)
     name = models.CharField(max_length=255, blank=True)
@@ -318,4 +331,4 @@ class Statement(models.Model):
 
 class Statement_user(models.Model):
     statement = models.ForeignKey(Statement, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

@@ -24,9 +24,9 @@ urlpatterns = [
     path('register/match', views.matches_register, name = "matches_register"),
     path('games', views.games, name = "games"),
     path('attachments', views.attachments, name = "attachments"),
-    path('manage/technician', views.technician_manage, name = "technician_manage"),
-    path('register/technician', views.technician_register, name = "technician_register"),
-    path('edit/technician/<int:id>', views.technician_edit, name = "technician_edit"),
+    path('manage/user', views.user_manage, name = "user_manage"),
+    path('register/user', views.user_register, name = "user_register"),
+    path('edit/user/<int:id>', views.user_edit, name = "user_edit"),
     path('register/voluntary', views.voluntary_register, name = "voluntary_register"),
     path('manage/voluntary', views.voluntary_manage, name = "voluntary_manage"),
     path('edit/voluntary/<int:id>', views.voluntary_edit, name = "voluntary_edit"),
@@ -72,9 +72,4 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-"""
-    path('manage/sport', views.sport_manage, name = "sport_manage"),
-    path('register/sport', views.sport_register, name = "sport_register"),
-    path('edit/sport/<int:id>', views.sport_edit, name = "sport_edit"),
-    path('add_players_match/<int:id>', views.add_players_match, name = "add_players_match"),
-"""
+

@@ -31,6 +31,7 @@ def time_restriction(redirect_page="manage"):
 
 def terms_accept_required(view_func):
     def wrapper(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
         if not request.user.is_authenticated:
             return redirect('login')
 

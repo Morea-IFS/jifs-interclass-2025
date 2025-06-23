@@ -20,19 +20,17 @@
             <div class="block-inputs-form">
                 <div>
                     <input type="text" autocomplete="on" autocorrect="on" name="name"
-                        placeholder="{{ technician.name }}" value="{{ technician.name }}" required />
+                        placeholder="{{ user.username }}" value="{{ user.username }}" required />
                     <input type="password" autocomplete="on" autocorrect="on" name="password"
                         placeholder="Para trocar a senha, digite a nova aqui. (opcional)" />
-                    <input type="text" autocomplete="on" autocorrect="on" name="siape"
-                        placeholder="{{ technician.siape }}" value="{{ technician.siape }}" />
                     <select name="campus" required>
                         <option selected disabled>Selecione o campus</option required>
                         {% for value, name in campus %}
-                        <option {% if technician.campus == value %} selected {% endif %} value="{{value}}">{{name}}
+                        <option {% if user.campus == value %} selected {% endif %} value="{{value}}">{{name}}
                         </option>
                         {% endfor %}
                     </select>
-                    <label for="fotos" id="label-foto" class="custom-file-button">{% if technician.photo %} Trocar imagem {% else %} Adicione uma imagem {% endif %}</label>
+                    <label for="fotos" id="label-foto" class="custom-file-button">{% if user.photo %} Trocar imagem {% else %} Adicione uma imagem {% endif %}</label>
                     <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png"
                         onchange="trocarTextoLabel()" />
                 </div>
@@ -44,7 +42,7 @@
             </div>
         </form>
         <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
-            <a href="{% url 'technician_manage' %}">VOLTAR</a>
+            <a href="{% url 'user_manage' %}">VOLTAR</a>
         </button>
     </section>
 </div>

@@ -30,13 +30,15 @@
                         <option value="{{value}}">{{name}}</option>
                         {% endfor %}
                     </select>
-                    {% if user.is_staff %}
+                    {%  if user.campus == None %}
                     <select name="campus" required>
                         <option selected disabled>Selecione o campus</option required>
                         {% for value, name in campus %}
                         <option value="{{value}}">{{name}}</option>
                         {% endfor %}
                     </select>
+                    {% endif %}
+                    {% if user.is_staff %}
                     <select id="user_admin" name="user">
                         <option selected disabled>Selecione o usuário admin</option>
                         {% for i in users %}
@@ -45,7 +47,7 @@
                     </select>
                     {% endif %}
                     <label for="fotos" id="label-foto" class="custom-file-button">Adicione uma imagem</label>
-                    <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" onchange="trocarTextoLabel()">
+                    <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" onchange="trocarTextoLabel()" required>
                 </div>
                 <button type="submit" class="side-bar-buttons-items2 custom-buttons-sport-nav">
                     CONFIRMAR
@@ -53,7 +55,7 @@
             </div>
         </form>
         <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
-            <a href="{% url 'voluntary_manage' %}">VOLTAR</a>
+            <a href="{% url 'voluntary_manage' %}">VER MINHA COMISSÃO TÉCNICA</a>
         </button>
     </section>
 </div>

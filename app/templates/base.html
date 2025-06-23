@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -27,56 +26,118 @@
                 <img class="side-bar-logo" src="{% static 'images/morea-sports-white.svg' %}" alt="Logo Placeholder" />
                 <div class="side-bar-top">
                     <div class="side-bar-buttons">
-                        <a href="{% url 'Home' %}">
+                        <a class="side-init" href="{% url 'Home' %}">
                             <button class="side-bar-buttons-items"><i class="fa-solid fa-house"></i>INICIO</button>
                         </a>
-                        <a href="{% url 'manage' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-compass"></i>MENU</button>
-                        </a>
-                        {% block navbar %}
 
-                        {% endblock navbar %}
-                        <a href="{% url 'attachments' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-file-pdf"></i>ANEXOS</button>
-                        </a>
-                        <a href="{% url 'settings' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-gear"></i>CONFIG</button>
-                        </a> 
+                        {% if perms.app.view_team %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-volleyball"></i>TIMES
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_team and perms.app.view_team_sport %}
+                                <a href="{% url 'team_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-users"></i>MEUS TIMES</a>
+                                {% endif %}
+                                {% if perms.app.add_team and perms.app.add_team_sport %}
+                                <a href="{% url 'guiate_register_team' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-plus"></i>REGISTRAR</a>
+                                {% endif %}
+                                {% if perms.app.view_player %}
+                                <a href="{% url 'player_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-user"></i>ATLETAS</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if perms.app.view_voluntary or perms.app.add_voluntary %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-users"></i>EQUIPE
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_voluntary %}
+                                <a href="{% url 'voluntary_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-people-group"></i>MINHA EQUIPE</a>
+                                {% endif %}
+                                {% if perms.app.add_voluntary %}
+                                <a href="{% url 'voluntary_register' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-plus"></i>REGISTRAR</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if perms.app.view_match or perms.app.add_match %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-users-rectangle"></i>PARTIDAS
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_match %}
+                                <a href="{% url 'matches_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>MINHAS PARTIDAS</a>
+                                {% endif %}
+                                {% if perms.app.add_match %}
+                                <a href="{% url 'matches_register' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-plus"></i>REGISTRAR</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- OUTROS -->
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-compass"></i>OUTROS
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
+                                {% if perms.auth.data %}
+                                <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
+                                {% endif %}
+                                {% if perms.app.view_certificate and perms.app.add_certificate %}
+                                <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>CERTIFICADOS</a>
+                                {% endif %}
+                                <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>ANEXOS</a>
+                                <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>CONFIG</a>
+                            </div>
+                        </div>
+
+                        {% block navbar %}{% endblock navbar %}
+
                         <a class="exit-hover" href="{% url 'logout' %}">
                             <button class="side-bar-buttons-items"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
                         </a>
                     </div>
                 </div>
                 <div class="side-bar-bottom">
-                    {% block register %}
-                    {% endblock register %}
-                    <div class="logos">
-                        <a href="https://ifs.edu.br"><img class="logos-items" src="{% static 'images/logo-ifs-black.svg' %}" alt="Logo IFS" /></a>
-                        <a href="https://morea-ifs.org"><img class="logos-items" src="{% static 'images/logo-jiifs-2025-black.png' %}" alt="Logo Morea" /></a>
-                    </div>
+                    {% block register %}{% endblock register %}
                     <div class="user-account">
                         <p><i class="fa-solid fa-user"></i> {{ user.username }}</p>
                     </div>
                 </div>
-
             </section>
-            {% block content %}
-
-            {% endblock content %}
+            {% block content %}{% endblock content %}
         </div>
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.dropdown-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const menu = button.nextElementSibling;
+                    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                });
+            });
+        });
+    </script>
+
     <ul class="notifications"></ul>
     <script src="{% static 'js/messages.js' %}"></script>
     {% if messages %}
-    {% for message in messages %}
-        <script>
-            createToast("{{ message.tags }}", "{{ message }}");
-        </script>
-    {% endfor %}
+        {% for message in messages %}
+            <script>
+                createToast("{{ message.tags }}", "{{ message }}");
+            </script>
+        {% endfor %}
     {% endif %}
     <script src="{% static 'js/script.js' %}"></script>
-    {% block scripts %}
-    {% endblock scripts %}
+    {% block scripts %}{% endblock scripts %}
 </body>
-
 </html>
