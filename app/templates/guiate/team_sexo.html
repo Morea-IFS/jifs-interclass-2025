@@ -1,52 +1,57 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/team_sexo.css' %}" />
-    <title>JIFS ADMIN</title>
-</head>
-<body>
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/team_sexo.css' %}" />
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block" style="align-items: start; display: flex; flex-direction: column; align-items: center;">
+    <div class="title" style="display: flex; flex-direction: column; color: white; height: auto; padding-top: 20px;">
+        <h1>ECOLHA O SEXO</h1>
+    </div>
     <form action="" method="post">
         {% csrf_token %}
-    
-    <div class="gender-container">
-        {% if sport == 2 %}
-        
-        <button type="submit" name="mixed" class="gender-btn mixed-btn">
-            <i class="gender-icon fas fa-mars-and-venus"></i>
-            <span class="btn-title">Misto</span>
-        </button>
+        <div class="gender-container">
+            {% if sport == 2 %}
+            
+            <button type="submit" name="sexo" value="2" class="gender-btn mixed-btn">
+                <i class="gender-icon fas fa-mars-and-venus"></i>
+                <span class="btn-title">Misto</span>
+            </button>
 
-        <button type="submit" name="mixed" class="gender-btn mixed-btn">
-            <i class="gender-icon fas fa-mars-and-venus"></i>
-            <span class="btn-title">Misto</span>
-        </button>
+            <button type="submit" name="sexo" value="2" class="gender-btn mixed-btn">
+                <i class="gender-icon fas fa-mars-and-venus"></i>
+                <span class="btn-title">Misto</span>
+            </button>
 
-        {% else %}
+            {% else %}
 
-        <button type="submit" name="male" class="gender-btn male-btn">
-            <i class="gender-icon fas fa-mars"></i>
-            <span class="btn-title">Masculino</span>
-        </button>
-        
-        <button type="submit" name="female" class="gender-btn female-btn">
-            <i class="gender-icon fas fa-venus"></i>
-            <span class="btn-title">Feminino</span>
-        </button>
+            <button type="submit" name="sexo" value="0" class="gender-btn male-btn">
+                <i class="gender-icon fas fa-mars"></i>
+                <span class="btn-title">Masculino</span>
+            </button>
+            
+            <button type="submit" name="sexo" value="1" class="gender-btn female-btn">
+                <i class="gender-icon fas fa-venus"></i>
+                <span class="btn-title">Feminino</span>
+            </button>
 
-        {% endif %}
-    </div>
-</form>
+            {% endif %}
+        </div>
+    </form>
     <div>
         <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: #AB0000;">
-            <a href="{% url 'guiate_register_team' %}">VOLTAR</a>
+            <a href="{% url 'guiate_register_team' event_id %}">VOLTAR</a>
         </button>
     </div>
-</body>
-</html>
+</div>
+
+{% endblock content %}
+

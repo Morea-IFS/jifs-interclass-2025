@@ -45,3 +45,36 @@
     font-size: 3em;
     color: var(--global-header-color);
 }
+
+@media screen and (max-width: 530px) {
+    .link-nav{
+        width: 9em;
+        height: 9em;
+        background-color: var(--global-color-manage);
+        border-radius: 20px;
+        padding: 15px;
+    }
+    .link-nav a{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        justify-content: space-evenly;
+    }
+    .link-nav:hover{
+        transition: 0.5s;
+        border: 5px solid var(--global-header-color);
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+    }
+    .link-nav p{
+        color: var(--global-header-color);
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .link-nav i{
+        font-size: 1.5em;
+        color: var(--global-header-color);
+    }
+}

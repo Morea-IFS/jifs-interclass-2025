@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>EDITAR USUÁRIO</h1>
+        </div>
+        <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="block-inputs-form">
+                <label for="name">Nome do usuário</label>
+                <input type="text" autocomplete="on" autocorrect="on" name="name" id="name" placeholder="{{ user_u.username }}" value="{{ user_u.username }}" required> 
+                {% if user.type == 0 or user.is_staff %}  
+                <label for="event">Evento</label>  
+                <select name="event" id="event" required>
+                    <option selected disabled>Selecione o evento</option required>
+                    {% for i in events %}
+                    <option value="{{i.id}}" {% if user_u.event_user.id == i.id %} selected {% endif %}>{{i.name}}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                <label for="type">Tipo de usuário</label>
+                <select name="type" id="type" required>
+                    <option selected disabled>Selecione o tipo</option required>
+                    {% for value, name in type_user %}
+                    <option value="{{value}}" {% if user_u.type == value %} selected {% endif %}>{{name}}</option>
+                    {% endfor %}
+                </select>
+                <label for="team" id="teamLabel" {% if user_u.type != 2 %} style="display: none;" {% endif %} >Time associado</label >
+                <select name="team" id="team" {% if user_u.type != 2 %} style="display: none;" {% endif %} required>
+                    <option selected disabled>Selecione o tipo</option required>
+                    {% for i in team %}
+                    <option value="{{i.id}}" {% if user_u.team.id == i.id %} selected {% endif %}>{{i.name}}</option>
+                    {% endfor %}
+                </select>
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" placeholder="{{user_u.email}}" value="{{user_u.email}}"/>
+                <label for="telephone">Telefone</label>
+                <input type="tel" id="telephone" name="telephone" maxlength="15" placeholder="{{user_u.telefone}}" value="{{user_u.telefone}}" />
+                <label for="active">Ativo</label>
+                <input type="checkbox" id="active" name="active" {% if user_u.is_active %} checked {% endif %} />
+                <label for="password">Senha</label>
+                <input type="password" id="password" autocomplete="on" autocorrect="on" name="password" placeholder="Para trocar a senha, digite a nova aqui. (opcional)">
+                <p>Para trocar clique aqui. (opcional)</p>
+                <label for="photo">Foto de Perfil (JPG, JPEG ou PNG). Para trocar clique aqui. (opcional)</label>
+                <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()">  
+                <p style="color: #6d6c6c; font-size: 15px;">*Para trocar clique aqui. (opcional)</p>
+
+                {% if user_u.photo %}
+                <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+                <img id="preview" src="{{ user_u.photo.url }}" alt="Foto atual"
+                    style="max-width: 150px; display: block; margin-top: 5px;" />
+                {% else %}
+                <img id="preview" style="max-width: 150px; display: none; margin-top: 5px;" />
+                {% endif %}
+                <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
+                    CONFIRMAR
+                </button>
+            </div>
+        </form>
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
+            <a href="{% url 'user_manage' %}">VOLTAR</a>
+        </button>
+    </section>
+</div>
+<script>
+function previewFoto() {
+    const input = document.getElementById('photo');
+    const preview_name = document.getElementById('preview-name');
+    const preview = document.getElementById('preview');
+
+    if (input.files && input.files[0]) {
+        preview_name.textContent = "Nova Fotografia:"
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview_name.textContent = "Fotografia atual:"
+        preview.src = '{{ user_u.photo.url }}';
+        preview.style.display = 'block';
+    }
+}
+</script>
+{% endblock content %}

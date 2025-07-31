@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Times Esportivos</title>
+    <style>
+        /* Reset e Estilos Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Cabeçalho */
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        /* Seções */
+        section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        /* Estatísticas */
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background-color: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            width: 30%;
+            min-width: 200px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 10px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        /* Formulários */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Abas */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background-color: #ddd;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .tab-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .stat-card {
+                width: 100%;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gestão de Times Esportivos</h1>
+            <p>Sistema de gerenciamento de times e esportes</p>
+        </header>
+        
+        <section>
+            <h2>Estatísticas Gerais</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Times Cadastrados</h3>
+                    <div class="stat-value" id="team-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Atletas Registrados</h3>
+                    <div class="stat-value" id="athlete-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Esportes Disponíveis</h3>
+                    <div class="stat-value" id="sport-count">0</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Times</h2>
+            <table id="teams-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Esporte</th>
+                        <th>Fundado em</th>
+                        <th>Nº de Atletas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão inseridos via JavaScript -->
+                </tbody>
+            </table>
+            
+            <button id="add-team-btn">Cadastrar Novo Time</button>
+            
+            <div id="team-form" style="display: none; margin-top: 20px;">
+                <h3>Cadastrar Time</h3>
+                <div class="form-group">
+                    <label for="team-name">Nome do Time:</label>
+                    <input type="text" id="team-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="team-sport">Esporte:</label>
+                    <select id="team-sport" required>
+                        <option value="">Selecione um esporte</option>
+                        <!-- Opções serão preenchidas via JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="team-founded">Fundado em:</label>
+                    <input type="date" id="team-founded" required>
+                </div>
+                <button id="save-team">Salvar Time</button>
+                <button id="cancel-team" style="background-color: #e74c3c;">Cancelar</button>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Esportes</h2>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="sports-list">Lista de Esportes</button>
+                <button class="tab-btn" data-tab="add-sport">Adicionar Esporte</button>
+            </div>
+            
+            <div class="tab-content active" id="sports-list">
+                <table id="sports-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Nº de Times</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="add-sport">
+                <div class="form-group">
+                    <label for="sport-name">Nome do Esporte:</label>
+                    <input type="text" id="sport-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="sport-type">Tipo:</label>
+                    <select id="sport-type" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="Coletivo">Coletivo</option>
+                        <option value="Individual">Individual</option>
+                    </select>
+                </div>
+                <button id="save-sport">Salvar Esporte</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Dados iniciais (simulando um banco de dados)
+        let sports = [
+            { id: 1, name: "Futebol", type: "Coletivo" },
+            { id: 2, name: "Basquete", type: "Coletivo" },
+            { id: 3, name: "Tênis", type: "Individual" }
+        ];
+        
+        let teams = [
+            { id: 1, name: "Time A", sportId: 1, founded: "2000-01-15", athletes: 20 },
+            { id: 2, name: "Time B", sportId: 2, founded: "1995-05-10", athletes: 15 }
+        ];
+        
+        // Atualiza as estatísticas
+        function updateStats() {
+            document.getElementById('team-count').textContent = teams.length;
+            document.getElementById('athlete-count').textContent = teams.reduce((sum, team) => sum + team.athletes, 0);
+            document.getElementById('sport-count').textContent = sports.length;
+        }
+        
+        // Atualiza a tabela de times
+        function updateTeamsTable() {
+            const tbody = document.querySelector('#teams-table tbody');
+            tbody.innerHTML = '';
+            
+            teams.forEach(team => {
+                const sport = sports.find(s => s.id === team.sportId);
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${team.id}</td>
+                    <td>${team.name}</td>
+                    <td>${sport ? sport.name : 'Desconhecido'}</td>
+                    <td>${new Date(team.founded).toLocaleDateString()}</td>
+                    <td>${team.athletes}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Atualiza a tabela de esportes
+        function updateSportsTable() {
+            const tbody = document.querySelector('#sports-table tbody');
+            tbody.innerHTML = '';
+            
+            sports.forEach(sport => {
+                const teamCount = teams.filter(team => team.sportId === sport.id).length;
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${sport.id}</td>
+                    <td>${sport.name}</td>
+                    <td>${sport.type}</td>
+                    <td>${teamCount}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Atualiza o dropdown de esportes
+        function updateSportsDropdown() {
+            const select = document.getElementById('team-sport');
+            select.innerHTML = '<option value="">Selecione um esporte</option>';
+            
+            sports.forEach(sport => {
+                const option = document.createElement('option');
+                option.value = sport.id;
+                option.textContent = sport.name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            updateTeamsTable();
+            updateSportsTable();
+            updateSportsDropdown();
+            
+            // Botão para mostrar formulário de time
+            document.getElementById('add-team-btn').addEventListener('click', () => {
+                document.getElementById('team-form').style.display = 'block';
+            });
+            
+            // Botão para cancelar cadastro de time
+            document.getElementById('cancel-team').addEventListener('click', () => {
+                document.getElementById('team-form').style.display = 'none';
+                document.getElementById('team-name').value = '';
+                document.getElementById('team-sport').value = '';
+                document.getElementById('team-founded').value = '';
+            });
+            
+            // Salvar novo time
+            document.getElementById('save-team').addEventListener('click', () => {
+                const name = document.getElementById('team-name').value;
+                const sportId = parseInt(document.getElementById('team-sport').value);
+                const founded = document.getElementById('team-founded').value;
+                
+                if (!name || !sportId || !founded) {
+                    alert('Preencha todos os campos!');
+                    return;
+                }
+                
+                const newTeam = {
+                    id: teams.length > 0 ? Math.max(...teams.map(t => t.id)) + 1 : 1,
+                    name,
+                    sportId,
+                    founded,
+                    athletes: 0
+                };
+                
+                teams.push(newTeam);
+                updateTeamsTable();
+                updateStats();
+                updateSportsTable();
+                
+                document.getElementById('team-form').style.display = 'none';
+                document.getElementById('team-name').value = '';
+                document.getElementById('team-sport').value = '';
+                document.getElementById('team-founded').value = '';
+            });
+            
+            // Salvar novo esporte
+            document.getElementById('save-sport').addEventListener('click', () => {
+                const name = document.getElementById('sport-name').value;
+                const type = document.getElementById('sport-type').value;
+                
+                if (!name || !type) {
+                    alert('Preencha todos os campos!');
+                    return;
+                }
+                
+                const newSport = {
+                    id: sports.length > 0 ? Math.max(...sports.map(s => s.id)) + 1 : 1,
+                    name,
+                    type
+                };
+                
+                sports.push(newSport);
+                updateSportsTable();
+                updateStats();
+                updateSportsDropdown();
+                
+                document.getElementById('sport-name').value = '';
+                document.getElementById('sport-type').value = '';
+                
+                // Mostra a lista de esportes após cadastrar
+                document.querySelector('.tab-btn[data-tab="sports-list"]').click();
+            });
+            
+            // Controle de abas
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove a classe active de todos os botões e conteúdos
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Adiciona a classe active ao botão clicado
+                    btn.classList.add('active');
+                    
+                    // Mostra o conteúdo correspondente
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,16 +5,18 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('home' , views.login, name = "home_public"),
-    path('placar' , views.scoreboard_public, name="scoreboard_public"),
-    path('scoreboard_projector', views.scoreboard_projector, name="scoreboard_projector"),
-    path('sobre', views.about_us, name="about_us"),
+    path('<int:event_id>' , views.home_public, name = "home_public"),
+    path('placar/<int:event_id>' , views.scoreboard_public, name="scoreboard_public"),
+    path('scoreboard_projector/<int:event_id>', views.scoreboard_projector, name="scoreboard_projector"),
+    path('sobre/<int:event_id>', views.about_us, name="about_us"),
     path('login' , views.login, name = "login"),
+    path('' , views.events_list, name = "events"),
     path('logout', views.sair, name='logout'),
-    path('', views.home_admin, name = "Home"),
+    path('morea-admin', views.home_admin, name = "Home"),
     path('manage/player', views.player_manage, name = "player_manage"),
     path('edit/player/<int:id>', views.player_edit, name = "player_edit"),
     path('manage/team', views.team_manage, name = "team_manage"),
+    path('manage/team/admin', views.team_manage_admin, name = "team_manage_admin"),
     path('edit/team/<int:id>', views.team_edit, name = "team_edit"),
     path('manage/player/team/<int:id>', views.team_players_manage, name = "team_players_manage"),
     path('edit/player/<int:id>/team/<int:team>', views.team_players_edit, name = "team_player_edit"),
@@ -24,26 +26,17 @@ urlpatterns = [
     path('register/match', views.matches_register, name = "matches_register"),
     path('games', views.games, name = "games"),
     path('attachments', views.attachments, name = "attachments"),
-    path('manage/technician', views.technician_manage, name = "technician_manage"),
-    path('register/technician', views.technician_register, name = "technician_register"),
-    path('edit/technician/<int:id>', views.technician_edit, name = "technician_edit"),
-    path('register/voluntary', views.voluntary_register, name = "voluntary_register"),
+    path('manage/user', views.user_manage, name = "user_manage"),
     path('manage/voluntary', views.voluntary_manage, name = "voluntary_manage"),
-    path('edit/voluntary/<int:id>', views.voluntary_edit, name = "voluntary_edit"),
-    path('general/data/<int:id>', views.general_data, name = "general_data"),
     path('scoreboard', views.scoreboard, name = "scoreboard"),
-    path('manage/projector', views.projector_manage, name="projector_manage"),
-    path('register/projector', views.projector_register, name="projector_register"),
     path('manage/banner', views.banner_manage, name="banner_manage"),
     path('register/banner', views.banner_register, name="banner_register"),
     path('players_match/<int:id>', views.players_match, name = "players_match"),
     path('players_in_teams/<int:id>', views.players_in_teams, name = "players_in_teams"),
-    path('timer/<int:id>', views.timer_page, name = "timer"),
-    path('upload/', views.upload_document, name='upload_document'),
-    path('dados/', views.boss_data, name='boss_data'),
-    path('termos/', views.terms_use, name='terms_use'),
+    path('upload', views.upload_document, name='upload_document'),
+    path('dados', views.boss_data, name='boss_data'),
+    path('termos', views.terms_use, name='terms_use'),
     path('erro404', views.page_in_erro404),
-    path('manage', views.manage, name="manage"),
     path('settings', views.settings, name="settings"),
 
     path('manage/statement', views.statement_manage, name="statement_manage"),
@@ -57,11 +50,16 @@ urlpatterns = [
     path('anexo_manage', views.anexo_manage, name="anexo_manage"),
     path('anexo_register', views.anexo_register, name="anexo_register"),
 
-    path('register_team', views.register_team, name="guiate_register_team"),
-    path('team/<str:sport_name>', views.team_sexo, name="guiate_team"),
-    path('players/<str:team_name>/<str:team_sexo>/<str:sport_name>', views.players_team, name="guiate_players_team"),
-    path('players/<str:team_name>/list/<str:team_sexo>/<str:sport_name>/', views.players_list, name="guiate_players_list"),
-    path('players/<str:team_name>/edit/<int:id>/<str:team_sexo>/<str:sport_name>/', views.player_list_edit, name = "player_list_edit"),
+    path('manage/event', views.event_manage, name="event_manage"),
+    path('teste', views.event_edit, name="event_edit"),
+    path('manage/sport', views.event_sport_manage, name="event_sport_manage"),
+    path('edit/sport', views.event_sport_edit, name="event_sport_edit"),
+
+    path('register_team/<int:event_id>', views.register_team, name="guiate_register_team"),
+    path('team/<str:sport_name>/<int:event_id>', views.team_sexo, name="guiate_team"),
+    path('players/<str:team_name>/<str:team_sexo>/<str:sport_name>/<int:event_id>', views.players_team, name="guiate_players_team"),
+    path('players/<str:team_name>/list/<str:team_sexo>/<str:sport_name>', views.players_list, name="guiate_players_list"),
+    path('players/<str:team_name>/edit/<int:id>/<str:team_sexo>/<str:sport_name>', views.player_list_edit, name = "player_list_edit"),
 
     path('dashboard', views.dashboard, name="dashboard"),
 
@@ -69,12 +67,9 @@ urlpatterns = [
     path('generator/certificate', views.generator_certificate, name="certificate"),
     path('generator/data', views.generator_data, name="data"),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
 
-"""
-    path('manage/sport', views.sport_manage, name = "sport_manage"),
-    path('register/sport', views.sport_register, name = "sport_register"),
-    path('edit/sport/<int:id>', views.sport_edit, name = "sport_edit"),
-    path('add_players_match/<int:id>', views.add_players_match, name = "add_players_match"),
-"""
+

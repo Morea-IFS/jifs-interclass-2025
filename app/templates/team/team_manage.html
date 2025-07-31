@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1">
+        <div class="title">
+            <h1>
+                {% if user.is_staff %} GERENCIAMENTO DE MODALIDADES {% else %} GERENCIAMENTO DE MODALIDADES CAMPUS {{campus.get_campus_display|upper}} {% endif %}
+            </h1>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -18,3 +18,5 @@ media/photo_voluntary/*
 media/document_boss/*
 media/photo_boss/*
 .env
+
+staticfiles

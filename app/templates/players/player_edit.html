@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>EDITAR JOGADOR DO CAMPUS <span style="color: #0051ff;">{{player.get_campus_display|upper}}</span></h1>
+        </div>
+        <div>
+            <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="block-inputs-form">
+                    <label for="name">Nome do atleta</label>
+                    <input type="text" autocomplete="on" id="name" autocorrect="on" name="name" {% if player.name %} placeholder="{{ player.name }}" {% else %} placeholder="Nome do jogador*" {% endif %} value="{{ player.name }}" required />
+                    <label for="registration">Matrícula</label>
+                    <input type="text" autocomplete="on" autocorrect="on" name="registration" {% if player.registration %} placeholder="{{ player.registration }}" value="{{ player.registration }}" {% else %} placeholder="Matrícula" {% endif %} required>
+                    <label for="cpf">CPF</label>
+                    <input type="text" autocomplete="on" autocorrect="on" name="cpf" id="cpf" {% if player.cpf %} placeholder="{{ player.cpf }}" value="{{ player.cpf }}" {% else %} placeholder="Cpf" {% endif %} required>
+                    <label for="sexos">Sexo</label>
+                    <select id="sexos" name="sexo">
+                        <option {% if player_disable %} selected disabled {% endif %} value="2"> Selecione o sexo
+                        </option>
+                        <option {% if player.sexo == 0 %} selected {% endif %} value="0">Masculino
+                        </option>
+                        <option {% if player.sexo == 1 %} selected {% endif %} value="1">Feminino</option>
+                    </select>
+                    <label for="fotos" id="label-foto" class="custom-file-button">Fotografia</label>
+                    <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+                    <p style="color: #6d6c6c; font-size: 15px;">
+                        *Anexe uma nova imagem apenas se quiser troca-la.
+                    </p>
+
+                    {% if player.photo %}
+                    <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+                    <img id="preview" src="{{ player.photo.url }}" alt="Foto atual"
+                        style="max-width: 150px; display: block; margin-top: 5px;" />
+                    {% else %}
+                    <img id="preview" style="max-width: 150px; display: none; margin-top: 5px;" />
+                    {% endif %}
+                    <button type="submit" class="side-bar-buttons-items2 custom-buttons-sport-nav">
+                        CONFIRMAR
+                    </button>
+                </div>
+            </form>
+        </div>
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color);">
+            <a href="{% url 'team_manage' %}" style="color: #ffffff; font-size: 25px;">VOLTAR</a>
+        </button>
+    </section>
+</div>
+<script>
+function previewFoto() {
+    const input = document.getElementById('photo');
+    const preview_name = document.getElementById('preview-name');
+    const preview = document.getElementById('preview');
+
+    if (input.files && input.files[0]) {
+        preview_name.textContent = "Nova Fotografia:"
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview_name.textContent = "Fotografia atual:"
+        preview.src = '{{ player.photo.url }}';
+        preview.style.display = 'block';
+    }
+}
+</script>
+{% endblock content %}

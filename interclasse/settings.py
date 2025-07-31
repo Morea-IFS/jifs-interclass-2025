@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -142,7 +143,21 @@ TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
+USE_L10N = True
+
 USE_TZ = True
+
+LANGUAGES = [
+    ('pt-br', 'Português'),
+    ('en', 'Inglês'),
+    ('es', 'Espanhol'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+AUTH_USER_MODEL = 'app.CustomUser'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -156,13 +171,14 @@ if (os.getenv("ENVIRONMENT") == 'DEV' or os.getenv("ENVIRONMENT") == 'dev'):
         os.path.join(BASE_DIR, 'static/')
     ]
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 elif (os.getenv("ENVIRONMENT") == 'PROD' or os.getenv("ENVIRONMENT") == 'prod'):
     STATICFILES_DIRS = [
         os.path.join(BASE_DIR, 'static/')
     ]
-    MEDIA_ROOT = '/var/www/html/jiifs/media/'
-    STATIC_ROOT = '/var/www/html/jiifs/static'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 

@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1" style="justify-content: start;">
+        <div class="title">
+            <h1>GERENCIAMENTO DOS USUÁRIOS</h1>
+        </div>
+        {% if perms.app.add_customuser %}
+        <button onclick="openModal()" class="side-bar-buttons-items2 custom-buttons-sport-nav">
+            <p> CADASTRAR USUÁRIO </p>
+        </button>
+        {% endif %}
+        <br><br>
+        <div class="all-manage">
+            {% for event in events %}
+                {% if event.user_set.all %}
+                <div  style="width: 100%;">
+                    <br>  
+                    <p class="title-table-event">{{event.name}}</p>
+                    <br>
+                    <section class="all-table" style="width: 100%;">
+                        <table id="search-table" style="width: 100%;">
+                            <tr class="hidden">
+                                <th>NOME</th>
+                                <th>TIPO</th>
+                                <th>TIME</th>
+                                <th>FOTO</th>
+                                <th>EMAIL</th>
+                                {% if perms.app.change_customuser %}
+                                <th>EDITAR</th>
+                                {% endif %}
+                                {% if perms.app.delete_customuser %}
+                                <th>DELETAR</th>
+                                {% endif %}
+                            </tr>
+                            {% for i in event.user_set.all %}
+                            <tr>
+                                <td>
+                                    <a>{{ i.username }}</a>
+                                </td>
+                                <td>{{i.get_type_display}}</td>
+                                <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
+                                <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                                <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
+                                {% if perms.app.change_customuser %}
+                                <td>
+                                    <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}','{{ i.is_active }}')" src="{% static 'images/icon-edit.svg' %}">
+                                </td>
+                                {% endif %}
+                                {% if perms.app.delete_customuser %}
+                                <td>
+                                    <form method="POST" action="">
+                                        {% csrf_token %}
+                                        <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
+                                            <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                                        </button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <style>
+                                .hidden {
+                                    display: none;
+                                }
+                            </style>
+                            <div class="title2">
+                                <h2>NÃO HÁ NENHUM GESTOR CADASTRADO <br> <span style="font-size: 20px;">Os gestores tem acesso ao sistema!</span></h2>
+                            </div>
+                            {% endfor %}
+                        </table>
+                    </section>
+                </div>
+                {% endif %}
+            {% endfor %}
+            {% if user.type == 0 %}
+            <div style="width: 100%;">
+                <br>  
+                <p class="title-table-event hidden">USUÁRIOS SEM EVENTO</p>
+                <br>
+                <section class="all-table" style="width: 100%;">
+                    <table id="search-table" style="width: 100%;">
+                        <tr class="hiddden">
+                            <th>NOME</th>
+                            <th>TIPO</th>
+                            <th>TIME</th>
+                            <th>FOTO</th>
+                            <th>EMAIL</th>
+                            {% if perms.app.change_customuser %}
+                            <th>EDITAR</th>
+                            {% endif %}
+                            {% if perms.app.delete_customuser %}
+                            <th>DELETAR</th>
+                            {% endif %}
+                        </tr>
+                        {% for i in users_none %}
+                        <tr>
+                            <td>
+                                <a>{{ i.username }}</a>
+                            </td>
+                            <td>{{i.get_type_display}}</td>
+                            <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
+                            <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                            <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
+                            <td>
+                                {% if not i.type_i == 4 or user.is_staff %}
+                                    <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}'),'{{ i.is_active }}'" src="{% static 'images/icon-edit.svg' %}">
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
+                                        <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <style>
+                            .hiddden {
+                                display: none;
+                            }
+                        </style>
+                        {% endfor %}
+                    </table>
+                </section>
+            </div>
+            {% endif %}
+            <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
+                <a href="{% url 'settings' %}">VOLTAR</a>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Cadastrar usuário</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="name">*Nome do usuário</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="name" id="name" placeholder="Nome do usuário" required>
+            <label for="password">*Senha</label>
+            <input type="password" id="password" autocomplete="on" autocorrect="on" name="password" placeholder="Senha" required>
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="exemplo@dominio.com" />
+            <label for="telephone">Telefone</label>
+            <input type="tel" id="telephone" name="telephone" maxlength="15" placeholder="(00) 00000-0000" />
+            <label for="photo">*Foto de Perfil (JPG, JPEG ou PNG)</label>
+            <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" required>  
+            {% if user.type == 0 or user.is_staff %} 
+            <label for="event">*Evento</label>  
+            <select name="event" id="event" required>
+                <option value="0">Selecione o evento</option required>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <label for="type">*Tipo de usuário</label>
+            <select name="type" id="type" required>
+                <option selected disabled>Selecione o tipo</option required>
+                {% for value, name in type_user %}
+                <option value="{{value}}">{{name}} - {{value}}</option>
+                {% endfor %}
+            </select>
+            <label for="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="teamLabel" {% endif %} style="display: none;" >Time associado</label >
+            <select name="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="team" {% endif %} required style="display: none;">
+                <option selected disabled>Selecione o time</option required>
+                {% for i in team %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Voluntário -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Editar usuário</h2>
+        <form method="post" enctype="multipart/form-data" id="editForm">
+            {% csrf_token %}
+            <input type="hidden" id="editUserId" name="user_id">
+
+            <label for="name">*Nome do usuário</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="name" id="editUserName" placeholder="Nome do usuário" required> 
+            <label for="password">Senha</label>
+            <input type="password" id="editUserPassword" autocomplete="on" autocorrect="on" name="password" placeholder="Senha">
+            <label for="active">Ativo</label>
+            <input type="checkbox" id="editUserActive" name="active"/>
+            <label for="email">E-mail</label>
+            <input type="email" id="editUserEmail" name="email" placeholder="exemplo@dominio.com" />
+            <label for="telephone">Telefone</label>
+            <input type="tel" id="editUserTelephone" name="telephone" maxlength="15" placeholder="(00) 00000-0000" />
+            <label for="photo">*Foto de Perfil</label>
+            <input type="file" name="photo" id="editUserPhoto" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+            <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+            <img id="preview" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
+            {% if user.type == 0 or user.is_staff %} 
+            <label for="event">*Evento</label>  
+            <select name="event" id="editEventSelect" required>
+                <option value="0">Selecione o evento</option required>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <label for="type">*Tipo de usuário</label>
+            <select name="type" id="editTypeSelect" required>
+                <option selected disabled>Selecione o tipo</option required>
+                {% for value, name in type_user %}
+                <option value="{{value}}">{{name}}</option>
+                {% endfor %}
+            </select>
+            {% if user.type == 0 or user.type == 1 or user.is_staff %}
+            <label for="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="editTeamLabel" {% endif %} style="display: none;" >Time associado</label >
+            <select name="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="editTeamSelect" {% endif %} required style="display: none;">
+                <option selected disabled>Selecione o time</option required>
+                {% for i in team %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <button type="submit">Salvar Alterações</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById("telephone").addEventListener("input", function (e) {
+        let input = e.target;
+        let digits = input.value.replace(/\D/g, "").substring(0, 11); // Apenas números, até 11 dígitos
+        let formatted = "";
+
+        if (digits.length > 0) {
+            formatted += "(" + digits.substring(0, 2);
+        }
+        if (digits.length >= 3) {
+            formatted += ") ";
+            if (digits.length <= 6) {
+                formatted += digits.substring(2);
+            } else if (digits.length <= 10) {
+                formatted += digits.substring(2, 6) + "-" + digits.substring(6);
+            } else {
+                formatted += digits.substring(2, 7) + "-" + digits.substring(7);
+            }
+        }
+        input.value = formatted;
+    });
+
+    document.getElementById("editUserTelephone").addEventListener("input", function (e) {
+        let input = e.target;
+        let digits = input.value.replace(/\D/g, "").substring(0, 11); // Apenas números, até 11 dígitos
+        let formatted = "";
+
+        if (digits.length > 0) {
+            formatted += "(" + digits.substring(0, 2);
+        }
+        if (digits.length >= 3) {
+            formatted += ") ";
+            if (digits.length <= 6) {
+                formatted += digits.substring(2);
+            } else if (digits.length <= 10) {
+                formatted += digits.substring(2, 6) + "-" + digits.substring(6);
+            } else {
+                formatted += digits.substring(2, 7) + "-" + digits.substring(7);
+            }
+        }
+        input.value = formatted;
+    });
+
+    const typeSelect = document.getElementById("editTypeSelect");
+    const team = document.getElementById("editTeamSelect");
+    const teamLabel = document.getElementById("editTeamLabel");
+
+    if (typeSelect) {
+        typeSelect.addEventListener("input", function (e) {
+            const value = e.target.value;
+            if (value == "2") {
+                console.log("libera ela")
+                team.style.display = 'flex';
+                teamLabel.style.display = 'flex';
+            } else {
+                team.style.display = 'none';
+                teamLabel.style.display = 'none';
+            }
+        });
+    }
+    function openModal() {
+        document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("eventModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById("eventModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Variável para guardar a URL da imagem original
+    let originalPhotoUrl = '';
+
+    function openEditModal(id, name, eventId, typeVoluntary, email, telephone, photoUrl, active) {
+        // Guarda a URL original
+        originalPhotoUrl = photoUrl || '';
+        
+        // Resetar o input de foto
+        const photoInput = document.getElementById('editUserPhoto');
+        photoInput.value = '';
+        
+        // Preencher os campos do formulário
+        document.getElementById("editUserId").value = id;
+        document.getElementById("editUserName").value = name;
+        document.getElementById("editUserEmail").value = email;
+        document.getElementById("editUserTelephone").value = telephone;
+        if (active == 'True'){
+            document.getElementById("editUserActive").checked = true;
+        }
+            
+        
+
+        // Configurar selects
+        const typeSelect = document.getElementById("editTypeSelect");
+        if (typeSelect) {
+            Array.from(typeSelect.options).forEach(option => {
+                option.selected = option.value === typeVoluntary;
+            });
+        }
+
+        const eventSelect = document.getElementById("editEventSelect");
+        if (eventSelect) {
+            Array.from(eventSelect.options).forEach(option => {
+                option.selected = option.value === eventId;
+        });
+        }
+
+        // Mostrar a imagem original
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+        
+        if (originalPhotoUrl) {
+            preview.src = originalPhotoUrl;
+            preview.style.display = 'block';
+            previewName.textContent = "Fotografia atual:";
+        } else {
+            preview.style.display = 'none';
+            previewName.textContent = "Nenhuma fotografia cadastrada";
+        }
+
+        document.getElementById("editModal").style.display = "block";
+    }
+
+    function previewFoto() {
+        const input = document.getElementById('editUserPhoto');
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+
+        if (input.files && input.files[0]) {
+            // Mostrar nova imagem selecionada
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                previewName.textContent = "Nova fotografia:";
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            if (originalPhotoUrl) {
+                preview.src = originalPhotoUrl;
+                preview.style.display = 'block';
+                previewName.textContent = "Fotografia atual:";
+            } else {
+                preview.style.display = 'none';
+                previewName.textContent = "Nenhuma fotografia cadastrada";
+            }
+        }
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById("editModal");
+        modal.style.display = "none";
+
+        // Resetar tudo
+        const form = document.getElementById("editForm");
+        form.reset();
+        
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+        const photoInput = document.getElementById('editUserPhoto');
+        
+        photoInput.value = '';
+        preview.style.display = 'none';
+        previewName.textContent = "Nenhuma fotografia selecionada";
+        originalPhotoUrl = '';
+
+        // Resetar selects
+        ['editTypeSelect', 'editEventSelect'].forEach(id => {
+            const select = document.getElementById(id);
+            if (select) select.selectedIndex = 0;
+        });
+    }
+</script>
+
+{% endblock content %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>CADASTRO DE MEMBRO DA COMISSÃO TÉCNICA</h1>
+        </div>
+        <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="block-inputs-form">
+                <label for="nome">*Nome Completo</label>
+                <input type="text" autocomplete="on" autocorrect="on" name="name" placeholder="Insira o nome"
+                required>
+                <label for="nome">*Matrícula, siape ou CPF</label>
+                <input type="text" autocomplete="on" autocorrect="on" name="registration"
+                placeholder="Matrícula, siape ou CPF." required>
+                <p style="color: #6d6c6c; font-size: 15px;">*Matricula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.</p>
+                <label for="nome">*Função</label>
+                <select name="type_voluntary" required>
+                    <option selected disabled>Selecione a função</option required>
+                    {% for value, name in types %}
+                    <option value="{{value}}">{{name}}</option>
+                    {% endfor %}
+                </select>
+                {% if user.is_staff %}
+                <label for="nome">*Usuário</label>
+                <select id="user_admin" name="user">
+                    <option selected disabled>Selecione o usuário admin</option>
+                    {% for i in users %}
+                    <option value="{{i.id}}">{{i}}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                {% if not user.event_user %}
+                <label for="nome">*Evento</label>
+                <select id="user_admin" name="event">
+                    <option selected disabled>Selecione o evento</option>
+                    {% for i in events %}
+                    <option value="{{i.id}}">{{i.name}}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                <label for="imagem">*Fotografia</label>
+                <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
+                <button type="submit" class="side-bar-buttons-items2 custom-buttons-sport-nav">
+                    CONFIRMAR
+                </button>
+            </div>
+        </form>
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
+            <a href="{% url 'voluntary_manage' %}">VER MINHA COMISSÃO TÉCNICA</a>
+        </button>
+    </section>
+</div>
+{% endblock content %}

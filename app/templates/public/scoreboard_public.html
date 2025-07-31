@@ -1,0 +1,249 @@
+{%load static%}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+        <link
+            rel="stylesheet"
+            href="{% static 'css/public/scoreboard.css' %}"
+        />
+        <title>JIIFS PLACAR</title>
+    </head>
+    <body>
+        <style>
+            .hidden{
+                display: none;
+            }
+        </style>
+        <div class="modal-mobile mobile"></div>
+        <header>
+            <nav>
+                <img
+                    class="logo-jiifs"
+                    src="{% static 'images/morea-sports.png' %}"
+                    alt="JIIFS"
+                />
+                <ul>
+                    <li class="item-close mobile">
+                        <img
+                            class="icon-close mobile"
+                            src="{% static 'images/icon-close.svg' %}"
+                            alt="Menu"
+                        />
+                    </li>
+                    <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
+                    <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
+                    <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
+                    <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
+                    <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                    <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
+                </ul>
+                <img
+                    class="icon-burguer"
+                    src="{% static 'images/icon-burguer.svg' %}"
+                    alt="Menu"
+                />
+            </nav>
+        </header>
+        <main>
+            <section class="scoreboard">
+                <div class="teams">
+                    <div id="team_a_color" style=" background-color: {% if team_match_a.team.hexcolor %} {{team_match_a.team.hexcolor}} {% else %} blue {% endif %}" class="team-a">
+                        <div class="title-team">
+                            <img id="photo-team-a" {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;"alt="foto time a"/>
+                            <h2 id="team-a">{% if team_match_a.team.name %} {{team_match_a.team.name}} {% else %} TEAM A {% endif %}</h2>
+                        </div>
+                        <div class="score-team">
+                            <p class="score"><span id="points-a">{% if point_a %} {{point_a}} {% else %} 0 {% endif %}</span></p>
+                        </div>
+                    </div>
+                    <div id="team_b_color" style=" background-color: {% if team_match_b.team.hexcolor %} {{team_match_b.team.hexcolor}} {% else %} red {% endif %}" class="team-b">
+                        <div class="title-team">
+                            <h2 id="team-b">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %} </h2>
+                            <img id="photo-team-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt="foto time b"/>
+                            
+                        </div>
+                        <div class="score-team">
+                            <p class="score"><span id="points-b">{% if point_b %} {{point_b}} {% else %} 0 {% endif %}</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-game live">
+                    <img
+                        src="{% static 'images/icon-live.png' %}"
+                        alt=""
+                        aria-hidden="true"
+                    />
+                    <p>Live</p>
+                </div>
+                <div class="sets-or-time">
+                    <div class="title-set">
+                        <p id="name-scoreboard">{% if name_scoreboard %} {{name_scoreboard}} {% else %} Placar {% endif %}</p>
+                    </div>
+                    <p class="time-and-sets-counter">
+                        <span id="timer">{% if match %} {{time_sets_a}} {% else %} 00:00 {% endif %}</span>
+                        <span id="sets-team-b" style="{% if match.sport == 1 %}display: flex;{% else %}display: none;{% endif %}">{% if match %} {{sets_b}} {% else %} 0 {% endif %}</span>
+                </div>
+                <div class="ball-sport">
+                    <img id="ball-sport" src="{{ball_sport}}" alt="" />
+                </div>
+                <div class="gender-of-game feminine">
+                    <img id="img-sexo" src="{{img_sexo}}" alt="" /><p id="sexo-color" style="color: {{sexo_color}};">{% if match %} {{match.get_sexo_display}} {% else %} MOREA SPORTS {% endif %}</p>
+                </div>
+            </section>
+            <section class="information">
+                <nav>
+                    <ul>
+                        <li class="stats">Estatísticas</li>
+                        <li class="players active">Jogadores</li>
+                        <li class="events">Eventos</li>
+                    </ul>
+                </nav>
+                <div class="information-container">
+                    <div class="stats-content">
+                        <div class="foul">
+                            <span id="team_a2_color"
+                            style=" background-color: {% if team_match_a.team.hexcolor %} {{team_match_a.team.hexcolor}} {% else %} #02007a {% endif %}"
+                                class="foul-team-a"
+                                >{% if lack_a %} {{lack_a}} {% else %} 0 {% endif %}</span
+                            >
+                            <p>Faltas</p>
+                            <span id="team_b2_color"
+                                style=" background-color: {% if team_match_b.team.hexcolor %} {{team_match_b.team.hexcolor}} {% else %} #d10000 {% endif %}"
+                                class="foul-team-b"
+                                >{% if lack_b %} {{lack_b}} {% else %} 0 {% endif %}</span
+                            >
+                        </div>
+                        <div class="aces">
+                            <span id="team_a3_color"
+                                style="background-color: {% if team_match_a.team.hexcolor %} {{team_match_a.team.hexcolor}} {% else %} #02007a {% endif %}""
+                                class="aces-team-a"
+                                >{% if aces_or_card_a %} {{aces_or_card_a}} {% else %} 0 {% endif %}</span
+                            >
+                            <p id="aces-or-card">{% if aces_or_card %} {{aces_or_card}} {% else %} Cartões {% endif %}</p>
+                            <span id="team_b3_color"
+                                style="background-color: {% if team_match_b.team.hexcolor %} {{team_match_b.team.hexcolor}} {% else %} #d10000 {% endif %}"
+                                class="aces-team-b"
+                                >{% if aces_or_card_b %} {{aces_or_card_b}} {% else %} 0 {% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="players-content">
+                        <div class="team-display">
+                            <img id="photo-team-a-b" {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt=""/>
+                            <span> - </span>
+                            <img id="photo-team-b-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt=""/>
+                        </div>
+                        
+                        <div class="players-lists">
+                            <ul class="list-team-a">
+                                
+                                {% for i in players_match_a %}
+
+                                <li id="team_a4_color" style="border: 2px solid {{team_match_a.team.hexcolor}}">
+                                    <div class="player-photo">
+                                        <img
+                                            {% if i.player.photo %} src="{{ i.player.photo.url }}" {% else %} src="{% static 'images/person.png' %}" {% endif %}
+                                            alt="foto de {{i.player.name}}"
+                                            aria-hidden="true"
+                                            class="photo"
+                                        />
+                                    </div>
+                                    
+                                    <div class="player-text-informations">
+                                        <p class="player-name">
+                                            <span>{{i.player.name}} (N° {{i.player_number}} )</span>
+                                        </p>
+                                        <div class="player-instagram">
+                                            <img
+                                                src="{% static 'images/logo-morea-sports.svg' %}"
+                                                alt=""
+                                                aria-hidden="true"
+                                                class="instagram"
+                                            />
+                                            {% if i.player.instagram %}<a href="https://www.instagram.com/{{i.player.instagram}}/?utm_source=ig_web_button_share_sheet">@{{i.player.instagram}}</a>{% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <ul class="list-team-b" id="player_list">
+                                {% for i in players_match_b %}
+                                <li id="team_b4_color" style="border: 2px solid {{team_match_b.team.hexcolor}}">
+                                    <div class="player-photo">
+                                        <img {% if i.player.photo %} src="{{i.player.photo.url}}" {% else %} src="{% static 'images/person.png' %}" {% endif %} alt="" aria-hidden="true" class="photo"/>
+                                    </div>
+                                   
+                                    <div class="player-text-informations">
+                                        <p class="player-name">
+                                            {{i.player.name}} <span>(N°{{i.player_number}})</span>
+                                        </p>
+                                        <div class="player-instagram">
+                                            <img
+                                                src="{% static 'images/icon-instagram.png' %}"
+                                                alt=""
+                                                aria-hidden="true"
+                                                class="instagram"
+                                            />
+                                            <a href="#">@{{i.player.instagram}}</a>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            
+                        </div>
+                    </div>
+                    <style>
+                        .events{
+                            color: white;
+                            font-size: 20px;
+                        }
+                        .ff{
+                            color: #0F0F0F;
+                        }
+                    </style>
+                    <div class="events-content">
+                        <ul class="icon">
+                            {% for i in events %}
+                                <li><p class="events"><strong><img class="icon-list" src="{% if i.name == "Cartão vermelho" %}{% static 'images/icon-red-card.png' %}{% elif i.name == "Cartão amarelo" %}{% static 'images/icon-yellow-card.png' %}{% elif i.name == "Assistência" %}{% static 'images/icon-assis-to.png' %}{% elif i.name == "Falta" %}{% static 'images/icon-whistle.png' %}{% endif %}"> {{i.name}}</strong>: {{i.details}}</p><br></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <style>
+                        .icon-list {
+                            mix-blend-mode: lighten;
+                            width: 1em;
+                        }
+                        .icon{
+                            list-style-type: none;
+                        }
+                    </style>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <img
+                src="{% static 'images/logo-ifs-white.png' %}"
+                alt=""
+                class="logo-ifs"
+            />
+            <img
+                src="{% static 'images/logo-morea-colorful.svg' %}"
+                alt=""
+                class="logo-ifs"
+            />
+        </footer>
+        <script src="{% static 'js/scoreboard_public.js' %}"></script>
+        <script src="{% static 'js/timer.js' %}"></script>
+        <script>
+            {% if seconds %}
+            stopwatch({{seconds}}, {{status}})
+            {% endif %}
+        </script>
+    </body>
+</html>

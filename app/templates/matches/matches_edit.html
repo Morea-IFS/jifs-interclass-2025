@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+
+
+{% endblock navbar %}
+
+{% block register %}
+
+{% endblock register %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>EDITAR PARTIDAS</h1>
+        </div>
+        <form id="function_validate_form" class="block-inputs" method="post">{% csrf_token %}
+            <div class="block-inputs-form">
+                <div>
+                    <select id="esporte" name="sport">
+                        <option selected disabled value="None">
+                            Selecione o esporte
+                        </option>
+                        {% for value, name in sport %}
+                        <option {% if match.sport == value %} selected {% endif %} value="{{ value }}">
+                            {{ name }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+                    <select id="sexos" name="sexo">
+                        <option {% if match_disable %} selected disabled {% endif %} value="None">
+                            Selecione o sexo
+                        </option>
+                        <option {% if match.sexo == 0 %} selected {% endif %} value="0">Masculino</option>
+                        <option {% if match.sexo == 1 %} selected {% endif %} value="1">Feminino</option>
+                    </select>
+                    <select id="time-a" name="team_a" required>
+                        <option selected disabled value="0">
+                            Selecione o time
+                        </option>
+                        {% for i in team %}
+                        <option {% if team_match_a.team == i %} selected {% endif %} value="{{i.id}}">{{i.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="times-b" name="team_b" required>
+                        <option selected disabled value="0">
+                            Selecione o time
+                        </option>
+                        {% for i in team %}
+                        <option {% if team_match_b.team == i %} selected {% endif %} value="{{i.id}}">{{i.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <input {% if match.time_match %} value="{{match.time_match|date:'Y-m-d\TH:i'}}"  {% endif %} class="input-data" type="datetime-local" name="datetime" id="date-game" />
+                </div>
+                <div>
+                    <input class="input-confirm" type="submit" value="Confirmar" />
+                </div>
+            </div>
+        </form>
+        <form id="function_validate_form_delete" class="block-inputs" method="post">
+            {% csrf_token %}
+            <div class="block-inputs-form">
+                <input class="input-delete" type="submit" value="Excluir" name="excluir" />
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock content %}

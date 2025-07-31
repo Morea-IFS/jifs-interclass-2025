@@ -1,8 +1,7 @@
 {% load static %}
-
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +10,7 @@
     <link rel="stylesheet" href="{% static 'css/navbar-layout.css' %}" />
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
     {% block head %}
-    <title>Title</title>
+    <title>MOREA ATUM</title>
     {% endblock head %}
 </head>
 
@@ -24,59 +23,126 @@
                 <span class="line second-line"></span>
             </div>
             <section class="side-bar">
-                <img class="side-bar-logo" src="{% static 'images/morea-sports-white.svg' %}" alt="Logo Placeholder" />
+                <img class="side-bar-logo" {% if useer.event_user %} src="{{user.event_user.logo.url}}" {% else %} src="{% static 'images/morea-sports-white.svg' %}" {% endif %} alt="Logo Placeholder" />
                 <div class="side-bar-top">
                     <div class="side-bar-buttons">
-                        <a href="{% url 'Home' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-house"></i>INICIO</button>
+                        <a class="side-init" href="{% url 'Home' %}">
+                            <button class="side-bar-buttons-items"><i class="fa-solid fa-house"></i>{% trans "INÍCIO" %}</button>
                         </a>
-                        <a href="{% url 'manage' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-compass"></i>MENU</button>
-                        </a>
-                        {% block navbar %}
 
-                        {% endblock navbar %}
-                        <a href="{% url 'attachments' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-file-pdf"></i>ANEXOS</button>
-                        </a>
-                        <a href="{% url 'settings' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-gear"></i>CONFIG</button>
-                        </a> 
+                        {% if perms.app.view_events %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-calendar-days"></i>{% trans "EVENTOS" %}
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_event %}
+                                <a href="{% url 'event_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>{% trans "VER OS EVENTOS" %}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if perms.app.view_team_sport %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-volleyball"></i>{% trans "TIMES" %}
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_team_sport %}
+                                <a {% if user.type == 0 or user.type == 1 %} href="{% url 'team_manage_admin' %}" {% else %} href="{% url 'team_manage' %}" {% endif %}><span class="submenu-marker">└─</span><i class="fa-solid fa-users"></i>{% trans "MEUS TIMES" %}</a>
+                                {% endif %}
+                                {% if perms.app.view_player %}
+                                <a href="{% url 'player_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-user"></i>{% trans "ATLETAS" %}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if perms.app.view_voluntary or perms.app.add_voluntary %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-users"></i>{% trans "EQUIPE" %}
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_voluntary %}
+                                <a href="{% url 'voluntary_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-people-group"></i>{% trans "MINHA EQUIPE" %}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if perms.app.view_match or perms.app.add_match %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-users-rectangle"></i>{% trans "PARTIDAS" %}
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if perms.app.view_match %}
+                                <a href="{% url 'games' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>{% trans "MINHAS PARTIDAS" %}</a>
+                                {% endif %}
+                                {% if perms.app.add_match %}
+                                <a href="{% url 'matches_register' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-plus"></i>{% trans "REGISTRAR" %}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- OUTROS -->
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-compass"></i>{% trans "OUTROS" %}
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if not user.type == 3 %}
+                                <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>{% trans "CRACHÁS" %}</a>
+                                {% endif %}
+                                {% if perms.app.data %}
+                                <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>{% trans "RELATÓRIOS" %}</a>
+                                {% endif %}
+                                {% if perms.app.view_certificate and perms.app.add_certificate %}
+                                <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>{% trans "CERTIFICADOS" %}</a>
+                                {% endif %}
+                                {% if not user.type == 3 %}
+                                <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>{% trans "ANEXOS" %}</a>
+                                {% endif %}
+                                <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>{% trans "CONFIGURAÇÕES" %}</a>
+                            </div>
+                        </div>
+
+                        {% block navbar %}{% endblock navbar %}
+
                         <a class="exit-hover" href="{% url 'logout' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
+                            <button class="side-bar-buttons-items"><i class="fa-solid fa-right-from-bracket"></i>{% trans "SAIR" %}</button>
                         </a>
                     </div>
                 </div>
                 <div class="side-bar-bottom">
-                    {% block register %}
-                    {% endblock register %}
-                    <div class="logos">
-                        <a href="https://ifs.edu.br"><img class="logos-items" src="{% static 'images/logo-ifs-black.svg' %}" alt="Logo IFS" /></a>
-                        <a href="https://morea-ifs.org"><img class="logos-items" src="{% static 'images/logo-jiifs-2025-black.png' %}" alt="Logo Morea" /></a>
-                    </div>
+                    {% block register %}{% endblock register %}
                     <div class="user-account">
                         <p><i class="fa-solid fa-user"></i> {{ user.username }}</p>
                     </div>
                 </div>
-
             </section>
-            {% block content %}
-
-            {% endblock content %}
+            {% block content %}{% endblock content %}
         </div>
     </main>
+
+    <script>
+
+    </script>
+
     <ul class="notifications"></ul>
     <script src="{% static 'js/messages.js' %}"></script>
-    {% if messages %}
-    {% for message in messages %}
-        <script>
-            createToast("{{ message.tags }}", "{{ message }}");
-        </script>
-    {% endfor %}
-    {% endif %}
-    <script src="{% static 'js/script.js' %}"></script>
-    {% block scripts %}
-    {% endblock scripts %}
-</body>
 
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                createToast("{{ message.tags }}", "{{ message }}");
+            </script>
+        {% endfor %}
+    {% endif %}
+
+    <script src="{% static 'js/script.js' %}"></script>
+    {% block scripts %}{% endblock scripts %}
+</body>
 </html>

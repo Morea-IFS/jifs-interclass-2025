@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/home_admin_adm.css' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+{% endblock navbar %}
+
+{% block content %}
+<script>
+    function mostrarPopup() {
+        document.getElementById("popupAviso").style.display = "block";
+    }
+
+    function fecharPopup() {
+        document.getElementById("popupAviso").style.display = "none";
+    }
+</script>
+<div id="popupAviso" class="popup">
+    <div class="popup-content">
+        <img src="{{imagem.image.url}}" alt="{% trans 'Imagem de aviso' %}">
+        <button onclick="fecharPopup()">{% trans "Fechar a mensagem" %}</button>
+    </div>
+</div>
+<div class="all-block" style="flex-direction: column; display: flex; align-items: center;">
+    {% if ins %}
+    <div class="notices">
+        <marquee>{% blocktrans %}O período de inscrições do JIFS vai até dia {{ins.end}}, não deixe para última hora!{% endblocktrans %}</marquee>
+    </div>
+    {% endif %}
+    {% if imagem %}
+    <script>
+        mostrarPopup()
+    </script>
+    {% endif %}
+    <section class="about-morea">
+        <div class="content">
+            <h1>{% trans "Mais Um Projeto" %} <span class="stroke-morea">MOREA</span></h1>
+            <p>{% trans "Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto" %}</p>
+            <p>{% trans "Veja mais em nosso" %} <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">{% trans "site" %}</a>.</p>
+        </div>
+        <div class="img-morea">
+            <img src="{% static 'images/logo-morea-sports.svg' %}" alt="" aria-hidden="true" />
+        </div>
+    </section>
+    <br><br><br>
+    <section class="about-data-container">
+        <div class="data-info">
+            <p class="data-info-title">EVENTOS</p>
+            <p class="data-info-number">{{total_events}}</p>
+            <p class="data-info-description">Quantidade de eventos</p>
+            <i class="fa-solid fa-calendar-days"></i>
+        </div>
+        <div class="data-info">
+            <p class="data-info-title">TIMES</p>
+            <p class="data-info-number">{{total_teams}}</p>
+            <p class="data-info-description">Times cadastrados no sistema</p>
+            <i class="fa-solid fa-volleyball"></i>
+        </div>
+        <div class="data-info">
+            <p class="data-info-title">ATLETAS</p>
+            <p class="data-info-number">{{total_players}}</p>
+            <p class="data-info-description">Quantidade de atletas</p>
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="data-info">
+            <p class="data-info-title">USUÁRIOS</p>
+            <p class="data-info-number">{{total_users}}</p>
+            <p class="data-info-description">Quantidade de usuários</p>
+            <i class="fa-solid fa-user"></i>
+        </div>
+    </section>
+    <br><br><br>
+    <section class="all-table">
+        <div class="title-home-admin">
+            EVENTOS ESPORTIVOS
+        </div>
+        <table id="search-table">
+            <tr class="hidden error">
+                <th>ID</th>
+                <th>NOME</th>
+                <th>DESCRIÇÃO</th>
+                <th>INÍCIO</th>
+                <th>FIM</th>
+                <th>CONCLUÍDO</th>
+            </tr>
+
+            {% for i in event %}
+            <tr>
+                <td>{{ i.id }}</td>
+                <td>{{ i.name }}</td>
+                <td>{{ i.description }}</td>
+                <td>{{ i.date_init }}</td>
+                <td>{{ i.date_end }}</td>
+                <td>{% if i.active %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"></td>{% endif %}
+            </tr>
+            {% empty %}
+            <style>
+                .hidden {
+                    display: none;
+                }
+            </style>
+            <p>Não há nenhum evento esportivo cadastrado no momento.</p>
+            {% endfor %}
+        </table>
+    </section>
+    <br><br><br>
+    <div class="title-home-admin">
+        AVISOS
+    </div>
+    <section class="alert-page">
+        <div class="alert-img">
+           <i class="fa-solid fa-circle-exclamation"></i> 
+        </div>
+        <div class="alert-text">
+            <p>LEMBRE SEMPRE DE OLHAR O E-MAIL OFICIAL DE SUPORTE DO SISTEMA.</p>
+        </div>
+    </section>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <style>
+        .popup {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .popup-content {
+            position: relative;
+            width: 400px;
+            max-width: 90%;
+            margin: 10% auto;
+            padding: 0;
+            background-color: transparent;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px #000;
+        }
+
+        .popup-content img {
+            width: 100%;
+            display: block;
+        }
+
+        .popup-content button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 16px;
+            border: none;
+            background-color: red;
+            color: white;
+            font-weight: bold;
+            border-radius: 5000px;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .popup-content button:hover {
+            background-color: darkred;
+        }
+    </style>
+</div>
+{% endblock content %}

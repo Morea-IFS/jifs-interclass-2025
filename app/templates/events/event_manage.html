@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head %}
+<style>
+
+    .container {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: var(--global-third-color);
+    }
+    h1{
+        color: var(--global-header-color);;
+    }
+    h2, h3 {
+        color: var(--global-color-white);
+        margin-top: 20px;
+    }
+
+    .btn-add {
+        display: block;
+        margin: 20px 0;
+        padding: 10px 20px;
+        background-color: var(--global-tenth-color);
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-add:hover {
+        background-color: #0e1e49;
+    }
+
+    .event-card {
+        background-color: var(--global-nav-color);
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    ul {
+        padding-left: 20px;
+    }
+
+    ul li {
+        margin-bottom: 5px;
+        color: var(--global-color-white);
+    }
+    p{
+        color: var(--global-color-white);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 600px;
+        position: relative;
+        box-sizing: border-box;
+    }
+    .modal-content h2{
+        color: #2196F3;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: black;
+    }
+
+    form label {
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+    }
+
+    form input, form textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    form button {
+        margin-top: 20px;
+        padding: 10px 15px;
+        background-color: #273c75;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    form button:hover {
+        background-color: #192a56;
+    }
+
+    /* Toggle Switch Custom */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 26px;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .slider {
+        background-color: #2196F3;
+    }
+
+    .toggle-switch input:checked + .slider:before {
+        transform: translateX(24px);
+    }
+
+    .toggle-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 15px;
+    }
+
+    .toggle-label span {
+        font-weight: bold;
+    }
+
+</style>
+<title>Gerenciar Eventos</title>
+{% endblock head %}
+
+{% block navbar %}
+{% endblock navbar %}
+
+{% block content %}
+<div class="container">
+    <h1>GERENCIAMENTO DE EVENTOS</h1>
+
+    <!-- Botão para abrir modal -->
+    <button class="btn-add" onclick="openModal()">+ Novo evento</button>
+    <button class="btn-add" onclick="openSportModal()">+ Novo esporte</button>
+
+    <!-- Lista de eventos -->
+    {% for event in events %}
+    <div class="event-card">
+        <h2>{{ event.name }}</h2>
+        <p><strong>Local:</strong> {{ event.local }}</p>
+        <p><strong>Período:</strong> {{ event.date_init }} - {{ event.date_end }}</p>
+        <p><strong>Descrição:</strong> {{ event.description }}</p>
+
+        <h3>Esportes no evento:</h3>
+        <ul>
+            {% for sport in event.sport_set.all %}
+                <li>{{ sport.get_sport_display }} ({{ sport.min_sport }} - {{ sport.max_sport }} atletas)</li>
+            {% empty %}
+                <li>Nenhum esporte registrado para este evento.</li>
+            {% endfor %}
+        </ul>
+        <h3>Usuários organizadores:</h3>
+        <ul>
+            {% for user in event.user_set.all %}
+                <li>{{ user.username }} - {{ user.get_type_display }}</li>
+            {% empty %}
+                <li>Nenhum usuário registrado para este evento.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal -->
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Cadastrar Evento</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="name">Nome:</label>
+            <input type="text" name="name" id="name" required>
+
+            <label for="logo">Logo:</label>
+            <input type="file" name="logo" id="logo">
+
+            <label for="description">Descrição:</label>
+            <textarea name="description" id="description"></textarea>
+
+            <label for="date_init">Início do evento:</label>
+            <input type="date" name="date_init" id="date_init">
+
+            <label for="date_end">Fim do evento:</label>
+            <input type="date" name="date_end" id="date_end">
+
+            <label for="enrollment_init">Início das inscrições:</label>
+            <input type="datetime-local" name="enrollment_init" id="enrollment_init">
+
+            <label for="enrollment_end">Fim das inscrições:</label>
+            <input type="datetime-local" name="enrollment_end" id="enrollment_end">
+
+            <label for="local">Local:</label>
+            <input type="text" name="local" id="local">
+
+            <label for="age">Idade mínima:</label>
+            <input type="number" name="age" id="age" value="99">
+
+            <label for="regulation">Regulamento (PDF):</label>
+            <input type="file" name="regulation" id="regulation">
+
+            <hr>
+            <h2 style="margin-top: 30px;">Campos obrigatórios para Jogadores</h3>
+
+            <div class="toggle-label"><span>Instagram</span><label class="toggle-switch"><input type="checkbox" name="player_need_instagram" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Foto</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Boletim</span><label class="toggle-switch"><input type="checkbox" name="player_need_bulletin" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>RG</span><label class="toggle-switch"><input type="checkbox" name="player_need_rg" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Sexo</span><label class="toggle-switch"><input type="checkbox" name="player_need_sexo" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Matrícula</span><label class="toggle-switch"><input type="checkbox" name="player_need_registration" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>CPF</span><label class="toggle-switch"><input type="checkbox" name="player_need_cpf" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Data de nascimento</span><label class="toggle-switch"><input type="checkbox" name="player_need_date_nasc" checked><span class="slider"></span></label></div>
+
+            <hr>
+            <h2 style="margin-top: 30px;">Campos obrigatórios para Voluntários</h3>
+
+            <div class="toggle-label"><span>Foto</span><label class="toggle-switch"><input type="checkbox" name="voluntary_need_photo" checked><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Matrícula</span><label class="toggle-switch"><input type="checkbox" name="voluntary_need_registration" checked><span class="slider"></span></label></div>
+
+            <button type="submit">Cadastrar Evento</button>
+        </form>
+    </div>
+</div>
+
+<div id="sportModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSportModal()">&times;</span>
+        <h2>Cadastrar Esporte no Evento</h2>
+        <form method="post">
+            {% csrf_token %}
+            
+            <label for="event">Evento:</label>
+            <select name="event" id="event" required>
+                <option selected disabled>Selecione o evento</option>
+                {% for event in events %}
+                    <option value="{{ event.id }}">{{ event.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="sport">Esporte:</label>
+            <select name="sport" id="sport" required>
+                <option selected disabled>Selecione o esporte</option>
+                {% for value, name in sports %}
+                    <option value="{{ value }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="min_sport">Mínimo de atletas:</label>
+            <input type="number" name="min_sport" id="min_sport" min="1" required>
+
+            <label for="max_sport">Máximo de atletas:</label>
+            <input type="number" name="max_sport" id="max_sport" min="1" required>
+
+            <button type="submit">Cadastrar Esporte</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("eventModal").style.display = "none";
+    }
+    function openSportModal() {
+        document.getElementById("sportModal").style.display = "block";
+    }
+
+    function closeSportModal() {
+        document.getElementById("sportModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById("eventModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+{% endblock content %}
