@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>EDITAR MEMBRO DA COMISSÃO TÉCNICA</h1>
+        </div>
+        <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="block-inputs-form">
+
+                <label for="nome">Nome Completo</label>
+                <input type="text" autocomplete="on" autocorrect="on" name="name" placeholder="{{ voluntary.name }}"
+                    value="{{ voluntary.name }}" required />
+
+                <label for="nome">Matrícula, siape ou CPF</label>
+                <input type="text" autocomplete="on" autocorrect="on" name="registration"
+                    placeholder="{{ voluntary.registration }}" value="{{ voluntary.registration }}" />
+                <p style="color: #6d6c6c; font-size: 15px;">
+                    *Matricula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.
+                </p>
+
+                <label for="nome">Função</label>
+                <select name="type_voluntary">
+                    <option selected disabled>Selecione a função</option>
+                    {% for v, n in types %}
+                    <option {% if voluntary.type_voluntary == v %} selected {% endif %} value="{{v}}">{{n}}</option>
+                    {% endfor %}
+                </select>
+
+                {% if user.is_staff %}
+                <label for="nome">Usuário</label>
+                <select id="user_admin" name="user">
+                    <option selected disabled>Selecione o usuário admin</option>
+                    {% for i in users %}
+                    <option value="{{i.id}}" {% if voluntary.admin == i %} selected {% endif %}>{{i}}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+
+                <label for="photo">Foto de Perfil</label>
+                <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+                <p style="color: #6d6c6c; font-size: 15px;">
+                    *Anexe uma nova Fotografia apenas se quiser troca-la.
+                </p>
+
+                {% if voluntary.photo %}
+                <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+                <img id="preview" src="{{ voluntary.photo.url }}" alt="Foto atual"
+                    style="max-width: 150px; display: block; margin-top: 5px;" />
+                {% else %}
+                <img id="preview" style="max-width: 150px; display: none; margin-top: 5px;" />
+                {% endif %}
+
+                <button type="submit" class="side-bar-buttons-items2 custom-buttons-sport-nav">
+                    CONFIRMAR
+                </button>
+            </div>
+        </form>
+
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav"
+            style="background-color: var(--global-seventh-color); margin-top: 40px;">
+            <a href="{% url 'voluntary_manage' %}">VOLTAR</a>
+        </button>
+    </section>
+</div>
+
+<script>
+function previewFoto() {
+    const input = document.getElementById('photo');
+    const preview_name = document.getElementById('preview-name');
+    const preview = document.getElementById('preview');
+
+    if (input.files && input.files[0]) {
+        preview_name.textContent = "Nova Fotografia:"
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview_name.textContent = "Fotografia atual"
+        preview.src = '{{ voluntary.photo.url }}';
+        preview.style.display = 'block';
+    }
+}
+</script>
+
+{% endblock content %}

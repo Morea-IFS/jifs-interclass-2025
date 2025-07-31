@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head %}
-<title>JIFS ADMIN</title>
+<title>ATUM ADMIN</title>
 <link rel="stylesheet" href="{% static 'css/settings.css' %}">
 {% endblock head %}
 
@@ -14,43 +14,45 @@
 <div class="all-block block-org">
     <h1>CONFIGURAÇÕES</h1>
     <div class="all-container">
-        {% if user.is_staff %}
         <div class="link-nav">
             <a href="{% url 'chefe_manage' %}">
                 <p>CHEFES DE DELEGAÇÃO</p>
                 <i class="fa-regular fa-address-card"></i>
             </a>
         </div>
-        <div class="link-nav">
-            <a href="{% url 'enrollment_manage' %}">
-                <p>PERÍODO DE INSCRIÇÃO</p>
-                <i class="fa-solid fa-calendar-days"></i>
-            </a>
-        </div>
+        {% if perms.app.view_attackments and perms.app.add_attackments %}
         <div class="link-nav">
             <a href="{% url 'anexo_manage' %}">
                 <p>ANEXOS</p>
                 <i class="fa-solid fa-file-pdf"></i>
             </a>
         </div>
+        {% endif %}
+        {% if perms.app.view_help and perms.app.add_help %}
         <div class="link-nav">
             <a href="{% url 'faq_manage' %}">
                 <p>FAQ</p>
                 <i class="fa-solid fa-circle-info"></i>
             </a>
         </div>
+        {% endif %}
+        {% if perms.app.view_customuser and perms.app.add_customuser %}
         <div class="link-nav">
             <a href="{% url 'user_manage' %}">
-                <p>GESTORES</p>
+                <p>USUÁRIOS</p>
                 <i class="fa-regular fa-circle-user"></i>
             </a>
         </div>
+        {% endif %}
+        {% if perms.app.view_banner and perms.app.add_banner %}
         <div class="link-nav">
             <a href="{% url 'banner_manage' %}">
                 <p>BANNER</p>
                 <i class="fa-solid fa-film"></i>
             </a>
         </div>
+        {% endif %}
+        {% if perms.app.view_statement and perms.app.add_statement %}
         <div class="link-nav">
             <a href="{% url 'statement_manage' %}">
                 <p>AVISOS</p>

@@ -1,0 +1,250 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'css/public/nav.css' %}">
+    <link rel="stylesheet" href="{% static 'css/public/home.css' %}">
+    <title>JIIFS HOME</title>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LM08HSDTFS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LM08HSDTFS');
+</script>
+<body>
+    <div class="modal-mobile mobile"></div>
+    <header>
+        <nav>
+            <img
+                class="logo-jiifs"
+                src="{% static 'images/logo-morea-sports.svg' %}"
+                alt="JIIFS"
+            />
+            <ul>
+                <li class="item-close mobile">
+                    <img
+                        class="icon-close mobile"
+                        src="{% static 'images/icon-close.svg' %}"
+                        alt="Menu"
+                    />
+                </li>
+                <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
+                <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
+                <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
+                <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
+                <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
+            </ul>
+            <img
+                class="icon-burguer"
+                src="{% static 'images/icon-burguer.svg' %}"
+                alt="Menu"
+            />
+        </nav>
+    </header>
+    <main>
+        <section></section>
+        <section class="games">
+            <div class="filters">
+                <h2>Filtre por: </h2>
+                <div class="search-game-filters">
+                    <div class="search-games">
+                        <img src="{% static 'images/icon-search.svg' %}" alt="" aria-hidden="true">
+                        <input class="search-input" type="text" name="" id="" placeholder="Pesquisar" >
+                    </div>
+                    <div class="game-filters">
+                        <div class="games-filter">
+                            <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
+                            <select name="sport" id="sport">
+                                <option value="all">Esporte</option>
+                                <option value="Futsal">Futsal</option>
+                                <option value="Voleibol">Vôlei</option>
+                                <option value="Queimado">Queimado</option>
+                            </select>
+                            <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
+                        </div>
+                        <div class="games-filter">
+                            <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
+                            <select name="genre" id="genre">
+                                <option value="all">Gênero</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                            </select>
+                            <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
+                        </div>
+                        <div class="games-filter">
+                            <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
+                            <select name="status" id="status">
+                                <option value="all">Status</option>
+                                <option value="Live">Acontendo</option>
+                                <option value="Futuro">Futuros</option>
+                                <option value="Finalizado">Finalizados</option>
+                                <option value="Pausado">Pausados</option>
+                                <option value="Cancelado">Cancelados</option>
+                            </select>
+                            <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="games-container">
+                {% if context_futsal_masc %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-male.svg'%}" alt="" aria-hidden="true">Futsal Masculino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_futsal_masc %}
+                        <div class="game">
+                            <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
+                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
+                        </div>
+                        <br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if context_futsal_fem %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-female.svg'%}" alt="" aria-hidden="true">Futsal Feminino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_futsal_fem %}
+                        <div class="game">
+                            <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
+                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
+                        </div>
+                        <br>
+                        {% endfor %}
+                        
+                    </div>
+                </div>
+                {% endif %}
+                {% if context_volei_masc %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-male.svg'%}" alt="" aria-hidden="true">Voleibol Masculino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_volei_masc %}
+                            {% for match in i.matches %}
+                                <div class="game">
+                                    <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
+                                    <p class="score">{{ match.times.0.points }} - {{ match.times.1.points }}</p>
+                                    <p class="team-b"><img class="logo-time" src="{{ match.times.1.photo_url }}" alt="Logo time">{{ match.times.1.name }}</p>
+                                </div>
+                            {% endfor %}
+                            <br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if context_volei_fem %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-female.svg'%}" alt="" aria-hidden="true">Voleibol Feminino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_volei_fem %}
+                            {% for match in i.matches %}
+                                <div class="game">
+                                    <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
+                                    <p class="score">{{ match.times.0.points }} - {{ match.times.1.points }}</p>
+                                    <p class="team-b"><img class="logo-time" src="{{ match.times.1.photo_url }}" alt="Logo time">{{ match.times.1.name }}</p>
+                                </div>
+                            {% endfor %}
+                            <br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if context_queimado_masc %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-male.svg'%}" alt="" aria-hidden="true">Queimado Masculino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_queimado_masc %}
+                        <div class="game">
+                            <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
+                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
+                        </div>
+                        <br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if context_queimado_fem %}
+                <div class="game-block">
+                    <div class="block-informations">
+                        <p class="modality"><img class="genre-icon" src="{% static 'images/icon-female.svg'%}" alt="" aria-hidden="true">Queimado Feminino</p>
+                    </div>
+                    <div class="games-of-block">
+                        {% for i in context_queimado_fem %}
+                        <div class="game">
+                            <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
+                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
+                        </div>
+                        <br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        <section class="today-games">
+            <h2>Jogos do Dia</h2>
+            <div class="today-games-container">
+                <div class="today-games">
+                    {% for i in context_games_day %}
+                        <div class="today-game">
+                            <p class="team-a">
+                                {{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time">
+                            </p>
+                            {% if i.match.sport.sets %}<img class="sport" src="{% static 'images/ball-of-volley.png' %}" alt="" aria-hidden="true">{% else %}<img class="sport" src="{% static 'images/ball-of-futsal.png' %}" alt="" aria-hidden="true">{% endif %}
+                            <p class="team-b">
+                                <img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">
+                                {{ i.times.1.team.name }}
+                            </p>
+                        </div>
+                    {% endfor %}
+
+                </div>                
+                
+            </div>
+        </section>
+    </main>
+    <footer>
+        <img
+            src="{% static 'images/logo-ifs-white.png' %}"
+            alt=""
+            class="logo-ifs"
+        />
+        <img
+            src="{% static 'images/logo-morea-colorful.svg' %}"
+            alt=""
+            class="logo-ifs"
+        />
+    </footer>
+    <nav class="mobile-menu-functions">
+        <ul class="menu-of-functions">
+            <li class="games-mobile activate">Geral</li>
+            <li class="today-mobile">Jogos do dia</li>
+        </ul>
+    </nav>
+    <script src="{% static 'js/home.js' %}"></script>
+</body>
+</html>

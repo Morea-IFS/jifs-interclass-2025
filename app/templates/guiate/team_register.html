@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/guiate-team.css' %}">
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block" style="align-items: start; display: flex; flex-direction: column; align-items: center;">
+    <div class="title" style="display: flex; flex-direction: column; color: white; height: auto; padding-top: 20px;">
+        <h1>ADICIONE ATLETAS NO TIME DE <span style="color: #0051ff; ">{{team_sport.get_sport_display|upper}} {{team_sport.sport.get_sport_display|upper}}</span> DO CAMPUS <span style="color: #0051ff;">{{team_sport.team.name|upper}}</span></h1>
+    </div>
+    <br><br>
+    <div class="grid-container">
+        {% for i in sports %}
+        <a href="{% url 'guiate_team' i.get_sport_display event_id %}" class="sport-btn">
+            <span class="btn-text">{{i.get_sport_display}}</span>      
+        </a>
+        {% endfor %}
+    </div>
+    <br>
+    <div style="display: flex; justify-content: center; margin-bottom: 2em;">
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: #AB0000;">
+            {% if button_return_manage %}
+            <a href="{% url 'Home' %}">VOLTAR</a>
+            {% else  %}
+            <a href="{% url 'team_manage' %}">VER MINHAS MODALIDADES</a>
+            {% endif  %}
+        </button>
+    </div>
+</div>
+
+{% endblock content %}
+

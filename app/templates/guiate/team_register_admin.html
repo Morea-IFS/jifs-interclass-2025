@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/player_create.css' %}">
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block" style="align-items: start; display: flex; flex-direction: column; align-items: center;">
+    <div class="title" style="display: flex; flex-direction: column; color: white; height: auto; padding-top: 20px;">
+        <h1>CADASTRO DE TIMES</h1>
+    </div>
+    <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="block-inputs-form">
+            <label for="times">Times</label>
+            <select id="times" name="team_adm_id">
+                <option selected disabled value="None">Selecione o time</option>
+                {% for i in teams %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <label for="esportes">Esportes</label>
+            <select id="times" name="sport_adm_id">
+                <option selected disabled value="None">Selecione o esporte</option>
+                {% for i in sports %}
+                <option value="{{i.id}}">{{i.get_sport_display}}</option>
+                {% endfor %}
+            </select>
+            <label for="sexos">Sexo</label>
+            <select id="sexos" name="sexo_adm_id">
+                <option selected disabled value="None">Selecione o sexo</option>
+                <option value="0">Masculino</option>
+                <option value="1">Feminino</option>
+                <option value="2">Misto</option>
+            </select>
+            <label for="evento">Evento</label>
+            <select id="evento" name="event_adm_id">
+                <option selected disabled value="None">Selecione o evento</option>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
+                CONFIRMAR ATLETA
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    document.getElementById("cpf").addEventListener("input", function () {
+        let cpf = this.value.replace(/\D/g, ""); 
+        if (cpf.length > 3) cpf = cpf.substring(0, 3) + "." + cpf.substring(3);
+        if (cpf.length > 7) cpf = cpf.substring(0, 7) + "." + cpf.substring(7);
+        if (cpf.length > 11) cpf = cpf.substring(0, 11) + "-" + cpf.substring(11, 14);
+        this.value = cpf; 
+    });
+</script>
+{% endblock content %}
+

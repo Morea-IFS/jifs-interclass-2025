@@ -1,0 +1,86 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'css/public/about_us.css' %}" />
+    <title>JIIFS - SOBRE NÓS</title>
+</head>
+<body>
+    <div class="modal-mobile mobile"></div>
+        <header>
+            <nav>
+                <img
+                    class="logo-jiifs"
+                    src="{% static 'images/logo-morea-sports.svg' %}"
+                    alt="JIIFS"
+                />
+                <ul>
+                    <li class="item-close mobile">
+                        <img
+                            class="icon-close mobile"
+                            src="{% static 'images/icon-close.svg' %}"
+                            alt="Menu"
+                        />
+                    </li>
+                    <li><a href="{%url 'home_public' event.id %}" class="home-link">Home</a></li>
+                    <li><a href="{%url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
+                    <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
+                    <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
+                    <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                    <li><a href="{% url 'login' %}" class="login-link">Login</a></li>
+                </ul>
+                <img
+                    class="icon-burguer"
+                    src="{% static 'images/icon-burguer.svg' %}"
+                    alt="Menu"
+                />
+            </nav>
+        </header>
+        <main>
+            <section class="about-morea">
+                <div class="content">
+                    <h1>Mais Um Projeto <span class="stroke-morea">MOREA</span></h1>
+                    <p>Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto</p>
+                    <p>Veja mais em nosso <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">site</a>.</p>
+                    <div class="social-media">
+                        <a class="link-instagram-morea" href="https://www.instagram.com/projeto.morea?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{%static 'images/icon-instagram-colorful.svg'%}" alt="" aria-hidden="true"><p>@projeto.morea</p></a>
+                        <a class="link-github-morea" href="https://github.com/Morea-IFS" target="_blank"><img src="{%static 'images/icon-github.svg'%}" alt="" aria-hidden="true"><p>Morea-IFS</p></a>
+                    </div>
+                </div>
+                <div class="img-morea">
+                    <img src="{% static 'images/logo-morea-sports.svg' %}" alt="" aria-hidden="true" />
+                </div>
+            </section>    
+            <section class="about-members">
+                <div class="advisors">
+                    <h2>Orientadores</h2>
+                    <div class="members">
+                       
+                    </div>
+                </div>
+                <div class="active-members">
+                    <h2>Membros Ativos</h2>
+                    <div class="members">
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <img
+                src="{% static 'images/logo-ifs-white.png' %}"
+                alt=""
+                class="logo-ifs"
+            />
+            <img
+                src="{% static 'images/logo-morea-colorful.svg' %}"
+                alt=""
+                class="logo-ifs"
+            />
+        </footer>
+        <script src="{% static 'js/about_us.js' %}"></script>
+</body>
+</html>

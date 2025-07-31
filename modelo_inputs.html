@@ -42,6 +42,7 @@
   input[type="tel"],
   input[type="number"],
   input[type="time"],
+  input[type="checkbox"],
   select {
     width: 100%;
     padding: 10px 14px;
@@ -58,6 +59,7 @@
   input[type="tel"]:focus,
   input[type="number"]:focus,
   input[type="time"]:focus,
+  input[type="checkbox"]:focus,
   select:focus {
     border-color: #0066ff;
     outline: none;
@@ -113,6 +115,9 @@
 
     <label for="senha">Senha</label>
     <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required />
+
+    <label for="novidades">Receber Novidades?</label>
+    <input type="checkbox" id="novidades" name="novidades" />
 
     <button type="submit">Confirmar</button>
   </form>

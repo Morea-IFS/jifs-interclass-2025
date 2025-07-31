@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+<link rel="stylesheet" href="{% static 'css/teste.css' %}">
+{% endblock head %}
+
+{% block content %}
+  <div class="block-score-all">
+    <div class="text-score">
+      <h1>PAINEL DE CONTROLE DO JOGO</h1>
+    </div>
+    <div class="block-score-contend">
+      <div class="score-function">
+        <div class="title-score-function">
+          <p>FUNCIALIDADES</p>
+        </div>
+        <div class="data-score-function">
+          <ul>
+            <li>PENALIDADES</li>
+            <li>SUBSTITUIÇÃO</li>
+            <li>ASSISTÊNCIA</li>
+            <li>ACRÉSCIMO</li>
+            <li>ASSISTÊNCIA</li>
+          </ul>
+        </div>
+      </div>
+      <div class="score-function"></div>
+      <div class="score-function"></div>
+      <div class="score-function"></div>
+      <div class="score-function"></div>
+      <div class="score-function"></div>
+    </div>
+  </div>
+{% endblock content %}

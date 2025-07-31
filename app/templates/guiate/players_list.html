@@ -1,109 +1,92 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
-    <title>JIFS ADMIN</title>
-</head>
-<body>
-    <main>
-        <div class="all">
-            <div class="all-block" style="width: 100vw; display: flex; justify-content: center;">
-                <div style="width: auto; height: auto; display: flex; flex-direction: column; align-items: center; text-align: center;" >
-                    <div class="title">
-                        <h1>
-                            <h1>JOGADORES DO CAMPUS <span style="color: #24a700;">{{team_sport.team.name|upper}}</span> - <span style="color: #0051ff;">{{team_sport.get_sport_display|upper}}</span> {{team_sport.get_sexo_display|upper}}</h1>
-                        </h1>
-                    </div>
-                    <section class="all-table">
-                        <table id="search-table">
-                            <tr class="hidden">
-                                <th>ID</th>
-                                <th>NOME</th>
-                                <th>MATRICULA</th>
-                                <th>CAMPUS</th>
-                                <th>SEXO</th>
-                                <th>DATA NASC.</th>
-                                <th>FOTO</th>
-                                <th>BOLETIM</th>
-                                <th>RG</th>
-                                {% if allowed %}
-                                <th>EDITAR</th>
-                                {% endif %}
-                                <th>DELETAR</th>
-                            </tr>
-                            {% for i in players %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>
-                                    {{ i.player.name }}
-                                </td>
-                                <td>{{i.player.registration}}</td>
-                                <td>{{i.player.get_campus_display}}</td>
-                                <td>{{i.player.get_sexo_display}}</td>
-                                <td>{{i.player.date_nasc}}</td>
-                                <td>{% if i.player.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                                <td>{% if i.player.bulletin %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                                <td>{% if i.player.rg %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                                {% if allowed %}
-                                <td>
-                                    <a href="{% url 'player_list_edit' team_sport.team.name i.player.id team_sport.get_sexo_display team_sport.get_sport_display %}">
-                                        <img src="{% static 'images/icon-edit.svg' %}">
-                                    </a>
-                                </td>
-                                {% endif %}
-                                <td>
-                                    <form method="POST" action="">
-                                        {% csrf_token %}
-                                        <button data-confirm="Você realmente deseja excluir este atleta?" name="player_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
-                                            <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <style>
-                                .hidden {
-                                    display: none;
-                                }
-                            </style>
-                            <img class="image-no-players" src="{% static 'images/setup-animate.svg' %}">
-                            <div class="title2">
-                                <h2>NENHUM JOGADOR FOI ENCONTRADO <br> <span style="font-size: 20px;">Para que o time esteja inscrito cadastre o número mínimo de jogadores!</span></h2>
-                                
-                            </div>
-                            
-                            {% endfor %}
-                        </table>
-                        <div style="display: flex; width: auto; height: auto; justify-content: center; align-items: center; gap: 15px;">                            
-                            <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-color-green);">
-                                <a href="{% url 'guiate_players_team' team_sport.team.name team_sport.get_sexo_display team_sport.get_sport_display %}">ADICIONAR MAIS</a>
-                            </button>
-                            
-                            <button class="side-bar-buttons-item2 custom-buttons-sport-nav">
-                                <a href="{% url 'team_manage' %}">FINALIZAR</a>
-                            </button>
-                        </div>
-                        
-                    </section>
-                    <ul class="notifications"></ul>
-                    <script src="{% static 'js/messages.js' %}"></script>
-                    {% if messages %}
-                    {% for message in messages %}
-                        <script>
-                            createToast("{{ message.tags }}", "{{ message }}");
-                        </script>
-                    {% endfor %}
-                    {% endif %}
-                </div>
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/team_sexo.css' %}" />
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block" style="align-items: start; display: flex; flex-direction: column; align-items: center;">
+    <div class="title" style="display: flex; flex-direction: column; color: white; height: auto; padding-top: 20px;">
+        <h1>ADICIONE ATLETAS NO TIME DE <span style="color: #0051ff; ">{{team_sport.get_sport_display|upper}} {{team_sport.sport.get_sport_display|upper}}</span> DO CAMPUS <span style="color: #0051ff;">{{team_sport.team.name|upper}}</span></h1>
+    </div>
+    <br><br>
+    <section class="all-table">
+        <table id="search-table">
+            <tr class="hidden">
+                <th>ID</th>
+                <th>NOME</th>
+                <th>MATRICULA</th>
+                <th>SEXO</th>
+                <th>DATA NASC.</th>
+                <th>FOTO</th>
+                <th>BOLETIM</th>
+                <th>RG</th>
+                {% if allowed %}
+                <th>EDITAR</th>
+                {% endif %}
+                <th>DELETAR</th>
+            </tr>
+            {% for i in players %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {{ i.player.name }}
+                </td>
+                <td>{{i.player.registration}}</td>
+                <td>{{i.player.get_sexo_display}}</td>
+                <td>{{i.player.date_nasc}}</td>
+                <td>{% if i.player.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                <td>{% if i.player.bulletin %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                <td>{% if i.player.rg %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                {% if allowed %}
+                <td>
+                    <a href="{% url 'player_list_edit' team_sport.team.name i.player.id team_sport.get_sexo_display team_sport.sport.get_sport_display %}">
+                        <img src="{% static 'images/icon-edit.svg' %}">
+                    </a>
+                </td>
+                {% endif %}
+                <td>
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <button data-confirm="Você realmente deseja excluir este atleta?" name="player_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
+                            <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <style>
+                .hidden {
+                    display: none;
+                }
+            </style>
+            <img class="image-no-players" src="{% static 'images/setup-animate.svg' %}">
+            <div class="title2">
+                <h2>NENHUM JOGADOR FOI ENCONTRADO<br> <span style="font-size: 20px;">Para que o time esteja inscrito cadastre o número mínimo de jogadores!</span></h2>
+                
             </div>
+            
+            {% endfor %}
+        </table>
+        <div style="display: flex; width: auto; height: auto; justify-content: center; align-items: center; gap: 15px;">                            
+            <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-color-green);">
+                <a href="{% url 'guiate_players_team' team_sport.team.name team_sport.get_sexo_display team_sport.sport.get_sport_display team_sport.team.event.id %}">ADICIONAR MAIS</a>
+            </button>
+            
+            <button class="side-bar-buttons-item2 custom-buttons-sport-nav">
+                <a href="{% url 'team_manage' %}">FINALIZAR</a>
+            </button>
         </div>
-    </main>
-    <script src="{% static 'js/script.js' %}"></script>
-</body>
-</html>
+        
+    </section>
+</div>
+
+{% endblock content %}
+

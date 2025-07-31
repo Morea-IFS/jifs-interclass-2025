@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1">
+        <div class="title">
+            <h1>GERENCIAMENTO DE PARTIDAS</h1>
+        </div>
+        {% if perms.app.add_match %}
+        <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
+            <a href="{% url 'matches_register' %}">CADASTRAR PARTIDA</a>
+        </button>
+        {% endif %}
+        <br><br>
+        <div class="all-manage">
+            <input type="search" class="hidden" id="search-input" onkeyup="search_table()" placeholder="Pesquisar as partidas" />
+            <section class="all-table">
+                <table id="search-table">
+                    <tr class="hidden">
+                        <th>ID</th>
+                        <th>TIME A</th>
+                        <th>TIME B</th>
+                        <th>STATUS</th>
+                        <th>TEMPO</th>
+                        <th>SEXO</th>
+                        <th>ESPORTE</th>
+                        {% if i.match.winner_team %}<th>VENCEDOR</th>{% endif %}
+                        {% if perms.app.change_match %}
+                        <th>EDITAR</th>
+                        {% endif %}
+                        {% if perms.app.delete_match %}
+                        <th>DELETAR</th>
+                        {% endif %}
+                    </tr>
+                    {% for i in context %}
+                    <tr>
+                        <td>{{i.match.id}}</td>
+                        <td>{{ i.times.0.team.name }}</td>
+                        <td>{{ i.times.1.team.name }}</td>
+                        <td>{{i.match.get_status_display}}</td>
+                        <td>{{i.match.time_match|date:"d/m/Y - H:i"}}</td>
+                        <td>{{ i.match.get_sexo_display }}</td>
+                        <td>{{i.match.get_sport_display}}</td>
+                        {% if i.match.winner_team %}<td>{{match.Winner_team}}</td>{% endif %}
+                        {% if perms.app.change_match %}
+                        <td>
+                            <a href="{% url 'matches_edit' i.match.id %}">
+                                <img src="{% static 'images/icon-edit.svg' %}">
+                            </a>
+                        </td>
+                        {% endif %}
+                        {% if perms.app.delete_match %}
+                        <td>
+                            <form method="POST" action="">
+                                {% csrf_token %}
+                                <button name="match_delete" value="{{i.match.id}}" style="background-color: transparent; border: none;">
+                                    <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                                </button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <style>
+                        .hidden {
+                            display: none;
+                        }
+                    </style>
+                    <img class="image-no-players" src="{% static 'images/setup-animate.svg' %}">
+                    <div class="title2">
+                        <h2>NÃO HÁ NENHUMA PARTIDA CADASTRADA{% if perms.app.add_match %} <br> <span style="font-size: 20px;">Realize o cadastro das partidas!</span>{% endif %}</h2>
+                    </div>
+                    {% endfor %}
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+{% endblock head %}
+
+{% block navbar %}
+
+<style>
+    .title-adm{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 7em;
+        width: 100%;
+        color: var(--global-header-color);
+    }
+    @media screen and (max-width: 700px) {
+        .title-adm{
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 15px;
+            height: auto;
+            padding-bottom: 15px;
+            gap: 15px;
+        }
+        .block1{
+            padding-inline: 4vw;
+        }
+    }
+
+    .title-buttons{
+        width: 20em;
+        height: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .title-buttons > span{
+        width: 7em;
+        height: 2.8em;
+        padding: 0;
+        border-radius: 8px;
+        background-color: var(--global-header-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    .title-buttons p{
+        color: white;
+        font-size: 20px;
+        font-weight: 500;
+    }
+    .title-buttons > select{
+        width: 12em;
+        height: 2.8em;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .input-search-adm{
+        width: 100%;
+    }
+    .input-search-adm input{
+        width: 100%;
+    }
+</style>
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1">
+        <div class="title-adm">
+            <h1>
+                COMISSÃO TÉCNICA
+            </h1>
+            <div class="title-buttons">
+                <span onclick="openModal()"><p>Novo</p></span>
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Evento</option>
+                        {% for i in events %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+        <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
+            <input name="q" type="search" placeholder="Procure pelos membros da comissão técnica">
+        </form>
+        {% if voluntarys or voluntarys is not None %}
+        <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
+            <table id="search-table" style="width: 100%;">
+                <tr class="hidden">
+                    <th>NOME</th>
+                    <th>FUNÇÃO</th>
+                    {% if not user.type == 3 %}
+                    <th>MATRÍCULA/SIAPE</th>
+                    {% endif %}
+                    <th>FOTO</th>
+                    {% if allowed and perms.app.change_voluntary %}
+                    <th>EDITAR</th>
+                    {% endif %}
+                    {% if allowed and perms.app.delete_voluntary %}
+                    <th>DELETAR</th> 
+                    {% endif %}
+                </tr>
+                {% for voluntary in voluntarys %}
+                <tr>
+                    <td>
+                        {% if not voluntary.type_voluntary == 4 or user.is_staff %}
+                        <a>{{ voluntary.name }}</a>
+                        {% else %}
+                        <a>{{ voluntary.name }}</a>
+                        {% endif %}
+                    </td>
+                    <td>{{voluntary.get_type_voluntary_display}}</td>
+                    {% if not user.type == 3 %}
+                    <td>{{voluntary.registration}}</td>
+                    {% endif %}
+                    <td>{% if voluntary.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                    {% if allowed and perms.app.change_voluntary %}
+                    <td>
+                        {% if not voluntary.type_voluntary == 4 or user.is_staff %}
+                            <img style="cursor: pointer;" onclick="openEditModal('{{ voluntary.id }}','{{ voluntary.name }}','{{ voluntary.registration }}','{{ voluntary.type_voluntary }}','{{ voluntary.admin.id }}','{{ voluntary.event.id }}', '{% if voluntary.photo %}{{ voluntary.photo.url }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    {% if allowed and perms.app.delete_voluntary %}
+                    <td>
+                        {% if not voluntary.type_voluntary == 4 or user.is_staff %}
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <button data-confirm="Você realmente deseja excluir este membro da comissão técnica" name="voluntary_delete" value="{{voluntary.id}}" style="background-color: transparent; border: none;">
+                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <style>
+                    .hidden {
+                        display: none;
+                    }
+                </style>
+                <section class="alert-page">
+                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-text">
+                        <p>NÃO HÁ NENHUM MEMBRO DA COMISSÃO TÉCNICA.</p>
+                    </div>
+                </section>
+                {% endfor %}
+            </table>
+        </section>
+        {% else %}
+        <section class="alert-page">
+            <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+            <div class="alert-text">
+                <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</div>
+
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Cadastrar comissão técnica</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="nome">*Nome Completo</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="name" placeholder="Insira o nome"
+            required>
+            <label for="nome">*Matrícula, siape ou CPF</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="registration"
+            placeholder="Matrícula, siape ou CPF." required>
+            <p style="color: #6d6c6c; font-size: 15px;">*Matricula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.</p>
+            <label for="nome">*Função</label>
+            <select name="type_voluntary" required>
+                <option selected disabled>Selecione a função</option required>
+                {% for value, name in types %}
+                <option value="{{value}}">{{name}}</option>
+                {% endfor %}
+            </select>
+            {% if user.is_staff %}
+            <label for="nome">*Usuário</label>
+            <select id="user_admin" name="user">
+                <option selected disabled>Selecione o usuário admin</option>
+                {% for i in users %}
+                <option value="{{i.id}}">{{i}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            {% if not user.event_user %}
+            <label for="nome">*Evento</label>
+            <select id="user_admin" name="event">
+                <option selected disabled>Selecione o evento</option>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <label for="imagem">*Fotografia</label>
+            <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
+            <button class="button-modal" type="submit">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Voluntário -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Editar comissão técnica</h2>
+        <form method="post" enctype="multipart/form-data" id="editForm">
+            {% csrf_token %}
+            <input type="hidden" id="editUserId" name="voluntary_id">
+
+            <label>*Nome Completo</label>
+            <input id="editUserName" type="text" name="name" required>
+
+            <label>*Matrícula, siape ou CPF</label>
+            <input id="editUserRegistration" type="text" name="registration" required>
+            <p style="color: #6d6c6c; font-size: 14px;">
+                *Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.
+            </p>
+
+            <label>*Função</label>
+            <select name="type_voluntary" id="editTypeVoluntary" required>
+                <option disabled>Selecione a função</option>
+                {% for value, name in types %}
+                <option value="{{ value }}" id="type_{{ value }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+
+            {% if user.is_staff %}
+            <label>*Usuário</label>
+            <select name="user" id="editUserSelect">
+                <option disabled>Selecione o usuário admin</option>
+                {% for i in users %}
+                <option value="{{ i.id }}" id="user_{{ i.id }}">{{ i.username }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            {% if not user.event_user %}
+            <label>*Evento</label>
+            <select name="event" id="editEventSelect">
+                <option disabled>Selecione o evento</option>
+                {% for e in events %}
+                <option value="{{ e.id }}" id="event_{{ e.id }}">{{ e.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            <label for="photo">*Foto de Perfil</label>
+            <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+            <p style="color: #6d6c6c; font-size: 15px;">
+                *Anexe uma nova Fotografia apenas se quiser troca-la.
+            </p>
+
+            <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+            <img id="preview" src="{{ voluntary.photo.url }}" alt="Foto atual"
+                style="max-width: 150px; display: block; margin-top: 5px;" />
+            <img id="preview" style="max-width: 150px; display: none; margin-top: 5px;" />
+
+            <button class="button-modal" type="submit">Salvar Alterações</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("eventModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById("eventModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Variável para guardar a URL da imagem original
+    let originalPhotoUrl = '';
+
+    function openEditModal(id, name, registration, typeVoluntary, userId, eventId, photoUrl) {
+        // Guarda a URL original
+        originalPhotoUrl = photoUrl || '';
+        
+        // Resetar o input de foto
+        const photoInput = document.getElementById('photo');
+        photoInput.value = '';
+        
+        // Preencher os campos do formulário
+        document.getElementById("editUserId").value = id;
+        document.getElementById("editUserName").value = name;
+        document.getElementById("editUserRegistration").value = registration;
+
+        // Configurar selects
+        const typeSelect = document.getElementById("editTypeVoluntary");
+        if (typeSelect) {
+            Array.from(typeSelect.options).forEach(option => {
+                option.selected = option.value === typeVoluntary;
+            });
+        }
+
+        const userSelect = document.getElementById("editUserSelect");
+        if (userSelect) {
+            Array.from(userSelect.options).forEach(option => {
+                option.selected = option.value === userId;
+            });
+        }
+
+        const eventSelect = document.getElementById("editEventSelect");
+        if (eventSelect) {
+            Array.from(eventSelect.options).forEach(option => {
+                option.selected = option.value === eventId;
+        });
+        }
+
+        // Mostrar a imagem original
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+        
+        if (originalPhotoUrl) {
+            preview.src = originalPhotoUrl;
+            preview.style.display = 'block';
+            previewName.textContent = "Fotografia atual:";
+        } else {
+            preview.style.display = 'none';
+            previewName.textContent = "Nenhuma fotografia cadastrada";
+        }
+
+        document.getElementById("editModal").style.display = "block";
+    }
+
+    function previewFoto() {
+        const input = document.getElementById('photo');
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+
+        if (input.files && input.files[0]) {
+            // Mostrar nova imagem selecionada
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                previewName.textContent = "Nova fotografia:";
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            if (originalPhotoUrl) {
+                preview.src = originalPhotoUrl;
+                preview.style.display = 'block';
+                previewName.textContent = "Fotografia atual:";
+            } else {
+                preview.style.display = 'none';
+                previewName.textContent = "Nenhuma fotografia cadastrada";
+            }
+        }
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById("editModal");
+        modal.style.display = "none";
+
+        // Resetar tudo
+        const form = document.getElementById("editForm");
+        form.reset();
+        
+        const preview = document.getElementById('preview');
+        const previewName = document.getElementById('preview-name');
+        const photoInput = document.getElementById('photo');
+        
+        photoInput.value = '';
+        preview.style.display = 'none';
+        previewName.textContent = "Nenhuma fotografia selecionada";
+        originalPhotoUrl = '';
+
+        // Resetar selects
+        ['editTypeVoluntary', 'editUserSelect', 'editEventSelect'].forEach(id => {
+            const select = document.getElementById(id);
+            if (select) select.selectedIndex = 0;
+        });
+    }
+</script>
+{% endblock content %}

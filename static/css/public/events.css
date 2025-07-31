@@ -1,0 +1,439 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@font-face {
+    font-family: 'Flick';
+    src: url('./fonts/FlickDemo-vmrYL.ttf') format('truetype');
+}
+
+:root {
+    --white: #fff;
+    --white-rgba: hsla(0, 0%, 100%, 0.7);
+    --border-title: hsla(0, 0%, 100%, 0.080);
+    --gray-background-cards: #2A2A2A;
+    --gray-background: #1E1E1E;
+    --gray-inputs-background: #343434;
+    --green-links-line: #00A3FF;
+    --green-title-time-or-set: #11BE18;
+    --red-live: #FF3232;
+    --pink-feminine: #FF32AA;
+    --blue-links: #3A7BD5;
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--gray-background);
+}
+
+.modal-mobile {
+    display: none;
+}
+
+.mobile-menu-functions {
+    display: none;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80px;
+    margin: 0 auto;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    background-color: var(--gray-background);
+    z-index: 1;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    padding: 0 16px;
+    max-width: 1152px;
+}
+
+img.logo-jiifs {
+    height: 60px;
+}
+
+header nav ul {
+    display: flex;
+    list-style: none;
+    gap: 35px;
+}
+
+header li a {
+    text-decoration: none;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 24px;
+}
+
+a {
+    text-decoration: none;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.icon-burguer,
+.icon-close {
+    display: none;
+}
+
+a.morea-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    border: none;
+    background: none;
+    z-index: 0;
+}
+
+a.morea-link::after {
+    content: "";
+    pointer-events: none;
+    bottom: -12px;
+    position: absolute;
+    width: 80%;
+    height: 4px;
+    background-color: var(--green-links-line);
+    animation: animationLinkNav 1s forwards;
+}
+
+@keyframes animationLinkNav {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 80%;
+
+    }
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    padding: 16px;
+    gap: 85px;
+}
+
+.about-morea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--gray-background-cards);
+    max-width: 1152px;
+    width: 100%;
+    height: 405px;
+    border-radius: 16px;
+    padding: 40px;
+}
+
+div.content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    gap: 27px;
+}
+
+h1 {
+    display: flex;
+    flex-direction: column;
+    font-size: 42px;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.about-morea p {
+    font-size: 20px;
+    line-height: 30px;
+    font-weight: 500;
+    color: var(--white-rgba);
+    max-width: 465px;
+}
+
+span.stroke-morea {
+    color: var(--green-links-line);
+}
+
+.link-morea-or-lattes {
+    text-decoration: none;
+    color: var(--blue-links);
+    font-size:20px;
+    transition: .3s ease-in-out;
+}
+.link-morea-or-lattes:hover{
+    color: var(--green-title-time-or-set);
+}
+
+.about-morea .social-media {
+    display: flex;
+    gap: 36px;
+}
+
+.about-morea .social-media a {
+    display: flex;
+    text-decoration: none;
+    color: var(--white);
+    font-size: 24px;
+    gap: 8px;
+}
+
+.about-morea .social-media a p {
+    color: var(--white);
+}
+.img-morea{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.img-morea img{
+    width: 362px;
+}
+.about-morea .social-media .link-instagram-morea p {
+    background-image: linear-gradient(to right, #7017FF, #C500E9, #ED00C0,#F80261,#FB0F79,#FE3B36,#FF6930,#FFD000);
+      background-clip: text;
+    -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: black;
+}
+.link-morea-or-lattes{
+    font-size: 16px;
+    cursor: pointer;
+}
+.socia-media{
+    display: flex;
+    gap: 18px;
+    padding-top: 7px;
+}
+.about-events{
+    width: 100vw;
+    height: auto;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+}
+.container-events{
+    width: 80%;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    gap: 30px;
+}
+.event{
+    display: flex;
+    width: 240px;
+    height: 320px;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+}
+.event-img{
+    width: 240px;
+    height: 160px;
+}
+.event-img img{
+    /*object-fit: cover;*/
+    width: 240px;
+    height: 160px;
+    border-radius: 25px;
+}
+.event-block{
+    width: 240px;
+    height: 160px;
+    padding: 15px;
+}
+.event-title{
+    font-size: 22px;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+.event-subtitle{
+    font-size: 18px;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;   
+    padding-top: 8px;
+    padding-bottom: 16px; 
+    color: white;
+}
+.event-link{
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 550;
+    font-family: Arial, Helvetica, sans-serif;  
+    width: auto;
+    height: auto;
+    padding: 10px;
+    border-radius: 7px;
+    background-color: #0059df;
+    color: white;
+}
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1152px;
+    margin: 0 auto;
+    padding: 16px;
+
+}
+
+footer img {
+    height: 80px;
+}
+
+@media  screen and (max-width:1000px) {
+    header {
+        max-width: 700px;
+    }
+
+    header nav ul {
+        gap: 20px;
+    }
+    h1{
+        font-size: 32px;
+    }
+    .about-morea p{
+        font-size: 18px;
+    }
+    .link-morea-or-lattes{
+        font-size: 18px;
+    }
+    .img-morea img{
+        width: 280px;
+    }
+    .about-morea .social-media a p {
+        display: none;
+    }
+    .about-morea .social-media{
+        gap: 16px;
+    }
+
+    header li a {
+        font-size: 20px;
+    }
+
+    img.logo-jiifs {
+        height: 45px;
+    }
+    main {
+        max-width: 700px;
+    }
+    footer {
+        max-width: 700px;
+    }
+
+    footer img {
+        height: 60px;
+    }
+}
+
+@media screen and (max-width:750px) {
+    header {
+       width: 100%;
+        height: 60px;
+    }
+    .modal-mobile{
+        display: none;
+        height: 100vh;
+        width: 50vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.541);
+        z-index: 2;
+        overflow-y: hidden;
+    }
+    header nav{
+        max-width: 350px;
+    }
+    header nav ul {
+        display: none;
+        align-items: center;
+        gap: 40px;
+        flex-direction: column;
+        position: fixed;
+        top: 0px;
+        right: 0;
+        background-color: var(--gray-background);
+        padding: 20px 10px;
+        width: 50%;
+        height: 100vh;
+        z-index: 4;
+    }
+    main{
+        max-width: 350px;
+    }
+    .icon-burguer {
+        display: block;
+        cursor: pointer;
+    }
+    .icon-close{
+        align-self: flex-end;
+        cursor: pointer;
+    }
+    .item-close{
+        align-self: flex-start;
+        width: 80%;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .about-morea{
+        align-items: center;
+        justify-content: center;
+        flex-direction: column-reverse;
+        height: 100%;
+        padding: 30px 20px;
+        gap: 16px;
+        width: 325px;
+    }
+    h1{
+        text-align: center;
+    }
+    p{
+        text-align: center;
+
+    }
+    .about-morea .social-media{
+        justify-content: center;
+        width: 100%;
+    }
+    div.content{
+        gap: 16px;
+    }
+    footer {
+        max-width: 350px;
+        height: 60px;
+    }
+    .img-morea img{
+        width: 200px;
+    }
+    footer img {
+        height: 40px;
+    }
+}

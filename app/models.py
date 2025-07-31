@@ -43,6 +43,12 @@ class Campus_types(models.IntegerChoices):
     tobias_barreto = 9, "Tobias Barreto"
     reitoria = 10, "Reitoria"
 
+class Users_types(models.IntegerChoices):
+    admin = 0, "Administrador"
+    manager_event = 1, "Coordenador de evento"
+    user_common = 2, "Usuário comum"
+    voluntary = 3, "Marcador de pontos"
+    
 class Point_types(models.IntegerChoices):
     goal = 0, "Gol"
     point = 1, "Ponto"
@@ -60,7 +66,7 @@ class Type_penalties(models.IntegerChoices):
     lack = 2, "lack"
     empty = 3, "Nenhum"
 
-class Sexo_types(models.IntegerChoices):
+class Events_need(models.IntegerChoices):
     masculine = 0, "Masculino"
     feminine = 1, "Feminino"
     mixed = 2, "Misto"
@@ -76,16 +82,66 @@ class Type_service(models.IntegerChoices):
     trainee = 3, "Estagiário"
     head_delegation = 4,"Chefe de delegação"
 
+class Sexo_types(models.IntegerChoices):
+    masculine = 0, "Masculino"
+    feminine = 1, "Feminino"
+    mixed = 2, "Misto"
+
+class Event(models.Model):
+    name = models.CharField(max_length=100)
+    logo = models.ImageField(upload_to='events/')
+    description = models.TextField(blank=True, null=True)
+    date_init = models.DateField(blank=True, null=True)
+    date_end = models.DateField(blank=True, null=True)
+    enrollment_init = models.DateTimeField(blank=True, null=True)
+    enrollment_end = models.DateTimeField(blank=True, null=True)
+    local = models.CharField(max_length=100, blank=True, null=True)
+    active = models.BooleanField(default=True) 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    regulation = models.FileField(upload_to='events/', blank=True, null=True)
+    age = models.IntegerField(default=99)
+
+    #Needs
+    player_need_instagram = models.BooleanField(default=True) 
+    player_need_photo = models.BooleanField(default=True) 
+    player_need_bulletin = models.BooleanField(default=True) 
+    player_need_rg = models.BooleanField(default=True) 
+    player_need_sexo = models.BooleanField(default=True) 
+    player_need_registration = models.BooleanField(default=True) 
+    player_need_cpf = models.BooleanField(default=True) 
+    player_need_date_nasc = models.BooleanField(default=True) 
+
+    voluntary_need_photo = models.BooleanField(default=True) 
+    voluntary_need_registration = models.BooleanField(default=True) 
+
+    def __str__(self):
+        return self.name
+
+class Event_sport(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="sport_set")
+    sport = models.IntegerField(choices=Sport_types.choices)
+    min_sport = models.PositiveIntegerField(default=1)
+    max_sport = models.PositiveIntegerField(default=99)
+
+    def __str__(self):
+        return f"{self.event.name} | {self.get_sport_display()}"
+
+class Event_need(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="need_set")
+
 class CustomUser(AbstractUser):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     date_nasc = models.DateField(blank=True, null=True)
     photo = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    campus = models.IntegerField(choices=Campus_types.choices, blank=True, null=True)
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, blank=True, null=True)
+    event_user = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True, null=True, related_name="user_set")
+    type = models.IntegerField(choices=Users_types.choices, default=3)
 
     def __str__(self):
         return self.username
 
 class Settings_access(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     start = models.DateTimeField()
     end = models.DateTimeField()
 
@@ -101,64 +157,46 @@ class Help(models.Model):
 
 class Player(models.Model):
     name = models.CharField(max_length=100)
-    instagram = models.CharField(max_length=100, blank=True)
-    photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True)
-    bulletin = models.FileField(upload_to='bulletins/')
-    rg = models.FileField(upload_to='rg/')
-    sexo = models.IntegerField(choices=Sexo_types.choices, default=Sexo_types.mixed)
-    campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
-    registration = models.CharField(max_length=15, default="0000000000")
-    cpf = models.CharField(max_length=11, default="00000000000")
-    date_nasc = models.DateField(default=timezone.now)
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
+    instagram = models.CharField(max_length=100, blank=True, null=True)
+    photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
+    bulletin = models.FileField(upload_to='bulletins/', blank=True, null=True)
+    rg = models.FileField(upload_to='rg/', blank=True, null=True)
+    sexo = models.IntegerField(choices=Sexo_types.choices, blank=True, null=True)
+    registration = models.CharField(max_length=15, default="0000000000", blank=True, null=True)
+    cpf = models.CharField(max_length=11, default="00000000000", blank=True, null=True)
+    date_nasc = models.DateField(default=timezone.now, blank=True, null=True)
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.name} | {self.sexo} | {self.admin.username}"
     
-class Technician(models.Model):
-    name = models.CharField(max_length=100)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    siape = models.CharField(max_length=100, blank=True)
-    photo = models.ImageField(upload_to='photo_technician/', default='defaults/person.png', blank=True)
-    campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
-    sexo = models.IntegerField(choices=Sexo_types.choices, default=Sexo_types.mixed)
-
-    def __str__(self):    
-        return f"{self.name} | {self.sexo}"
-    
 class Voluntary(models.Model):
     name = models.CharField(max_length=100)
-    photo = models.ImageField(upload_to='photo_voluntary/', default='defaults/person.png', blank=True)
-    campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
-    registration = models.CharField(max_length=11, default="00000000000")
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
+    photo = models.ImageField(upload_to='photo_voluntary/', default='defaults/person.png', blank=True, null=True)
+    registration = models.CharField(max_length=11, default="00000000000", blank=True, null=True)
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type_voluntary = models.IntegerField(choices=Type_service.choices, default=Type_service.voluntary)
-
-    def __str__(self):    
-        return f"{self.name} | {self.get_campus_display()}"
-
-class Team(models.Model):
-    name = models.CharField(max_length=100, blank=True)
-    photo = models.ImageField(upload_to='logo_team/', default='defaults/team.png', blank=True, null=True)
-    hexcolor = models.CharField(max_length=7, null=True, blank=True)
-    campus = models.IntegerField(choices=Campus_types.choices, default=Campus_types.reitoria)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="voluntary_set")
 
     def __str__(self):    
         return f"{self.name}"
 
-
-class Badge(models.Model):
+class Team(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    file = models.ImageField(upload_to='badge/', blank=True)
+    description = models.TextField(max_length=200, blank=True, null=True)
+    photo = models.ImageField(upload_to='logo_team/', default='defaults/team.png', blank=True, null=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    status = models.BooleanField(default=True)
 
     def __str__(self):    
-        return f"{self.name} - {self.id}"
+        return f"{self.name}"
     
 class Attachments(models.Model):
     name = models.CharField(max_length=100, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to='attachments/', blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.name} - {self.id}"
@@ -167,19 +205,21 @@ class Certificate(models.Model):
     name = models.CharField(max_length=100, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.ImageField(upload_to='certificate/', blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.name}"
 
 class Team_sport(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    sport = models.IntegerField(choices=Sport_types.choices)
+    sport = models.ForeignKey(Event_sport, on_delete=models.CASCADE)
     admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sexo = models.IntegerField(choices=Sexo_types.choices)
     status = models.BooleanField(default=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="team_sport_set")
 
-    def __str__(self):    
-        return f"{self.team.get_campus_display()} | {self.get_sport_display()}"
+    def __str__(self):      
+        return f"{self.team.name} | {self.get_sexo_display()}"
     
 class Player_team_sport(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -199,6 +239,7 @@ class Volley_match(models.Model):
     status = models.IntegerField(choices=Status.choices, default=Status.empty)
     sets_team_a = models.IntegerField(default=0)
     sets_team_b = models.IntegerField(default=0)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.get_status_display()} | {self.sets_team_a} | {self.sets_team_b}"
@@ -214,6 +255,7 @@ class Match(models.Model):
     volley_match = models.ForeignKey(Volley_match, on_delete=models.CASCADE, blank=True, null=True, related_name="matches")
     add = models.TimeField(blank=True, null=True)
     time_match = models.DateTimeField(null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.id} | {self.get_sport_display()} | {self.get_status_display()} | {self.sexo}"
@@ -267,7 +309,7 @@ class Time_pause(models.Model):
         elif self.start_pause and self.end_pause:
             return f"{self.start_pause} | {self.end_pause} | {self.match}"
 
-class Events(models.Model):
+class Occurrence(models.Model):
     name = models.CharField(max_length=50)
     details = models.CharField(max_length=200)
     match = models.ForeignKey(Match, on_delete=models.CASCADE, null=True)
@@ -276,18 +318,11 @@ class Events(models.Model):
     def __str__(self):    
         return f"{self.name} | {self.details} | {self.details} | {self.datetime}"
     
-class Config(models.Model):
-    site = models.CharField(max_length=200,null=True, blank=True)
-    qrcode = models.ImageField(upload_to='photos_config/', default='defaults/qrcode.png',null=True, blank=True)
-    areasup = models.CharField(max_length=50,null=True, blank=True)
-
-    def __str__(self):    
-        return f"{self.id} | {self.site}"
-    
 class Banner(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     image = models.ImageField(upload_to='photos_config/', null=True, blank=True)
     status = models.IntegerField(choices=Type_Banner.choices, default=Type_Banner.empty)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.id} | {self.name} | {self.status}"
@@ -301,7 +336,8 @@ class Terms_Use(models.Model):
     email = models.EmailField(max_length=255, blank=True)
     phone = models.CharField(max_length=255, blank=True)
     accepted = models.BooleanField(default=False)
-    accepted_at = models.DateTimeField(null=True, blank=True)  # data do aceite
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     @property
     def date_accept_local(self):
@@ -315,20 +351,13 @@ class Terms_Use(models.Model):
     class Meta:
         verbose_name = "Terms_Use"
         verbose_name_plural = "Terms_uses"
-    
-class Bolletin(models.Model):
-    title = models.CharField(max_length=255)
-    date = models.DateTimeField(auto_now_add=True)
-
-class Section(models.Model):
-    bolletin = models.ForeignKey(Bolletin, on_delete=models.CASCADE)
-    subtitle = models.CharField(max_length=500)
-    contend = models.CharField(max_length=1500)
 
 class Statement(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     image = models.ImageField(upload_to='photos_config/', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
 class Statement_user(models.Model):
     statement = models.ForeignKey(Statement, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)

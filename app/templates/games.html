@@ -2,23 +2,93 @@
 {% load static %}
 
 {% block head %}
-<title>JIFS ADMIN</title>
+<title>ATUM ADMIN</title>
 {% endblock head %}
 
 {% block navbar %}
+<style>
+    .title-adm{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 7em;
+        width: 100%;
+        color: var(--global-header-color);
+    }
+    @media screen and (max-width: 700px) {
+        .title-adm{
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 15px;
+            height: auto;
+            padding-bottom: 15px;
+            gap: 15px;
+        }
+        .block1{
+            padding-inline: 4vw;
+        }
+    }
 
+    .title-buttons{
+        width: 20em;
+        height: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .title-buttons > span{
+        width: 7em;
+        height: 2.8em;
+        padding: 0;
+        border-radius: 8px;
+        background-color: var(--global-header-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    .title-buttons p{
+        color: white;
+        font-size: 20px;
+        font-weight: 500;
+    }
+    .title-buttons > select{
+        width: 12em;
+        height: 2.8em;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .input-search-adm{
+        width: 100%;
+    }
+    .input-search-adm input{
+        width: 100%;
+    }
+</style>
 {% endblock navbar %}
 
 {% block content %}
+
 <div class="all-block">
     <div class="block1">
-        <div class="title">
-            <h1>PARTIDAS</h1>
+        <div class="title-adm">
+            <h1>
+                GERENCIAMENTO DE PARTIDAS
+            </h1>
+            <div class="title-buttons">
+                <span onclick="openModal()"><p>Novo</p></span>
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Evento</option>
+                        {% for i in events %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
         </div>
-        <button class="side-bar-buttons-items2 custom-buttons-sport-nav">
-            <a href="{% url 'matches_register' %}">CADASTRAR PARTIDA</a>
-        </button>
-        <br><br>
         <div class="games">
             {% for i in context %}
             <section class="game-section">
@@ -40,7 +110,7 @@
                                 alt="Timer Icon" />
                         </div>
                     </a>
-                    <a class="games-config-link" href="{% url 'general_data' i.match.id %}">
+                    <a class="games-config-link" href="">
                         <div class="games-config-item">
                             <img class="games-config-item-img" src="{% static 'images/icon-config.png' %}"
                                 alt="Gear Icon" />
@@ -55,15 +125,17 @@
                 </div>
             </section>
             {% empty %}
-            <img style="width: 20em;" src="{% static 'images/games-empty.svg' %}">
-            <div class="title2">
-                <h2>NÃO HÁ NENHUM TIME CADASTRADO!</h2>
-            </div>
+            <section class="alert-page">
+                <div class="alert-img">
+                <i class="fa-solid fa-circle-exclamation"></i> 
+                </div>
+                <div class="alert-text">
+                    <p>NÃO HÁ NENHUMA PARTIDA PROGRAMADA.</p>
+                </div>
+            </section>
             {% endfor %}
+
         </div>
-        <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-block: 40px;">
-            <a href="{% url 'manage' %}">VOLTAR</a>
-        </button>
     </div>
 </div>
 {% endblock content %}

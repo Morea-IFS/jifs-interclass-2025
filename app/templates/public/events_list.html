@@ -1,0 +1,85 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'css/public/events.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+    <title>MOREA SPORTS</title>
+</head>
+<body>
+    <div class="modal-mobile mobile"></div>
+        <header>
+            <nav>
+                <img
+                    class="logo-jiifs"
+                    src="{% static 'images/logo-morea-sports.svg' %}"
+                    alt="JIIFS"
+                />
+                <ul>
+                    <li class="item-close mobile">
+                        <img
+                            class="icon-close mobile"
+                            src="{% static 'images/icon-close.svg' %}"
+                            alt="Menu"
+                        />
+                    </li>
+                    <li><a href="" class="morea-link">Eventos</a></li>
+                    <li><a href="{% url 'login' %}" class="login-link">Login</a></li>
+                </ul>
+                <img
+                    class="icon-burguer"
+                    src="{% static 'images/icon-burguer.svg' %}"
+                    alt="Menu"
+                />
+            </nav>
+        </header>
+        <main>
+            <section class="about-morea">
+                <div class="content">
+                    <h1>Seja bem vindo ao <span class="stroke-morea">MOREA SPORTS</span></h1>
+                    <p>Escolha o evento esportivo que deseja e o acompanhe em tempo real.</p>
+                    <p>Veja mais em nosso <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">site</a>.</p>
+                    <div class="social-media">
+                        <a class="link-instagram-morea" href="https://www.instagram.com/projeto.morea?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{%static 'images/icon-instagram-colorful.svg'%}" alt="" aria-hidden="true"><p>@projeto.morea</p></a>
+                        <a class="link-github-morea" href="https://github.com/Morea-IFS" target="_blank"><img src="{%static 'images/icon-github.svg'%}" alt="" aria-hidden="true"><p>Morea-IFS</p></a>
+                    </div>
+                </div>
+                <div class="img-morea">
+                    <img src="{% static 'images/logo-morea-sports.svg' %}" alt="" aria-hidden="true" />
+                </div>
+            </section>    
+            <section class="about-events">
+                <div class="container-events">
+                {% for event in events %}
+                <div class="event">
+                    <div class="event-img"><img src="{{ event.logo.url }}" alt=""></div>
+                    <div class="event-block">
+                        <p class="event-title">{{ event.name }}</p>
+                        <p class="event-subtitle"><i class="fa-solid fa-location-dot" style="color: blue;"></i>{{ event.local }}</p>
+                        <a class="event-link" href="{% url 'home_public' event.id %}">ACESSAR</a>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+            </section>
+
+        </main>
+        <footer>
+            <img
+                src="{% static 'images/logo-ifs-white.png' %}"
+                alt=""
+                class="logo-ifs"
+            />
+            <img
+                src="{% static 'images/logo-morea-colorful.svg' %}"
+                alt=""
+                class="logo-ifs"
+            />
+        </footer>
+        <script src="{% static 'js/about_us.js' %}"></script>
+</body>
+</html>

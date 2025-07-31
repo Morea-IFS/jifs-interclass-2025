@@ -144,10 +144,6 @@
         background-color: var(--global-sixth-color);
     }
 
-    input[type=search] {
-        color: var(--global-color-white);
-    }
-
     .title-scoreboard h2 {
         color: var(--global-color-white);
     }
@@ -187,6 +183,7 @@ button {
 .all {
     display: flex;
     min-height: 100dvh;
+    background-color: var(--global-third-color);
 }
 
 .all-block {
@@ -198,9 +195,9 @@ button {
 .block1 {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    align-items: start;
     width: 100%;
+    padding-inline: 2vw;
 }
 
 .center-top{
@@ -211,7 +208,7 @@ button {
 
 .title {
     display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     text-align: center;
     height: 7em;
@@ -269,18 +266,8 @@ button {
 .block-inputs-form {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4em;
-    width: 80%;
-}
-
-.block-inputs-form label{
-    color: #868686;
-}
-
-.block-inputs-form select {
-    background-color: var(--global-secondary-color);
-    color: var(--global-primary-color);
+    gap: 0.6em;
+    width: 95%;
 }
 
 .div-input-sports {
@@ -294,58 +281,51 @@ button {
 }
 
 .div-input-sports label {
-    text-align: left;
-    margin: 5px;
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #484848;
+    margin-top: 15px;
 }
 
-input[type=number] {
-    background-color: var(--global-fifth-color);
-    border: black 1px solid;
-    border-radius: 10px;
-    text-align: center;
-    padding: 0.8em 0.5em;
-    font-size: 14px;
-}
-
-input[type=date] {
-    background-color: var(--global-sixth-color);
-    border: none;
-    color: #5c5c5c;
-    text-align: center;
-    width: 100%;
-    padding: 0.8em 0.5em;
-    font-size: 14px;
-    
-}
-
-input[type=text],
-input[type=password],
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="file"],
+input[type="date"],
+input[type="checkbox"],
+input[type=search],
 select {
-    padding-block: 1em;
-    border: none;
     width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.8px solid #afafaf;
     font-size: 15px;
-    margin-bottom: 1em;
-    text-align-last: center;
-    background-color: var(--global-sixth-color);
+    transition: border-color 0.3s ease;
+    background-color: white;
+    box-sizing: border-box;
 }
 
-input[type=file] {
-    display: none;
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="datetime-local"]:focus,
+input[type="time"]:focus,
+input[type="file"]:focus,
+input[type="date"]:focus,
+input[type="checkbox"]:focus,
+input[type=search]:focus,
+select:focus {
+    border-color: #0066ff;
+    outline: none;
 }
 
-.custom-file-button {
-    display: flex;
-    border: none;
-    width: 100%;
-    text-align: center;
-    padding-block: 1em;
-    font-size: 15px;
-    justify-content: center;
-    background-color: var(--global-secondary-color);
-    color: var(--global-primary-color);
-    user-select: none;
-}
 
 .input-data {
     background-color: var(--global-secondary-color);
@@ -380,17 +360,35 @@ input[type=file] {
 
 /* CSS GERENCIAMENTO */
 
-
-
-input[type=search] {
-    text-align: center;
-    width: 80%;
-    padding: 1em;
-    margin-bottom: 2em;
-    border-radius: 1em;
-    border: solid black 1px;
-    background-color: var(--global-fifth-color);
+.alert-page {
+    width: 100%;
+    margin: 20px auto;
+    background-color: var(--global-nav-color);
+    border-left: 4px solid #0077ff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
+.alert-img {
+    flex-shrink: 0;
+    font-size: 24px;
+    color: #fff;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-text {
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
 
 .all-table {
     max-width: 80vw;
@@ -418,6 +416,9 @@ input[type=search] {
 tbody tr {
     text-align: center;
 }
+tr{
+    border-bottom: 1px solid #ababab;
+}
 
 table,
 th,
@@ -438,14 +439,6 @@ th {
 
 td {
     color: var(--global-ninth-color);
-}
-
-tr:nth-child(odd) {
-    background-color: var(--global-fourth-color);
-}
-
-tr:nth-child(even) {
-    background-color: var(--global-fifth-color);
 }
 
 .pagination {
@@ -479,6 +472,11 @@ tr:nth-child(even) {
 .pagination-buttons {
     display: flex;
     gap: 2em;
+}
+.title-table-event{
+    color: #0051ff;
+    font-size: 30px;
+    font-weight: 700;
 }
 
 /* CSS DOS JOGOS */

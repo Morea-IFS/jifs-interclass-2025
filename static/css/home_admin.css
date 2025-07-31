@@ -86,6 +86,7 @@ span.stroke-morea {
 
 .link-morea-or-lattes {
     text-decoration: none;
+    text-align: center;
     color: var(--blue-links);
     font-size:20px;
     transition: .3s ease-in-out;

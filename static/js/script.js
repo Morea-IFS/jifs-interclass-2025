@@ -311,6 +311,16 @@ function applyConfirmation() {
             confirmAction(event, message);
         });
     });
+    7410
 }
 
 document.addEventListener("DOMContentLoaded", applyConfirmation);
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.dropdown-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const menu = button.nextElementSibling;
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        });
+    });
+});

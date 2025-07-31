@@ -1,9 +1,12 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Settings_access, Statement, Statement_user, Badge, Bolletin, Section, Config, Volley_match, Attachments, Events, Player, Voluntary, Technician, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Settings_access, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
 
 User = get_user_model()
+
+admin.site.register(Session)
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -11,13 +14,13 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = UserAdmin.fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'campus')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type')
         }),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'campus')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type')
         }),
     )
 
@@ -30,15 +33,20 @@ class Settings_accessAdmin(admin.ModelAdmin):
     list_display = ('id','start','end')
     search_fields = ('id','start','end')
 
+@admin.register(Event_sport)
+class Event_sportAdmin(admin.ModelAdmin):
+    list_display = ('id','event','sport','min_sport','max_sport')
+    search_fields = ('id','event','sport','min_sport','max_sport')
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('id','name','logo')
+    search_fields = ('id','name','logo')
+
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('id','name','sexo','campus','registration','date_nasc','bulletin','photo')
-    search_fields = ('id','name','sexo','campus','registration','date_nasc','bulletin','photo')
-
-@admin.register(Badge)
-class BadgevAdmin(admin.ModelAdmin):
-    list_display = ('id','name','user','file')
-    search_fields = ('id','name','user','file')
+    list_display = ('id','name','sexo','registration','date_nasc','bulletin','photo')
+    search_fields = ('id','name','sexo','registration','date_nasc','bulletin','photo')
 
 @admin.register(Attachments)
 class AttachmentsvAdmin(admin.ModelAdmin):
@@ -64,25 +72,11 @@ class HelpAdmin(admin.ModelAdmin):
 class CertificatevAdmin(admin.ModelAdmin):
     list_display = ('id','name','user','file')
     search_fields = ('id','name','user','file')
-@admin.register(Bolletin)
-class BolletinvAdmin(admin.ModelAdmin):
-    list_display = ('id','title','date')
-    search_fields = ('id','title','date')
-
-@admin.register(Section)
-class SectionvAdmin(admin.ModelAdmin):
-    list_display = ('id','bolletin','subtitle','contend')
-    search_fields = ('id','bolletin','subtitle','contend')
-
-@admin.register(Technician)
-class TechnicianAdmin(admin.ModelAdmin):
-    list_display = ('id','name','sexo', 'siape','campus')
-    search_fields = ('id','name','sexo', 'siape','campus')
 
 @admin.register(Voluntary)
 class VoluntaryAdmin(admin.ModelAdmin):
-    list_display = ('id','name','registration','campus')
-    search_fields = ('id','name','registration','campus')
+    list_display = ('id','name','registration')
+    search_fields = ('id','name','registration')
 
 @admin.register(Volley_match)
 class Volley_matchAdmin(admin.ModelAdmin):
@@ -91,8 +85,8 @@ class Volley_matchAdmin(admin.ModelAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('id','name','hexcolor')
-    search_fields = ('id','name','hexcolor')
+    list_display = ('id','name','description','event')
+    search_fields = ('id','name','description','event')
 
 @admin.register(Team_sport)
 class Team_sportAdmin(admin.ModelAdmin):
@@ -139,15 +133,10 @@ class AssistanceAdmin(admin.ModelAdmin):
     list_display = ('id','assis_to','player','match')
     search_fields = ('id','assis_to','player','match')
 
-@admin.register(Events)
-class EventsAdmin(admin.ModelAdmin):
+@admin.register(Occurrence)
+class OccurrenceAdmin(admin.ModelAdmin):
     list_display = ('id','name','details')
     search_fields = ('id','name','details')
-
-@admin.register(Config)
-class ConfigAdmin(admin.ModelAdmin):
-    list_display = ('id','site')
-    search_fields = ('id','site')
 
 @admin.register(Banner)
 class BannerAdmin(admin.ModelAdmin):

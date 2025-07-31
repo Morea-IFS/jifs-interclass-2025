@@ -47,7 +47,7 @@ socket.onmessage = function(e) {
      bannerScoreboard = document.getElementById('banner-scoreboard'),
      FooterBoard = document.getElementById('footer-project'),
      SectionBoard = document.getElementById('section-project');
-    
+    console.log(data)
     if (pointsA) pointsA.textContent = data.points_a;
     if (pointsB) pointsB.textContent = data.points_b;
     if (namescoreboard) namescoreboard.textContent = data.name_scoreboard;

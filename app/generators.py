@@ -11,7 +11,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 import os, time
 from typing import List, Dict
 from django.http import HttpResponse
-from .models import Badge, Certificate, Match,Events, Match, Time_pause
+from .models import Certificate, Match, Occurrence, Match, Time_pause
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('Outfit', 'fonts/Outfit-Black.ttf'))
@@ -144,7 +144,7 @@ def generate_badges(players, user_l, t, namebadge):
 
 def generate_events(name, details):
     match = Match.objects.get(status=1)
-    Events.objects.create(name=name,details=details, match=match)
+    Occurrence.objects.create(name=name,details=details, match=match)
 
 
 def generate_timer(match):
@@ -196,3 +196,7 @@ def generate_timer(match):
         status = 0
     print("Tempo: ",seconds, " status: ",status)
     return seconds, status
+
+def prinet(message):
+    if settings.DEBUG:
+        print(message)

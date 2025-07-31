@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <section class="block1">
+        <div class="title">
+            <h1>CADASTRO DE TIMES</h1>
+        </div>
+        <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="block-inputs-form">
+                <div>
+                    <input type="text" autocomplete="on" autocorrect="on" name="name"
+                        placeholder="Digite o nome do time*"></input>
+                    <select id="sexos" name="sexo" required>
+                        <option selected disabled>Selecione o sexo*</option required>
+                        {% for value, name in sexo %}
+                        <option value="{{value}}">{{name}}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="sport_id">
+                        <option value="None" selected disabled>Selecione o esporte*</option>
+                        {% for value, name in sport %}
+                        <option value="{{value}}">{{name}}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                </div>
+                <div>
+                    <input class="input-confirm" type="submit" value="Confirmar">
+                </div>
+            </div>
+        </form>
+        <button class="side-bar-buttons-items2" style="background-color: var(--global-seventh-color); margin-top: 40px;">
+            <a href="{% url 'team_manage' %}">VOLTAR</a>
+        </button>
+    </section>
+</div>
+{% endblock content %}
