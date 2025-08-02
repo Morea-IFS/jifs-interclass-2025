@@ -79,6 +79,7 @@
             </h1>
             <div class="title-buttons">
                 <span onclick="openModal()"><p>Novo</p></span>
+                {% if user.type == 0 %}
                 <form method="get">
                     <select name="e" onchange="this.form.submit();">
                         <option value="">Evento</option>
@@ -87,6 +88,11 @@
                         {% endfor %}
                     </select>
                 </form>
+                {% else %}
+                <h3>
+                    {{user.event_user.name}}
+                </h3>
+                {% endif %}
             </div>
         </div>
         <div class="games">

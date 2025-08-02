@@ -375,10 +375,18 @@ def erro_404_customizado(request, exception):
 @terms_accept_required
 def player_manage(request):
     if request.method == "GET":
-        if request.user.is_staff:
-            player = Player.objects.all().order_by('-id')
+        context = {
+            'events': Event.objects.all()
+        }
+        if 'e' in request.GET and request.GET['e'] != '' and request.GET['e'] != '0':
+            event = Event.objects.get(id=request.GET['e'])
+            player = Player.objects.filter(event=event).order_by('id')
+            context['select_event'] = request.GET['e']
         else:
-            player = Player.objects.filter(admin=request.user).order_by('-id')
+            if request.user.is_staff:  
+                player = Player.objects.all().order_by('-id')
+            else:
+                player = Player.objects.filter(admin=request.user).order_by('-id')
         page = request.GET.get('page', 1) 
         paginator = Paginator(player, 20) 
         try:
@@ -387,7 +395,8 @@ def player_manage(request):
             player_paginated = paginator.page(1)
         except EmptyPage:
             player_paginated = paginator.page(paginator.num_pages)
-        return render(request, 'players/player_manage.html', {'player': player_paginated})
+        context['player'] = player_paginated
+        return render(request, 'players/player_manage.html', context)
     else:
         try:
             if 'player_delete' in request.POST:
@@ -482,7 +491,7 @@ def team_players_edit(request, id, team):
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_team_sport', raise_exception=True)
-def team_manage(request):
+def team_manage_nda(request):
         user = User.objects.get(id=request.user.id)
         context = {
             'allowed': allowed_pages(user),
@@ -491,7 +500,8 @@ def team_manage(request):
             if not user.type in [0, 1]: 
                 context['team_sports'] = Team_sport.objects.filter(admin=user)
                 return render(request, 'team/team_manage.html', context)
-            return render(request, 'team/team_manage_admin.html', context)
+            print("aqui não")
+            return redirect('team_manage')
         else:
             if 'team_sport_delete' in request.POST:
                 team_sport_id = request.POST.get('team_sport_delete')
@@ -503,7 +513,6 @@ def team_manage(request):
                         i.delete()     
                         print("apagado player somente do")
                         if not Player_team_sport.objects.filter(player=i.player).exists():
-                            
                             print("APAGANDO JOGADOR: ", i.player.name)
                             status = verificar_foto(str(i.player.photo))
                             if status:
@@ -526,14 +535,16 @@ def team_manage(request):
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_team_sport', raise_exception=True)
-def team_manage_admin(request):
+def team_manage(request):
     context = {}
 
     current_get_params = request.GET.urlencode()
 
     if request.method == "GET":
-        context['events'] = Event.objects.all()
-        context['users'] = User.objects.all()
+        if request.user.type == 0: 
+            context['users'] = User.objects.all()
+            context['events'] = Event.objects.all()
+        
 
         e = request.GET.get("e")
         t = request.GET.get("t")
@@ -558,24 +569,49 @@ def team_manage_admin(request):
             context['events_sport'] = Event_sport.objects.filter(event__id=e)
             context['select_event'] = e
 
-        return render(request, 'team/team_manage_admin.html', context)
+        elif t and request.user.type == 1:
+            context['teams'] = Team.objects.filter(event__id=request.user.event_user.id)
+            context['events_sport'] = Event_sport.objects.filter(event__id=request.user.event_user.id)
+            context['team'] = Team.objects.get(id=t)
+            context['team_sports'] = Team_sport.objects.filter(team__id=t)
+            context['users'] = User.objects.filter(event_user=request.user.event_user)
+
+        elif request.user.type == 1:
+            print("eita")
+            context['teams'] = Team.objects.filter(event__id=request.user.event_user.id)
+            context['events_sport'] = Event_sport.objects.filter(event__id=request.user.event_user.id)
+
+        elif request.user.type == 2:
+            context['team'] = Team.objects.get(id=request.user.team.id)
+            context['team_sports'] = Team_sport.objects.filter(team__id=request.user.team.id)
+            context['events_sport'] = Event_sport.objects.filter(event__id=request.user.event_user.id)
+            
+        print("passou: ", context)
+        return render(request, 'team/team_manage.html', context)
 
     else:
+        print(request.POST)
         if 'add-team' in request.POST:
             name = request.POST.get("name")
             description = request.POST.get("description")
             photo = request.FILES.get("photo")
-            event = Event.objects.get(id=request.POST.get("event_admin_id"))
+            event = Event.objects.get(id=request.POST.get("add-team"))
             Team.objects.create(name=name, description=description, photo=photo, event=event)
         elif 'add-team-sport' in request.POST:
-            team = Team.objects.get(id=request.POST.get("team_adm_id"))
+            team = Team.objects.get(id=request.POST.get("add-team-sport"))
             sport = Event_sport.objects.get(id=request.POST.get("sport_adm_id"))
             sexo = request.POST.get("sexo_adm_id")
-            if request.POST.get("user_adm_id"):
-                user = User.objects.get(id=request.POST.get("user_adm_id"))
-            else:
-                user = request.user
-            Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event, admin=user)
+            Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+        elif 'edit-team' in request.POST:
+            team = Team.objects.get(id=request.POST.get("edit-team"))
+            team.name = request.POST.get("edit-name")
+            if request.FILES.get("edit-logo"):
+                team.photo = request.FILES.get("edit-logo")
+            team.description = request.POST.get("edit-description")
+            if request.POST.get('edit-status') == 'on': team.status = True
+            else: team.status = False
+            team.save()
+
         elif 'team-data' in request.POST:
             team_id = request.POST.get('team-data')
             team = Team.objects.get(id=team_id)
@@ -598,15 +634,37 @@ def team_manage_admin(request):
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
             # response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
-
             HTML(string=html_string).write_pdf(response)
 
             return response
+        
+        elif 'team_sport_delete' in request.POST:
+            team_sport_id = request.POST.get('team_sport_delete')
+            team_sport_delete = Team_sport.objects.get(id=team_sport_id)
+            players_team_sport = Player_team_sport.objects.filter(team_sport=team_sport_delete)
+            print(players_team_sport)
+            if players_team_sport:
+                for i in players_team_sport:
+                    i.delete()     
+                    print("apagado player somente do")
+                    if not Player_team_sport.objects.filter(player=i.player).exists():
+                        
+                        print("APAGANDO JOGADOR: ", i.player.name)
+                        status = verificar_foto(str(i.player.photo))
+                        if status:
+                            i.player.photo.delete()
+                        i.player.bulletin.delete()
+                        i.player.rg.delete()
+                        i.player.delete()     
+            team_sport_delete.delete()
+            if not Team_sport.objects.filter(team=team_sport_delete.team.id):
+                pass
+                #Team.objects.get(id=team_sport_delete.team.id).delete()
 
         if current_get_params:
-            return redirect(f"{reverse('team_manage_admin')}?{current_get_params}")
+            return redirect(f"{reverse('team_manage')}?{current_get_params}")
         else:
-            return redirect('team_manage_admin')
+            return redirect('team_manage')
 
 @login_required(login_url="login") 
 def theme_manage(request):
@@ -844,7 +902,9 @@ def matches_register(request):
 @terms_accept_required
 def games(request):
     contex = {}
-    if 'e' in request.GET and request.GET['e'] != '':
+    if request.user.type in [1,2]:
+        matchs = Match.objects.filter(event=request.user.event_user).prefetch_related('teams__team').order_by('time_match')
+    elif 'e' in request.GET and request.GET['e'] != '':
         matchs = Match.objects.filter(event=Event.objects.get(id=request.GET['e'])).prefetch_related('teams__team').order_by('time_match')
         contex['select_event'] = request.GET['e']
     else:
@@ -918,7 +978,8 @@ def user_manage(request):
                 messages.success(request, f"{user.username} do sistema atualizado com sucesso!")
             elif 'name' in request.POST:
                 name = request.POST.get('name')
-                if int(request.POST.get('event')) != 0: event = Event.objects.get(id=request.POST.get('event'))
+                if request.POST.get('event') and int(request.POST.get('event')) != 0: event = Event.objects.get(id=request.POST.get('event'))
+                elif request.user.type == 1: event = request.user.event_user
                 else: event = None
                 type = request.POST.get('type')
                 team = request.POST.get('team')
@@ -932,7 +993,7 @@ def user_manage(request):
                     else: messages.error(request, "Você não informou o time associado ao usuário.")
                 else:
                     User.objects.create_user(username=name, password=password, photo=photo, type=type, email=email, telefone=telephone, event_user=event )
-                messages.success(request, f"{name} cadastrado do sistema com sucesso!")
+                    messages.success(request, f"{name} cadastrado do sistema com sucesso!")
             elif 'user_delete' in request.POST:
                 user_id = request.POST.get('user_delete')
                 user_delete = User.objects.get(id=user_id)
@@ -949,19 +1010,16 @@ def voluntary_manage(request):
         types = Type_service.choices
     else:
         types = Type_service.choices[:-1]
-    if not request.user.event_user:
-        events = Event.objects.all()
-    else:
-        events = Event.objects.filter(id=request.user.event_user.id)
     if request.method == "GET":
         context = {
             'allowed': allowed_pages(user),
-            'events': events,
-            'campus': Campus_types.choices,
             'types': types,
             'users': User.objects.all(),
         }
-        if 'e' in request.GET and request.GET['e'] != '':
+        if not request.user.event_user: context['events'] = Event.objects.all()
+        if user.type != 0:
+            context['voluntarys'] = Voluntary.objects.filter(event=request.user.event_user)
+        elif 'e' in request.GET and request.GET['e'] != '':
             context['voluntarys'] = Voluntary.objects.filter(event__id=request.GET['e'])
             context['select_event'] = request.GET['e']
         print(context)

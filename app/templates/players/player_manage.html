@@ -6,91 +6,176 @@
 {% endblock head %}
 
 {% block navbar %}
+<style>
+    .title-adm{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 7em;
+        width: 100%;
+        color: var(--global-header-color);
+    }
+    @media screen and (max-width: 700px) {
+        .title-adm{
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 15px;
+            height: auto;
+            padding-bottom: 15px;
+            gap: 15px;
+        }
+        .block1{
+            padding-inline: 4vw;
+        }
+    }
 
+    .title-buttons{
+        width: 20em;
+        height: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .title-buttons > span{
+        width: 7em;
+        height: 2.8em;
+        padding: 0;
+        border-radius: 8px;
+        background-color: var(--global-header-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    .title-buttons p{
+        color: white;
+        font-size: 20px;
+        font-weight: 500;
+    }
+    .title-buttons > select{
+        width: 12em;
+        height: 2.8em;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .input-search-adm{
+        width: 100%;
+    }
+    .input-search-adm input{
+        width: 100%;
+    }
+</style>
 {% endblock navbar %}
 
 {% block content %}
 <div class="all-block">
     <div class="block1">
-        <div class="title">
-            <h1>GERENCIAMENTO DOS JOGADORES</h1>
+        <div class="title-adm">
+            <h1>
+                GERENCIAMENTO DE ATLETAS
+            </h1>
+            <div class="title-buttons">
+                <span onclick="openModal()"><p>Novo</p></span>
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Evento</option>
+                        {% for i in events %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
         </div>
-        <div class="all-manage">
-            <input type="search" class="hidden" id="search-input" onkeyup="search_table()" placeholder="Pesquisar os jogadores" />
-            <section class="all-table">
-                <table id="search-table">
-                    <tr class="hidden">
-                        <th>ID</th>
-                        <th>NOME</th>
-                        <th>MATRICULA</th>
-                        <th>CAMPUS</th>
-                        <th>SEXO</th>
-                        <th>DATA NASC.</th>
-                        {% if perms.app.change_player %}
-                        <th>EDITAR</th>
-                        {% endif %}
-                        {% if perms.app.delete_player %}
-                        <th>DELETAR</th>
-                        {% endif %}
-                    </tr>
-                    {% for player in player %}
-                    <tr>
-                        <td>{{ player.id }}</td>
-                        <td>{{ player.name }}</td>
-                        <td>{{player.registration}}</td>
-                        <td>{{player.get_campus_display}}</td>
-                        <td>{{player.get_sexo_display}}</td>
-                        <td>{{player.date_nasc}}</td>
-                        {% if perms.app.change_player %}
-                        <td>
-                            <a href="{% url 'player_edit' player.id %}">
-                                <img src="{% static 'images/icon-edit.svg' %}">
-                            </a>
-                        </td>
-                        {% endif %}
-                        {% if perms.app.delete_player %}
-                        <td>
-                            <form method="POST" action="">
-                                {% csrf_token %}
-                                <button name="player_delete" data-confirm="Você deseja excluir o jogador?" value="{{player.id}}" style="background-color: transparent; border: none;">
-                                    <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
-                                </button>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <style>
-                        .hidden {
-                            display: none;
-                        }
-                    </style>
-                    <div class="title2">
-                        <h2>NENHUM JOGADOR FOI ENCONTRADO</h2>
+        <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
+            <input name="q" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure por esportes, por sexo ou pelo ID">
+        </form>
+        <br>
+        {% if select_event %}
+        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+            <table id="search-table" style="width: 100%;">
+                <tr class="hidden">
+                    <th>ID</th>
+                    <th>NOME</th>
+                    <th>MATRICULA</th>
+                    <th>SEXO</th>
+                    <th>DATA NASC.</th>
+                    {% if perms.app.change_player %}
+                    <th>EDITAR</th>
+                    {% endif %}
+                    {% if perms.app.delete_player %}
+                    <th>DELETAR</th>
+                    {% endif %}
+                </tr>
+                {% for player in player %}
+                <tr>
+                    <td>{{ player.id }}</td>
+                    <td>{{ player.name }}</td>
+                    <td>{{player.registration}}</td>
+                    <td>{{player.get_sexo_display}}</td>
+                    <td>{{player.date_nasc}}</td>
+                    {% if perms.app.change_player %}
+                    <td>
+                        <a href="{% url 'player_edit' player.id %}">
+                            <img src="{% static 'images/icon-edit.svg' %}">
+                        </a>
+                    </td>
+                    {% endif %}
+                    {% if perms.app.delete_player %}
+                    <td>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <button name="player_delete" data-confirm="Você deseja excluir o jogador?" value="{{player.id}}" style="background-color: transparent; border: none;">
+                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <style>
+                    .hidden {
+                        display: none;
+                    }
+                </style>
+                <section class="alert-page">
+                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-text">
+                        <p>NENHUM ATLETA FOI ENCONTRADO.</p>
                     </div>
-                    {% endfor %}
-                </table>
-            </section>
-            <section class="pagination hidden">
-                <div class="pagination-info">
-                    <p>Página {{ player.number }} de {{ player.paginator.num_pages }}</p>
-                </div>
+                </section>
+                {% endfor %}
+            </table>
+        </section>
+        <section class="pagination hidden">
+            <div class="pagination-info">
+                <p>Página {{ player.number }} de {{ player.paginator.num_pages }}</p>
+            </div>
+            
+            <div class="pagination-buttons">
+                {% if player.has_previous %}
+                    <button class="pagination-button">
+                        <a href="?page={{ player.previous_page_number }}" class="pagination-link">Anterior</a>
+                    </button>
+                {% endif %}
                 
-                <div class="pagination-buttons">
-                    {% if player.has_previous %}
-                        <button class="pagination-button">
-                            <a href="?page={{ player.previous_page_number }}" class="pagination-link">Anterior</a>
-                        </button>
-                    {% endif %}
-                    
-                    {% if player.has_next %}
-                        <button class="pagination-button">
-                            <a href="?page={{ player.next_page_number }}" class="pagination-link">Próxima</a>
-                        </button>
-                    {% endif %}
-                </div>
-            </section>
-        </div>
+                {% if player.has_next %}
+                    <button class="pagination-button">
+                        <a href="?page={{ player.next_page_number }}" class="pagination-link">Próxima</a>
+                    </button>
+                {% endif %}
+            </div>
+        </section>
+        {% else %}
+        <section class="alert-page">
+            <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+            <div class="alert-text">
+                <p>SELECIONE O EVENTO QUE DESEJA.</p>
+            </div>
+        </section>
+        {% endif %}
     </div>
 </div>
+
 {% endblock content %}

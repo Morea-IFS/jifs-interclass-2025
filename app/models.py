@@ -213,7 +213,6 @@ class Certificate(models.Model):
 class Team_sport(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     sport = models.ForeignKey(Event_sport, on_delete=models.CASCADE)
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     sexo = models.IntegerField(choices=Sexo_types.choices)
     status = models.BooleanField(default=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="team_sport_set")

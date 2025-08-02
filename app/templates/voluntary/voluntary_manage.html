@@ -80,6 +80,7 @@
             </h1>
             <div class="title-buttons">
                 <span onclick="openModal()"><p>Novo</p></span>
+                {% if user.type == 0 %}
                 <form method="get">
                     <select name="e" onchange="this.form.submit();">
                         <option value="">Evento</option>
@@ -88,6 +89,11 @@
                         {% endfor %}
                     </select>
                 </form>
+                {% else %}
+                <h3>
+                    {{user.event_user.name}}
+                </h3>
+                {% endif %}
             </div>
         </div>
         <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
@@ -160,12 +166,14 @@
             </table>
         </section>
         {% else %}
-        <section class="alert-page">
-            <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
-            <div class="alert-text">
-                <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
-            </div>
-        </section>
+            {% if user.type == 0 %}
+            <section class="alert-page">
+                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-text">
+                    <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
+                </div>
+            </section>
+            {% endif %}
         {% endif %}
     </div>
 </div>
@@ -270,7 +278,6 @@
             <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
             <img id="preview" src="{{ voluntary.photo.url }}" alt="Foto atual"
                 style="max-width: 150px; display: block; margin-top: 5px;" />
-            <img id="preview" style="max-width: 150px; display: none; margin-top: 5px;" />
 
             <button class="button-modal" type="submit">Salvar Alterações</button>
         </form>
