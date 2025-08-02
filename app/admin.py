@@ -90,8 +90,8 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Team_sport)
 class Team_sportAdmin(admin.ModelAdmin):
-    list_display = ('id','team','sport','sexo','status','admin')
-    search_fields = ('id','team','sport','sexo','status','admin')
+    list_display = ('id','team','sport','sexo','status')
+    search_fields = ('id','team','sport','sexo','status')
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
