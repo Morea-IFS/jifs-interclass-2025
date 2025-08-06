@@ -93,12 +93,12 @@
                             <option selected disabled value="None">Selecione o jogador</option>
                             <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
                                 {% for i in players_match_a %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
                                 {% endfor %}
                                 </optgroup>
                                 <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
                                 {% for i in players_match_b %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
                                 {% endfor %}
                         </select>
                     </div>

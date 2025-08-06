@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM PAINEL</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+<style>
+  :root {
+    --bg-block: #F0F0F0;
+    --primary: #004FC7;
+    --primary-dark: #00295e;
+    --accent: #ffb400;
+    --radius: 20px;
+    --transition: .3s cubic-bezier(.4,.2,.2,1);
+    --shadow: 0 14px 40px -10px rgba(0,0,0,0.15);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+
+  .scoreboard-all-block {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    padding-inline:2vw;
+  }
+  .title-adm { display:flex; align-items:center; height:6em; }
+  .title-adm h1 { margin:0; font-size:1.8rem; }
+
+  .sb-block-contend {
+    width:100%;
+    display:flex;
+    gap:20px;
+    flex-wrap: wrap;
+  }
+
+  .sb-block {
+    background: var(--bg-block);
+    border-radius: var(--radius);
+    padding: 24px;
+    display:flex;
+    flex-direction: column;
+    gap:16px;
+    position: relative;
+    min-width: 260px;
+    flex: 1;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight:700;
+    margin:0;
+    color:#2F2F2F;
+  }
+
+  /* menu */
+  .penalities-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .penalities-list li {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    background:white;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    gap:8px;
+    font-size:16px;
+    color: var(--primary);
+  }
+  .penalities-list li .label { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .penalities-list li .arrow { transition: transform var(--transition); display:flex; align-items:center; }
+  .penalities-list li:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1); }
+  .penalities-list li.active {
+    background:#eef4ff;
+    color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+  .penalities-list li.active .arrow { transform: rotate(90deg); }
+
+  .voltar-wrapper { display:none; margin-bottom:8px; }
+  .voltar-btn {
+    padding:8px 14px;
+    background:#f1f5fa;
+    border:1px solid #c7d4ed;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    display:inline-flex;
+    gap:6px;
+    font-size:13px;
+  }
+
+  /* conteúdo abaixo */
+  .conteudos-container {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:6px;
+  }
+  .conteudo-lo {
+    background:#f8f8f8;
+    border-radius:12px;
+    padding:20px;
+    box-shadow: 0 12px 30px -5px rgba(0,0,0,0.08);
+    overflow:hidden;
+    max-height:0;
+    transition: max-height var(--transition), padding var(--transition);
+    display:none;
+  }
+  .conteudo-lo.show {
+    display:block;
+    max-height:1200px;
+    animation: fadeInUp .25s ease;
+  }
+
+  .button-modal {
+    padding:10px 16px;
+    border:none;
+    border-radius:8px;
+    background: var(--primary);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:filter .2s;
+  }
+  .button-modal:hover { filter:brightness(1.1); }
+
+  /* placar + cronômetro */
+  .controls-grid {
+    display:flex;
+    gap:20px;
+    flex-wrap: wrap;
+  }
+  .scoreboard, .timer-block {
+    background:white;
+    border-radius:14px;
+    padding:16px 20px;
+    flex:1;
+    min-width:200px;
+    box-shadow: var(--shadow);
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+  }
+  .score-title { margin:0; font-size:14px; font-weight:600; }
+  .score-value { margin:0; font-size:32px; font-weight:700; }
+
+  .points-controls {
+    display:flex;
+    gap:8px;
+    flex-wrap: wrap;
+    margin-top:6px;
+  }
+  .points-btn {
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    background: var(--primary);
+    color:white;
+    transition: transform .2s;
+    flex:1;
+    min-width:60px;
+  }
+  .points-btn:active { transform: scale(.97); }
+
+  .timer {
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap:6px;
+  }
+  .timer-display {
+    font-size:36px;
+    font-weight:700;
+    background:#f8f9fc;
+    padding:12px 24px;
+    border-radius:10px;
+    min-width:140px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .timer-controls {
+    display:flex;
+    gap:10px;
+    flex-wrap: wrap;
+    justify-content:center;
+    margin-top:4px;
+  }
+  .timer-button {
+    padding:8px 14px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    background: var(--accent);
+    color:#222;
+    transition:filter .2s;
+  }
+  .timer-button:hover { filter:brightness(1.05); }
+
+  hr { border:none; border-bottom:1px solid #e0e0e0; margin:12px 0; }
+
+  @media (max-width:1000px) {
+    .sb-block-contend { flex-direction: column; }
+    .controls-grid { flex-direction: column; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(8px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+</style>
+{% endblock head %}
+
+{% block content %}
+<div class="scoreboard-all-block">
+  <div class="title-adm">
+    <h1>PAINEL DE CONTROLE DO JOGO</h1>
+  </div>
+
+  <div class="sb-block-contend">
+    <!-- funcionalidades (menu) -->
+    <div class="sb-block" style="flex:0 1 300px;">
+      <p class="section-title">FUNCIONALIDADES</p>
+      <div class="voltar-wrapper" id="voltar-wrapper">
+        <div class="voltar-btn" id="voltar-btn">&larr; Voltar</div>
+      </div>
+      <ul class="penalities-list" id="menu-list">
+        <li data-target="penalities" id="penalities"><span class="label">PENALIDADES</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="assistance" id="assistance"><span class="label">ASSISTÊNCIA</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="banner" id="banner"><span class="label">BANNER</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="addition" id="addition"><span class="label">ACRÉSCIMO</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="replacement" id="replacement"><span class="label">SUBSTITUIÇÃO</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="athlete-a" id="athlete-a"><span class="label">ATLETAS {{team_match_a.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="athlete-b" id="athlete-b"><span class="label">ATLETAS {{team_match_b.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+      </ul>
+    </div>
+
+    <!-- dados gerais estáticos -->
+    <div class="sb-block" style="flex:0 1 300px;">
+      <p class="section-title">DADOS GERAIS</p>
+      <p><strong>Evento:</strong> {{match.event.name}}</p>
+      <p><strong>Local:</strong> {{match.event.local}}</p>
+      <p><strong>Esporte:</strong> {{match.get_sport_display}} - {{match.get_sexo_display}}</p>
+      <hr>
+      <p><strong>Time A:</strong> {{team_match_a.team.name}}</p>
+      <p><strong>Time B:</strong> {{team_match_b.team.name}}</p>
+    </div>
+
+    <!-- cronômetro e placar -->
+    <div class="sb-block" style="flex:1 1 360px;">
+      <p class="section-title">CRONÔMETRO & PLACAR</p>
+      <div class="controls-grid">
+        <div class="scoreboard">
+          <p class="score-title">PLACAR</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:120px;">
+              <p style="margin:0;font-weight:600;">{{team_match_a.team.name}}</p>
+              <p class="score-value" id="score-a">{{point_a}}</p>
+              <form method="post" class="points-controls">{% csrf_token %}
+                <button name="team-a-point" value="+1" class="points-btn" data-team="A" data-delta="1">+1</button>
+                <button name="team-a-point" value="+2" class="points-btn" data-team="A" data-delta="2">+2</button>
+                <button name="team-a-point" value="-1" class="points-btn" data-team="A" data-delta="-1">-1</button>
+              </form>
+            </div>
+            <div style="flex:1; min-width:120px;">
+              <p style="margin:0;font-weight:600;">{{team_match_b.team.name}}</p>
+              <p class="score-value" id="score-b">{{point_b}}</p>
+              <form method="post" class="points-controls">{% csrf_token %}
+                <button name="team-b-point" value="+1" class="points-btn" data-team="B" data-delta="1">+1</button>
+                <button name="team-b-point" value="+2" class="points-btn" data-team="B" data-delta="2">+2</button>
+                <button name="team-b-point" value="-1" class="points-btn" data-team="B" data-delta="-1">-1</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="timer-block">
+          <p class="score-title">CRONÔMETRO</p>
+          <div class="timer">
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <div class="timer-controls">
+              <button class="timer-button" id="start-stop">Start</button>
+              <button class="timer-button" id="reset-timer">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- últimas informações (visível quando nenhuma funcionalidade está aberta) -->
+  <div class="conteudos-container" id="latest-wrapper">
+    <div class="conteudo-lo show" id="latest-info" style="background:#f8f8f8; max-height:none; display:block;">
+      <h2>ÚLTIMAS INFORMAÇÕES</h2>
+      <p><strong>Tempo decorrido:</strong> <span id="live-timer">00:00:00</span></p>
+      {% for i in occurrence %}
+      <p><strong>{{i.name}}</strong> {{i.details}}</p>
+      {% endfor %}
+    </div>
+
+    <!-- conteúdos dos itens abaixo -->
+    <form method="post" class="conteudo-lo" id="penalities-content">
+      {% csrf_token %}
+      <h2>PENALIDADES</h2>
+      <label for="">Tipo</label>
+      <select name="" id="">
+        <option value="">Selecione o tipo</option>
+        {% for value, name in point_types %}
+        <option value="{{value}}">{{name}}</option>
+        {% endfor %}
+      </select>
+      <br><br>
+      <label for="">Atleta</label>
+      <select name="" id="">
+        <option value="">Selecione o atleta</option>
+        <optgroup label="Jogadores do time: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="Jogadores do time: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="assistance-content">
+      {% csrf_token %}
+      <h2>ASSISTÊNCIA</h2>
+      <input type="hidden" name="assistance">
+      <label for="">Ponto</label>
+      <select name="point" required>
+        <option selected disabled value="None">Selecione o ponto</option>
+        {% for i in points %}
+        <option value="{{i.id}}">{{i.time}} - {{i.team_match.team.name}}{% if i.player %} - {{i.player}}{% endif%}</option>
+        {% endfor %}
+      </select>
+      <br><br>
+      <label for="">Atleta</label>
+      <select name="player_id" required>
+        <option selected disabled value="None">Selecione o atleta</option>
+        <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+      </select>
+      <button class="button-modal" type="submit">Salvar</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="banner-content">
+      {% csrf_token %}
+      <h2>BANNER</h2>
+      <p>Conteúdo relacionado a banner aparece aqui.</p>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="addition-content">
+      {% csrf_token %}
+      <h2>ACRÉSCIMO</h2>
+      <p>Conteúdo relacionado a acréscimo aparece aqui.</p>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="replacement-content">
+      {% csrf_token %}
+      <h2>SUBSTITUIÇÃO</h2>
+      <p>Conteúdo relacionado a substituição aparece aqui.</p>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="athlete-a-content">
+      {% csrf_token %}
+      <input type="hidden" name="team-a">
+      <section class="all-table" style="width:100%; max-width:none; margin-top:15px;">
+        <table id="search-table" style="width:100%;">
+          <tr>
+            <th>NOME</th>
+            <th>NÚMERO</th>
+          </tr>
+          {% for i in players_match_a %}
+          <tr>
+            <td>{{i.player.name}}</td>
+            <td><input type="number" name="number_a_{{i.id}}" placeholder="{{i.player_number}}" value="{{i.player_number}}"></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </section>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="athlete-b-content">
+      {% csrf_token %}
+      <input type="hidden" name="team-b">
+      <section class="all-table" style="width:100%; max-width:none; margin-top:15px;">
+        <table id="search-table" style="width:100%;">
+          <tr>
+            <th>NOME</th>
+            <th>NÚMERO</th>
+          </tr>
+          {% for i in players_match_b %}
+          <tr>
+            <td>{{i.player.name}}</td>
+            <td><input type="number" name="number_b_{{i.id}}" placeholder="{{i.player_number}}" value="{{i.player_number}}"></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </section>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // menu e conteúdo
+  const menuItems = document.querySelectorAll('.penalities-list li');
+  const contentMap = {
+    'penalities': document.getElementById('penalities-content'),
+    'assistance': document.getElementById('assistance-content'),
+    'banner': document.getElementById('banner-content'),
+    'addition': document.getElementById('addition-content'),
+    'replacement': document.getElementById('replacement-content'),
+    'athlete-a': document.getElementById('athlete-a-content'),
+    'athlete-b': document.getElementById('athlete-b-content'),
+  };
+  const menuList = document.getElementById('menu-list');
+  const voltarWrapper = document.getElementById('voltar-wrapper');
+  const voltarBtn = document.getElementById('voltar-btn');
+  const originalItems = Array.from(menuList.children);
+  const latestInfo = document.getElementById('latest-info');
+  const liveScoreAEl = document.getElementById('live-score-a');
+  const liveScoreBEl = document.getElementById('live-score-b');
+  const liveTimerEl = document.getElementById('live-timer');
+
+  function resetAll() {
+    menuList.innerHTML = '';
+    originalItems.forEach(i => menuList.appendChild(i));
+    menuItems.forEach(i => i.classList.remove('active'));
+    Object.values(contentMap).forEach(c => c && c.classList.remove('show'));
+    voltarWrapper.style.display = 'none';
+    if (latestInfo) {
+      latestInfo.classList.add('show');
+      latestInfo.style.display = 'block';
+    }
+  }
+
+  menuItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const target = item.getAttribute('data-target');
+      const content = contentMap[target];
+      const isActive = item.classList.contains('active');
+      if (isActive) {
+        resetAll();
+        return;
+      }
+      // esconder últimas infos
+      if (latestInfo) {
+        latestInfo.classList.remove('show');
+        latestInfo.style.display = 'none';
+      }
+
+      menuList.innerHTML = '';
+      voltarWrapper.style.display = 'block';
+      menuList.appendChild(item);
+      item.classList.add('active');
+      Object.values(contentMap).forEach(c => c && c.classList.remove('show'));
+      if (content) {
+        content.classList.add('show');
+        content.scrollIntoView({ behavior:'smooth', block:'start' });
+      }
+    });
+  });
+
+  voltarBtn.addEventListener('click', resetAll);
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.penalities-list') && !e.target.closest('.conteudo-lo') && !e.target.closest('#voltar-btn')) {
+      resetAll();
+    }
+  });
+
+  // placar
+  const scoreAEl = document.getElementById('score-a');
+  const scoreBEl = document.getElementById('score-b');
+  let scoreA = 0, scoreB = 0;
+  document.querySelectorAll('.points-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const team = btn.dataset.team;
+      const delta = parseInt(btn.dataset.delta, 10);
+      if (team === 'A') scoreA = Math.max(0, scoreA + delta);
+      if (team === 'B') scoreB = Math.max(0, scoreB + delta);
+      scoreAEl.textContent = scoreA;
+      scoreBEl.textContent = scoreB;
+      // atualiza últimas infos
+      if (liveScoreAEl) liveScoreAEl.textContent = scoreA;
+      if (liveScoreBEl) liveScoreBEl.textContent = scoreB;
+    });
+  });
+
+  // cronômetro
+  let timerInterval = null;
+  let elapsedSeconds = 0;
+  const display = document.getElementById('timer-display');
+  const startStopBtn = document.getElementById('start-stop');
+  const resetBtn = document.getElementById('reset-timer');
+
+  function formatTime(sec) {
+    const hrs = Math.floor(sec / 3600);
+    const mins = Math.floor((sec % 3600)/60);
+    const secs = sec % 60;
+    return [hrs, mins, secs].map(n => String(n).padStart(2,'0')).join(':');
+  }
+  function updateTimerDisplay() {
+    display.textContent = formatTime(elapsedSeconds);
+    if (liveTimerEl) liveTimerEl.textContent = formatTime(elapsedSeconds);
+  }
+  function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      elapsedSeconds += 1;
+      updateTimerDisplay();
+    }, 1000);
+    startStopBtn.textContent = 'Pause';
+  }
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    startStopBtn.textContent = 'Start';
+  }
+  startStopBtn.addEventListener('click', () => {
+    if (timerInterval) stopTimer();
+    else startTimer();
+  });
+  resetBtn.addEventListener('click', () => {
+    stopTimer();
+    elapsedSeconds = 0;
+    updateTimerDisplay();
+  });
+  updateTimerDisplay();
+</script>
+{% endblock content %}

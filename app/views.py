@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access,Campus_types, Help, Statement, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access,Campus_types, Help, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -378,7 +378,11 @@ def player_manage(request):
         context = {
             'events': Event.objects.all()
         }
-        if 'e' in request.GET and request.GET['e'] != '' and request.GET['e'] != '0':
+        if request.user.type == 1:
+            player = Player.objects.filter(event=request.user.event_user).order_by('id')
+        elif request.user.type == 2:
+            player = Player.objects.filter(event=request.user.event_user, admin=request.user).order_by('id')
+        elif 'e' in request.GET and request.GET['e'] != '' and request.GET['e'] != '0':
             event = Event.objects.get(id=request.GET['e'])
             player = Player.objects.filter(event=event).order_by('id')
             context['select_event'] = request.GET['e']
@@ -389,6 +393,7 @@ def player_manage(request):
                 player = Player.objects.filter(admin=request.user).order_by('-id')
         page = request.GET.get('page', 1) 
         paginator = Paginator(player, 20) 
+        print(player)
         try:
             player_paginated = paginator.page(page)
         except PageNotAnInteger:
@@ -487,50 +492,6 @@ def team_players_edit(request, id, team):
             return redirect('team_players_manage', team_sport.id)
     except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('team_manage')
-
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.view_team_sport', raise_exception=True)
-def team_manage_nda(request):
-        user = User.objects.get(id=request.user.id)
-        context = {
-            'allowed': allowed_pages(user),
-        }
-        if request.method == "GET":
-            if not user.type in [0, 1]: 
-                context['team_sports'] = Team_sport.objects.filter(admin=user)
-                return render(request, 'team/team_manage.html', context)
-            print("aqui não")
-            return redirect('team_manage')
-        else:
-            if 'team_sport_delete' in request.POST:
-                team_sport_id = request.POST.get('team_sport_delete')
-                team_sport_delete = Team_sport.objects.get(id=team_sport_id)
-                players_team_sport = Player_team_sport.objects.filter(team_sport=team_sport_delete)
-                print(players_team_sport)
-                if players_team_sport:
-                    for i in players_team_sport:
-                        i.delete()     
-                        print("apagado player somente do")
-                        if not Player_team_sport.objects.filter(player=i.player).exists():
-                            print("APAGANDO JOGADOR: ", i.player.name)
-                            status = verificar_foto(str(i.player.photo))
-                            if status:
-                                i.player.photo.delete()
-                            i.player.bulletin.delete()
-                            i.player.rg.delete()
-                            i.player.delete()     
-                team_sport_delete.delete()
-                if not Team_sport.objects.filter(team=team_sport_delete.team.id):
-                    Team.objects.get(id=team_sport_delete.team.id).delete()
-            elif 'add-team' in request.POST:
-                name = request.POST.get("name")
-                description = request.POST.get("description")
-                photo = request.POST.get("logo")
-                event = Event.objects.get(id=request.POST.get("event_admin_id"))
-                print(photo, event)
-                Team.objects.create(name=name, description=description, photo=photo, event=event)
-            return redirect('team_manage')
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -702,20 +663,123 @@ def team_edit(request, id):
 @terms_accept_required
 @permission_required('app.view_player_team_sport', raise_exception=True)
 def team_players_manage(request, id):
-        team = get_object_or_404(Team_sport, id=id)
+        team_sport = get_object_or_404(Team_sport, id=id)
+        if len(Player_team_sport.objects.filter(team_sport=team_sport)) >= team_sport.sport.min_sport and team_sport.status == False:
+            team_sport.status = True
+            team_sport.save()
+        elif len(Player_team_sport.objects.filter(team_sport=team_sport)) < team_sport.sport.min_sport and team_sport.status == True:
+            team_sport.status = False
+            team_sport.save()
         user = User.objects.get(id=request.user.id)
         if request.method == "GET":
-            player_team_sport = Player_team_sport.objects.select_related('player', 'team_sport').filter(team_sport=id)
-            if not player_team_sport: 
-                messages.info(request, "Não há nenhum atleta cadastrado!")        
-            return render(request, 'team/team_players_manage.html', {'player_team_sport': player_team_sport,'team_sport': team, 'allowed': allowed_pages(user)})
+            player_team_sport = Player_team_sport.objects.select_related('player', 'team_sport').filter(team_sport=id)     
+            return render(request, 'team/team_players_manage.html', {'player_team_sport': player_team_sport,'sexos': Sexo_types.choices,'team_sport': team_sport, 'allowed': allowed_pages(user), 'events': Event.objects.all()})
         else:
             print(request.POST)
-            player = request.POST.get('player_delete')
-            Player_team_sport.objects.get(team_sport=id, player=player).delete()
-            if not Player_team_sport.objects.filter(player=player).exists():
-                Player.objects.get(id=player).delete()
-            return redirect('team_players_manage', team.id)
+            if request.POST.get("player_delete"):
+                print(request.POST)
+                player = request.POST.get('player_delete')
+                Player_team_sport.objects.get(team_sport=id, player=player).delete()
+                if not Player_team_sport.objects.filter(player=player).exists():
+                    Player.objects.get(id=player).delete()
+                if len(Player_team_sport.objects.filter(team_sport=team_sport)) < team_sport.sport.min_sport and team_sport.status == True:
+                    team_sport.status = False
+                    team_sport.save()
+            elif request.POST.get("edit-name"):
+                player = Player.objects.get(id=request.POST.get("edit-player-id"))
+                player.name = request.POST.get("edit-name")
+                player.registration = request.POST.get("edit-registration")
+                player.date_nasc = request.POST.get("edit-date")
+                player.sexo = request.POST.get("edit-sexo")
+                if request.FILES.get("edit-photo"):
+                    player.photo = request.FILES.get("edit-photo")
+                if request.FILES.get("edit-bulletin"):
+                    player.bulletin = request.FILES.get("edit-bulletin")
+                if request.FILES.get("edit-rg"):
+                    player.rg = request.FILES.get("edit-rg")
+                player.save()
+            elif 'search' in request.POST: 
+                print("oiii")
+                number_players = len(Player_team_sport.objects.filter(team_sport=team_sport))
+                if number_players >= team_sport.sport.max_sport:
+                    messages.error(request, "O seu time atingiu o limite de atletas nessa modalidade!")
+                    print("O seu time atingiu o limite de atletas nessa modalidade!")
+                    return redirect('team_players_manage', team_sport.id)
+                qe = request.POST.get('search')
+                if request.user.type == 0 or request.user.type == 1:
+                    if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event=team_sport.team.event)
+                    else: player_filter = Player.objects.filter(name__icontains=qe, event=team_sport.team.event)
+                else:
+                    if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event=team_sport.team.event, admin=user)
+                    else: player_filter = Player.objects.filter(name__icontains=qe, event=team_sport.team.event, admin=user)
+                if len(player_filter) > 1:
+                    messages.error(request, f"{len(player_filter)} atletas foram encontrados, seja mais preciso, você pode buscar pelo nome e pela matrícula!")
+                elif len(player_filter) == 0:
+                    messages.error(request, "O atleta não foi encontrado!")
+                    return redirect('team_players_manage', team_sport.id)
+                else:
+                    player = Player.objects.get(id=player_filter.first().id)
+                    if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
+                        Player_team_sport.objects.create(player=player, team_sport=team_sport)        
+                        messages.success(request, f"O atleta {player.name} foi cadastrado na modalidade com sucesso!")
+                        return redirect('team_players_manage', team_sport.id)
+                    else:
+                        messages.info(request, f"O atleta {player.name} já está cadastrado, tá?!")
+                        return redirect('team_players_manage', team_sport.id)
+            elif 'name' in request.POST:
+                number_players = len(Player_team_sport.objects.filter(team_sport=team_sport))
+                if number_players >= team_sport.sport.max_sport:
+                    messages.error(request, "O seu time atingiu o limite de atletas nessa modalidade!")
+                    print("O seu time atingiu o limite de atletas nessa modalidade!")
+                    return redirect('team_players_manage', team_sport.id)
+                if len(Player_team_sport.objects.filter(team_sport=team_sport)) >= team_sport.sport.min_sport and team_sport.status == False:
+                    team_sport.status = True
+                    team_sport.save()
+                name = request.POST.get('name')
+                date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d")
+                date_today = date.today()
+                if (date_today.year - date_nasc.year) > 19:
+                    messages.error(request, "O atleta não pode ser cadastrado por conta da idade :(")
+                    print("O atleta não pode ser cadastrado por conta da idade :(")
+                    return redirect('team_players_manage', team_sport.id)
+                registration = request.POST.get('registration')
+                cpf = request.POST.get('cpf')
+                cpf = cpf.replace("-","").replace(".","")
+                photo = request.FILES.get('photo')
+                event = team_sport.event
+                if photo: 
+                    print(photo)
+                    status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
+                    if status: return redirect('team_players_manage', team_sport.id)
+                bulletin = request.FILES.get('bulletin')
+                if bulletin: 
+                    status = type_file(request, ['.pdf'], bulletin, 'O boletim escolar anexado não é do tipo pdf, que é o tipo aceito.')
+                    if status: return redirect('team_players_manage', team_sport.id)
+                rg = request.FILES.get('rg')
+                if rg: 
+                    status = type_file(request, ['.png','.jpg','.jpeg','.pdf','docx'], rg, 'O RG anexado não é faz parte dos tipos aceito, os tipos são png, jpg, jpeg, pdf ou docs.')
+                    if status: return redirect('team_players_manage', team_sport.id)
+                if team_sport.sport.sport == 2:
+                    print("espote 2")
+                    sexo = request.POST.get('sexo')
+                    if not Player.objects.filter(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event).exists():
+                        player = Player.objects.create(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, bulletin=bulletin, registration=registration, rg=rg, photo=photo, admin=user, event=event)
+                    else:
+                        player = Player.objects.get(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event)
+                else:
+                    print("aleratorio")
+                    if not Player.objects.filter(name=name, sexo=team_sport.sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event).exists():
+                        player = Player.objects.create(name=name, sexo=team_sport.sexo, rg=rg, cpf=cpf, date_nasc=date_nasc, bulletin=bulletin, registration=registration, photo=photo, admin=user, event=event)
+                        print("criando novo atleta", team_sport.sexo, team_sport.get_sexo_display())
+                    else:
+                        player = Player.objects.get(name=name, sexo=team_sport.sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event)
+                if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
+                    Player_team_sport.objects.create(player=player, team_sport=team_sport)        
+                    messages.success(request, "O jogador foi cadastrado no sistema com sucesso!")
+                    print("O jogador foi cadastrado no sistema com sucesso!")
+                else:
+                    messages.info(request, "O jogador já está cadastrado nessa modalidade, tá?!")
+            return redirect('team_players_manage', team_sport.id)
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -1017,11 +1081,17 @@ def voluntary_manage(request):
             'users': User.objects.all(),
         }
         if not request.user.event_user: context['events'] = Event.objects.all()
-        if user.type != 0:
-            context['voluntarys'] = Voluntary.objects.filter(event=request.user.event_user)
+        if 'e' in request.GET and request.GET['e'] != '' and 'q' in request.GET:
+            context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event__id=request.GET['e'])
         elif 'e' in request.GET and request.GET['e'] != '':
             context['voluntarys'] = Voluntary.objects.filter(event__id=request.GET['e'])
             context['select_event'] = request.GET['e']
+        elif 'q' in request.GET and request.GET['q'] != '':
+            if request.user.event_user: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event=request.user.event_user)
+            else: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'])
+        elif user.type != 0:
+            context['voluntarys'] = Voluntary.objects.filter(event=request.user.event_user)
+
         print(context)
         return render(request, 'voluntary/voluntary_manage.html', context)
     else:
@@ -1548,6 +1618,80 @@ def enrollment_register(request):
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('enrollment_manage')
 
+def scoreboarde(request):  
+    if Match.objects.filter(status=1):
+        match = Match.objects.get(status=1)
+        team_matchs = Team_match.objects.filter(match=match)
+        team_match_a = team_matchs[0]
+        team_match_b = team_matchs[1]
+        players_match_a = Player_match.objects.filter(team_match=team_match_a)
+        players_match_b = Player_match.objects.filter(team_match=team_match_b)  
+        team_sport_a = Team_sport.objects.get(team=team_match_a.team, sport__sport=team_match_a.match.sport, sexo=match.sexo)
+        team_sport_b = Team_sport.objects.get(team=team_match_b.team, sport__sport=team_match_b.match.sport, sexo=match.sexo)
+        player_team_sport_a = Player_team_sport.objects.filter(team_sport=team_sport_a)
+        player_team_sport_b = Player_team_sport.objects.filter(team_sport=team_sport_b)
+        for i in player_team_sport_a:
+            if not Player_match.objects.filter(player=i.player, match=match, team_match=team_match_a).exists():
+                Player_match.objects.create(player=i.player, match=match, team_match=team_match_a)
+        for i in player_team_sport_b:
+            if not Player_match.objects.filter(player=i.player, match=match, team_match=team_match_b).exists():
+                Player_match.objects.create(player=i.player, match=match, team_match=team_match_b)
+        for i in players_match_a:
+            if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_a).exists():
+                i.delete()
+        for i in players_match_b:
+            if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_b).exists():
+                i.delete()
+    if request.method == "GET":
+        context = {
+            'point_types': Point_types.choices,
+            'match': match,
+            'team_match_a': team_match_a,
+            'team_match_b': team_match_b,
+            'point_a': Point.objects.filter(team_match=team_match_a).count(),
+            'point_b': Point.objects.filter(team_match=team_match_b).count(),
+            'players_match_a': players_match_a,
+            'players_match_b': players_match_b,
+            'points': Point.objects.all(),
+            'occurrence': Occurrence.objects.order_by('-id')[:7]
+
+        }
+        print(context)
+        return render(request, 'scoreboarde.html', context)
+    else:
+        print("ee")
+        if 'team-a' in request.POST:
+            for i in players_match_a:
+                number = request.POST.get(f'number_a_{i.id}')        
+                player = get_object_or_404(Player_match, id=i.id) 
+                if number != '': 
+                    if int(number) >= 0:
+                        player.player_number = number
+                player.save()
+            messages.success(request, f"O número dos atletas do campus {team_match_a.team.name} foram adicionados/atualizados com sucesso!")
+        elif 'team-b' in request.POST:
+            for i in players_match_b:
+                number = request.POST.get(f'number_b_{i.id}')          
+                player = get_object_or_404(Player_match, id=i.id)
+                if number != '': 
+                    if int(number) >= 0:
+                        player.player_number = number
+                player.save()
+            messages.success(request, f"O número dos atletas do campus {team_match_b.team.name} foram adicionados/atualizados com sucesso!")
+        elif 'assistance' in request.POST:
+            point = Point.objects.get(id=request.POST.get('point'))
+            player = Player_match.objects.get(id=request.POST.get('player_id'))
+            Assistance.objects.create(assis_to=point, player=player)
+        elif 'team-a-point' in request.POST:
+            if request.POST.get("team-a-point") == "+1": Point.objects.create(team_match=team_match_a)
+            elif request.POST.get("team-a-point") == "+2": Point.objects.create(team_match=team_match_a), Point.objects.create(team_match=team_match_a)
+            elif request.POST.get("team-a-point") == "-1": Point.objects.filter(team_match=team_match_a).last().delete()
+        elif 'team-b-point' in request.POST:
+            if request.POST.get("team-b-point") == "+1": Point.objects.create(team_match=team_match_b)
+            elif request.POST.get("team-b-point") == "+2": Point.objects.create(team_match=team_match_b), Point.objects.create(team_match=team_match_b)
+            elif request.POST.get("team-b-point") == "-1": Point.objects.filter(team_match=team_match_b).last().delete()
+        return redirect('scoreboarde')
+
 @login_required(login_url="login")
 @terms_accept_required
 def scoreboard(request):
@@ -1808,11 +1952,11 @@ def scoreboard(request):
                         return redirect('games')
                 elif 'point_assistance' in request.POST:
                     point = get_object_or_404(Point, id=request.POST.get('point_assistance'))
-                    player = get_object_or_404(Player, id=request.POST.get('player_assistance'))
+                    player = get_object_or_404(Player_match, id=request.POST.get('player_assistance'))
                     print(player.name)
                     if point.player == player: messages.error(request, "O mesmo jogador que marcou o ponto foi adicionado como jogador que deu a assistência.")
                     else: 
-                        Assistance.objects.create(assis_to=point,player=player, match=match)
+                        Assistance.objects.create(assis_to=point,player=player)
                         if point.player.name:
                             generate_events('Assistência', f'{player.name} deu assistência a {point.player.name} para marcar um {point.get_point_types_display().lower()}!')
                         else:

@@ -273,8 +273,7 @@ class Point(models.Model):
 
 class Assistance(models.Model):
     assis_to = models.ForeignKey(Point, on_delete=models.CASCADE)
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    match = models.ForeignKey(Match, on_delete=models.CASCADE, null=True)
+    player = models.ForeignKey('Player_match', on_delete=models.CASCADE)
 
     def __str__(self):    
         return f"{self.assis_to} | {self.player}"

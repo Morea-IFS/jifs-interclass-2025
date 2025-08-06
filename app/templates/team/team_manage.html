@@ -47,13 +47,27 @@
         border: 0;
         background-color: transparent;
     }
-    .item{
-        width: 100%; 
-        height: 5px; 
-        background-color: #004FC7; 
+    .item {
+        height: 4px;
+        background-color: #004FC7;
         border-radius: 25px;
         margin-top: 12px;
+        width: 0;
+        margin-left: auto;
+        margin-right: auto;
+        animation: growBar 1.2s ease-out forwards;
     }
+
+    @keyframes growBar {
+        0% {
+            width: 0;
+        }
+        100% {
+            width: 70%; 
+        }
+    }
+
+
 
     .button_team img {
         width: 7.5em;
@@ -274,7 +288,7 @@
                 <button type="submit" name="t" value="{{i.id}}" class="button_team">
                     <img src="{{i.photo.url}}" alt="" draggable="false">
                     <p>{{i.name}}</p>
-                    {% if team.id == i.id %} <div class="item">a</div> {% endif %}
+                    {% if team.id == i.id %} <div class="item"></div> {% endif %}
                 </button>
                 {% endfor %}
             </form>
