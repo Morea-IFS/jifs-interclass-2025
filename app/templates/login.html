@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{% static 'images/ATUM-FAV-ICON.svg' %}" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
@@ -14,50 +14,60 @@
 </head>
 
 <body>
-    <div class="hero is-fullheight">
-        <div class="hero-body">
-            <section class="container has-text-centered">
-                <div class="box">
-                    <div class="box box-logo">
-                        <img class="image-login" src="{% static 'images/morea-sports.png' %}" alt="Morea Sports Logo">
+    <main>
+        <aside class="login-apresentation">
+            <a href="#" class="moreaSports-logo">
+                <img class="logo" src="{% static 'images/ATUM-FAV-ICON.svg' %}" alt="" aria-hidden="true">
+                <p class="morea-title">ATUM</p>
+                <svg class="icon-redirect"  xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>
+            </a>
+            <div class="apresentation-text">
+                <h1>Bem vindo de Volta!</h1>
+                <p>Aproveite do que há de melhor do ATUM!</p>
+            </div>
+            <div class="decoration">
+                <img src="{% static 'images/login/balls.svg' %}" alt="" aria-hidden="true">
+            </div>
+        </aside>
+        <section class="form-wrapper">
+            <div class="form-container">
+                <h2>Login</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="field">
+                        <label>Usuário</label>
+                        <div class="control has-icons-left">
+                            <input name="username" class="input" type="text" placeholder="Nome de usuário">
+                            <span class="icon is-small is-left">
+                                <i class="fa-solid fa-user" style="filter: brightness(50%);"></i>
+                            </i>
+                        </span>
                     </div>
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="field">
-                            <label class="label is-size-4">Usuário</label>
-                            <div class="control has-icons-left">
-                                <input name="username" class="input is-medium" type="text" placeholder="Nome de usuário" style="border: 1px solid #515357;">
-                                <span class="icon is-small is-left">
-                                    <i class="fa-solid fa-user" style="filter: brightness(50%);"></i>
-                                    </i>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label class="label is-size-4">Senha</label>
-                            <div class="control has-icons-left">
-                                <input name="password" class="input is-medium" type="password" placeholder="Senha" style="border: 1px solid #515357;">
-                                <span class="icon is-small is-left">
-                                    <i class="fa-solid fa-key" style="filter: brightness(50%);"></i>
-                                    </i>
-                                </span>
-                            </div>
-                        </div>
-                        <button type="submit" class="button is-block is-large is-fullwidth button-login">Login</button>
-                    </form>
                 </div>
-                <ul class="notifications"></ul>
-                <script src="{% static 'js/messages.js' %}"></script>
-                {% if messages %}
-                {% for message in messages %}
-                    <script>
-                        createToast("{{ message.tags }}", "{{ message }}");
-                    </script>
-                {% endfor %}
-                {% endif %}
-            </section>
-        </div>
+                <div class="field">
+                    <label >Senha</label>
+                    <div class="control has-icons-left">
+                        <input name="password" class="input" type="password" placeholder="Senha">
+                        <span class="icon is-small is-left">
+                            <i class="fa-solid fa-key" style="filter: brightness(50%);"></i>
+                        </i>
+                    </span>
+                </div>
+            </div>
+            <button type="submit">Login</button>
+        </form>
     </div>
+</section>
+</main>
+<ul class="notifications"></ul>
+<script src="{% static 'js/messages.js' %}"></script>
+{% if messages %}
+{% for message in messages %}
+<script>
+    createToast("{{ message.tags }}", "{{ message }}");
+</script>
+{% endfor %}
+{% endif %}
 </body>
 
 </html>

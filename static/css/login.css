@@ -3,48 +3,324 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 * {
-
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', Arial, Helvetica, sans-serif;
+	
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: 'Poppins', Arial, Helvetica, sans-serif;
 }
 :root{
-        /* VARIAVEIS / CORES */
-        --dark: #34495e;
-        --light: #fff;
-        --success: #0abf30;
-        --error: #f24d4c;
-        --warning: #e9bd0c;
-        --info: #3498db;
+	/* VARIAVEIS / CORES */
+	--dark: #34495e;
+	--light: #fff;
+	--success: #0abf30;
+	--error: #f24d4c;
+	--warning: #e9bd0c;
+	--info: #3498db;
+	
+	/*Colors login */
+	--color-text: #fff;
+	--color-blue-primary:#000086;
+	--color-blue-secondary:#025BFF;
+	--color-gray-background:#1E1E1E;
+	--color-gray-background-secondary: #2A2A2A;
 }
 
-.hero {
-    background-color: #14161a;
+body{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color:var(--color-gray-background) ;
+	height: 100vh;
+	overflow: hidden;
+}
+
+main{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+}
+
+aside.login-apresentation{
+	display: flex;
+	flex-direction: column;
+	background-image:  url("../images/login/circle-desktop-left.svg"),linear-gradient(to top, #000086, #025BFF);
+	background-repeat: no-repeat;
+	background-position: bottom left;
+	border-top-right-radius:64px ;
+	background-size:50%, 100% ;
+	height: 100%;
+	width: 50%;
+	overflow: hidden;
+	padding:40px;
+	position: relative;
+	
+}
+.moreaSports-logo{
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	margin-bottom: 80px;
+	width: max-content;
+	transition: .3s ease-in-out;
+	
+	.morea-title{
+		display: flex;
+		flex-direction: column;
+		color: var(--color-text);
+		font-weight: 700;
+		font-size: 16px;
+		transition: .3s ease-in-out;
+		cursor: pointer;
+		
+		&::after{
+			content: " ";
+			width: 100%;
+			height: 4px ;
+			background-color: #ffffff28;
+			border-top-right-radius: 4px;
+			border-bottom-right-radius: 4px;
+			transition: .3s ease-in-out;
+		}
+	}
+	img.logo{
+		width: 40px;
+		height: 40px;
+	}
+
+	.icon-redirect{
+		fill: #ffffff8a;
+		height: 50%;
+		transition: .3s ease-in-out;
+	}
+}
+
+.moreaSports-logo:hover{
+	.morea-title{
+		&::after{
+		background-color: #fff !important;
+	}
+	}
+	
+	.icon-redirect{
+		cursor: pointer;
+		fill: #fff;
+	}
+}
+
+.apresentation-text{
+	display: flex;
+	flex-direction: column;
+	color: var(--color-text);
+	gap: 21px;
+	
+	h1{
+		font-size:3.5em ;
+		max-width: 500px;
+		line-height: 1.2em;
+		font-weight: 700;
+	}
+	p{
+		font-size: 1.5em;
+		max-width: 450px;
+		line-height: 1.5em;
+		font-weight: 400;
+		color: var(--color-text);
+		opacity: 0.3;
+	}
+	
+}
+.decoration{
+	align-self: flex-end;
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
+	align-items: flex-end;
+	position: absolute;
+	right: 40px;
+	bottom: 40px;
+	
+	img{
+		width: 280px;
+	}
+}
+.form-wrapper{
+	background: url('../images/login/circle-desktop-right.svg') no-repeat;
+	background-position: top right;
+	background-size: 30%;
+	height: 100%;
+	width: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--color-gray-background);
+	padding: 1em;
+}
+.form-container{
+	display: flex;
+	flex-direction: column;
+	width: 480px;
+	background-color: var(--color-gray-background-secondary);
+	padding: 24px;
+	border-radius: 8px;
+	gap: 21px;
+}
+
+h2{
+	font-weight: 500;
+	font-size: 24px;
+	padding-bottom:8px ;
+	color: var(--color-text);
+	border-bottom: 2px solid #ffffff20;
+}
+.field{
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+}
+
+label{
+	color: var(--color-text);
+	
+}
+input{
+	background-color: #1E1E1E !important;
+}
+
+input:focus{
+	border-color: #043ea9 !important;
+	color: var(--color-text);
+
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-gray-background) inset !important;
+  color: var(--color-text);
+  -webkit-text-fill-color: #fff !important;
+  transition: background-color 5000s ease-in-out 0s; /* Safari hack */
+}
+button{
+	margin-top: 21px;
+	width: 100%;
+	height:40px;
+	border-radius: 4px;
+	background-color: var(--color-blue-secondary);
+	color: var(--color-text);
+	font-weight: 600;
+	transition: 0.3s ease-in-out;
+
+}
+button:hover{
+	background-color: var(--color-text);
+	color: var(--color-blue-secondary);
+	transform: scale(0.95);
 }
 
 .title-login {
-    color: #01aefa;
+	color: #01aefa;
 }
 
 .login-hr {
-    background-color: #36d34a;
+	background-color: #36d34a;
 }
 
 .image-login {
-    height: 9em;
+	height: 9em;
 }
 
 .box-logo {
-    box-shadow: none;
+	box-shadow: none;
 }
 
 .button-login {
-    margin-top: 2em;
+	margin-top: 2em;
 }
 
 .button{
-    background-color: #00A3FF;
+	background-color: #00A3FF;
+}
+
+@media screen and (max-width:1060px){
+	.decoration{
+		img{
+			width: 200px;
+		}
+	}
+}
+@media screen and (max-width:815px){
+	.apresentation-text{
+		h1{
+			font-size: 44px;
+		}
+		p{
+			font-size: 18px;
+		}
+	}
+}
+@media screen and (max-width:715px){
+	main{
+		flex-direction: column;
+		background-color: var(--color-gray-background-secondary);
+	}
+	aside.login-apresentation{
+		width: 100%;
+		height: 50%;
+		padding: 24px;
+		border-top-right-radius: 0px;
+		border-bottom-left-radius: 64px;
+		background-image: url("../images/login/circle-desktop-right.svg"),linear-gradient(to top, #000086, #025BFF);
+		background-position: top right;
+		background-size: 20%,100%;
+	}
+	.moreaSports-logo{
+		margin-bottom: 32px;
+		.morea-title{
+			font-size: 10px;
+
+			&::after{
+				height: 2px;
+			}
+		}
+		img.logo{
+			height: 24px;
+			width: 24px;
+		}
+		
+	}
+	.apresentation-text{
+		gap: 12px;
+		h1{
+			font-size: 32px;
+			max-width: 230px;
+		}
+		p{
+			font-size: 12px;
+			max-width: 230px;
+		}
+	}
+	.decoration{
+		right: 28px;
+		bottom: 28px;
+		img{
+			width: 120px;
+		}
+	}
+	.form-wrapper{
+		padding: 28px;
+		height: 50%;
+		width: 100%;
+		background-color: var(--color-gray-background-secondary);
+		background-image: none;
+		.form-container{
+			width: 100%;
+			padding: 0;
+		}
+	}
 }
 
 /*Notices*/
