@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access,Campus_types, Help, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access,Campus_types, Help, Type_penalties, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -1618,7 +1618,7 @@ def enrollment_register(request):
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return redirect('enrollment_manage')
 
-def scoreboarde(request):  
+def scoreboard(request):  
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
         team_matchs = Team_match.objects.filter(match=match)
@@ -1630,6 +1630,7 @@ def scoreboarde(request):
         team_sport_b = Team_sport.objects.get(team=team_match_b.team, sport__sport=team_match_b.match.sport, sexo=match.sexo)
         player_team_sport_a = Player_team_sport.objects.filter(team_sport=team_sport_a)
         player_team_sport_b = Player_team_sport.objects.filter(team_sport=team_sport_b)
+        seconds, status = generate_timer(match)
         for i in player_team_sport_a:
             if not Player_match.objects.filter(player=i.player, match=match, team_match=team_match_a).exists():
                 Player_match.objects.create(player=i.player, match=match, team_match=team_match_a)
@@ -1645,6 +1646,7 @@ def scoreboarde(request):
     if request.method == "GET":
         context = {
             'point_types': Point_types.choices,
+            'penalities_types': Type_penalties.choices,
             'match': match,
             'team_match_a': team_match_a,
             'team_match_b': team_match_b,
@@ -1653,48 +1655,59 @@ def scoreboarde(request):
             'players_match_a': players_match_a,
             'players_match_b': players_match_b,
             'points': Point.objects.all(),
-            'occurrence': Occurrence.objects.order_by('-id')[:7]
+            'activity_types': Activity.choices,
+            'occurrence': Occurrence.objects.order_by('-id')[:7],
+            'seconds': seconds,
+            'status': status,
 
         }
-        print(context)
-        return render(request, 'scoreboarde.html', context)
+        print("context")
+        return render(request, 'scoreboard.html', context)
     else:
-        print("ee")
+        print(request.POST)
         if 'team-a' in request.POST:
             for i in players_match_a:
-                number = request.POST.get(f'number_a_{i.id}')        
+                number = request.POST.get(f'number_a_{i.id}') 
+                activity = request.POST.get(f'activity_a_{i.id}')        
                 player = get_object_or_404(Player_match, id=i.id) 
                 if number != '': 
                     if int(number) >= 0:
                         player.player_number = number
+                        player.activity = int(activity)
                 player.save()
-            messages.success(request, f"O número dos atletas do campus {team_match_a.team.name} foram adicionados/atualizados com sucesso!")
+            messages.success(request, f"Dados atualizados!")
         elif 'team-b' in request.POST:
             for i in players_match_b:
-                number = request.POST.get(f'number_b_{i.id}')          
+                number = request.POST.get(f'number_b_{i.id}')   
+                activity = request.POST.get(f'activity_b_{i.id}')           
                 player = get_object_or_404(Player_match, id=i.id)
                 if number != '': 
                     if int(number) >= 0:
                         player.player_number = number
+                        player.activity = int(activity)
                 player.save()
-            messages.success(request, f"O número dos atletas do campus {team_match_b.team.name} foram adicionados/atualizados com sucesso!")
+            messages.success(request, f"Dados atualizados!")
         elif 'assistance' in request.POST:
             point = Point.objects.get(id=request.POST.get('point'))
             player = Player_match.objects.get(id=request.POST.get('player_id'))
             Assistance.objects.create(assis_to=point, player=player)
+        elif 'replacement_init' in request.POST:
+            player_init = get_object_or_404(Player_match, id=request.POST.get("replacement_init"))
+            player_init.activity = 0
+            player_end = get_object_or_404(Player_match, id=request.POST.get("replacement_end"))
+            player_end.activity = 1
+            player_init.save(), player_end.save()
         elif 'team-a-point' in request.POST:
             if request.POST.get("team-a-point") == "+1": Point.objects.create(team_match=team_match_a)
-            elif request.POST.get("team-a-point") == "+2": Point.objects.create(team_match=team_match_a), Point.objects.create(team_match=team_match_a)
             elif request.POST.get("team-a-point") == "-1": Point.objects.filter(team_match=team_match_a).last().delete()
         elif 'team-b-point' in request.POST:
             if request.POST.get("team-b-point") == "+1": Point.objects.create(team_match=team_match_b)
-            elif request.POST.get("team-b-point") == "+2": Point.objects.create(team_match=team_match_b), Point.objects.create(team_match=team_match_b)
             elif request.POST.get("team-b-point") == "-1": Point.objects.filter(team_match=team_match_b).last().delete()
-        return redirect('scoreboarde')
+        return redirect('scoreboard')
 
 @login_required(login_url="login")
 @terms_accept_required
-def scoreboard(request):
+def scoreboarde(request):
     if Match.objects.filter(status=1):
         time_now = time.strftime("%H:%M:%S", time.localtime())
         time_now2 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())

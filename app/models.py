@@ -63,7 +63,7 @@ class Activity(models.IntegerChoices):
 class Type_penalties(models.IntegerChoices):
     card_red = 0, "Cartão Vermelho"
     card_yellow = 1, "Cartão Amarelo"
-    lack = 2, "lack"
+    lack = 2, "Falta"
     empty = 3, "Nenhum"
 
 class Events_need(models.IntegerChoices):
