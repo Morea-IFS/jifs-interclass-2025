@@ -2,268 +2,558 @@
 {% load static %}
 
 {% block head %}
-<title>ATUM ADMIN</title>
-<style>.hidden { display: none; }</style>
+<title>ATUM PAINEL</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+<style>
+  :root {
+    --bg-block: #F0F0F0;
+    --primary: #004FC7;
+    --primary-dark: #00295e;
+    --accent: #ffb400;
+    --radius: 20px;
+    --transition: .3s cubic-bezier(.4,.2,.2,1);
+    --shadow: 0 14px 40px -10px rgba(0,0,0,0.15);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+
+  .scoreboard-all-block {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    padding-inline:2vw;
+  }
+  .title-adm { display:flex; align-items:center; height:6em; }
+  .title-adm h1 { margin:0; font-size:1.8rem; }
+
+  .sb-block-contend {
+    width:100%;
+    display:flex;
+    gap:20px;
+    flex-wrap: wrap;
+  }
+
+  .sb-block {
+    background: var(--bg-block);
+    border-radius: var(--radius);
+    padding: 24px;
+    display:flex;
+    flex-direction: column;
+    gap:16px;
+    position: relative;
+    min-width: 260px;
+    flex: 1;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight:700;
+    margin:0;
+    color:#2F2F2F;
+  }
+
+  /* menu */
+  .penalities-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .penalities-list li {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    background:white;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    gap:8px;
+    font-size:16px;
+    color: var(--primary);
+  }
+  .penalities-list li .label { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .penalities-list li .arrow { transition: transform var(--transition); display:flex; align-items:center; }
+  .penalities-list li:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1); }
+  .penalities-list li.active {
+    background:#eef4ff;
+    color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+  .penalities-list li.active .arrow { transform: rotate(90deg); }
+
+  .voltar-wrapper { display:none; margin-bottom:8px; }
+  .voltar-btn {
+    padding:8px 14px;
+    background:#f1f5fa;
+    border:1px solid #c7d4ed;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    display:inline-flex;
+    gap:6px;
+    font-size:13px;
+  }
+
+  /* conteúdo abaixo */
+  .conteudos-container {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:6px;
+  }
+  .conteudo-lo {
+    background:#f8f8f8;
+    border-radius:12px;
+    padding:20px;
+    box-shadow: 0 12px 30px -5px rgba(0,0,0,0.08);
+    overflow:hidden;
+    max-height:0;
+    transition: max-height var(--transition), padding var(--transition);
+    display:none;
+  }
+  .conteudo-lo.show {
+    display:block;
+    max-height:1200px;
+    animation: fadeInUp .25s ease;
+  }
+
+  .button-modal {
+    padding:10px 16px;
+    border:none;
+    border-radius:8px;
+    background: var(--primary);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:filter .2s;
+  }
+  .button-modal:hover { filter:brightness(1.1); }
+
+  /* placar + cronômetro */
+  .controls-grid {
+    display:flex;
+    gap:20px;
+    flex-wrap: wrap;
+  }
+  .scoreboard, .timer-block {
+    background:white;
+    border-radius:14px;
+    padding:16px 20px;
+    flex:1;
+    min-width:200px;
+    box-shadow: var(--shadow);
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+  }
+  .score-title { margin:0; font-size:14px; font-weight:600; }
+  .score-value { margin:0; font-size:32px; font-weight:700; }
+
+  .points-controls {
+    display:flex;
+    gap:8px;
+    flex-wrap: wrap;
+    margin-top:6px;
+  }
+  .points-btn {
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    background: var(--primary);
+    color:white;
+    transition: transform .2s;
+    flex:1;
+    min-width:60px;
+  }
+  .points-btn:active { transform: scale(.97); }
+
+  .timer {
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap:6px;
+  }
+  .timer-display {
+    font-size:36px;
+    font-weight:700;
+    background:#f8f9fc;
+    padding:12px 24px;
+    border-radius:10px;
+    min-width:140px;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .timer-controls {
+    display:flex;
+    gap:10px;
+    flex-wrap: wrap;
+    justify-content:center;
+    margin-top:4px;
+  }
+  .timer-button {
+    padding:8px 14px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    background: var(--accent);
+    color:#222;
+    transition:filter .2s;
+  }
+  .timer-button:hover { filter:brightness(1.05); }
+
+  hr { border:none; border-bottom:1px solid #e0e0e0; margin:12px 0; }
+
+  @media (max-width:1000px) {
+    .sb-block-contend { flex-direction: column; }
+    .controls-grid { flex-direction: column; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(8px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+</style>
 {% endblock head %}
 
-{% block navbar %}
-
-{% endblock navbar %}
-
 {% block content %}
-<div class="all-block-scoreboard">
-    <div class="block-top">
-        <div class="block1-scoreboard">
-            <div class="title-scoreboard">
-                <h1>CRONOMETRO</h1>
-            </div>
-            <div class="timer-scoreboard">
-                <h1 id="timer">00:00</h1>
-            </div>
-            <div class="buttons-scoreboard">
-                <form method="post">
-                    {% csrf_token %}
-                    <button name="time_stop" type="submit">
-                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-stop.svg' %}" alt="icon-stop">
-                    </button>
-                </form>
-                <form method="post">
-                    {% csrf_token %}
-                    <button onclick="startTimer()" name="time_init" type="submit">
-                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-play.svg' %}" alt="icon-play">
-                    </button>
-                </form>
-                <form method="post">
-                    {% csrf_token %}
-                    <button name="time_pause" type="submit">
-                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-pause.svg' %}" alt="icon-pause">
-                    </button>
-                </form>
-            </div>
-        </div>
-        <div class="block2-scoreboard">
-            <div class="title-scoreboard">
-                <h1>SELECIONE</h1>
-            </div>
-            <div class="inputs-scoreboard">
-                <form class="block-inputs-form-scoreboard" id="formPrincipal" method="POST">
-                    {% csrf_token %}
-                    <br>
-                    <select id="tipo" name="tipo" onchange="mostrarCampos()">
-                        <option value="">Selecione a ação</option>
-                        <option value="penalidade">Penalidade</option>
-                        <option value="assistencia">Assistência</option>
-                        <option value="acrescimo">Acrescimo</option>
-                        <option value="winner">Melhor jogador da partida</option>
-                        <option value="sets">partida com sets</option>
-                        <option value="end">Proxima partida</option>
-                        <option value="banner">Banner</option>
-                    </select>
-                    <div id="camposPenalidade" class="hidden">                
-                        <select name="type_penalties" required>
-                            <option selected disabled value="None">Escolha a Penalidade</option>
-                            <option value="1">Cartão Amarelo</option>
-                            <option value="0">Cartão Vermelho</option>
-                            <option value="2">Falta</option>
-                        </select>
-                        <br><br>
-                        <select name="player_penalties" required>
-                            <option selected disabled value="None">Selecione o time</option>
-                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
-                            {% for i in players_match_a %}
-                            <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                            {% endfor %}
-                            </optgroup>
-                            <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
-                            {% for i in players_match_b %}
-                            <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                            {% endfor %}
-                        </optgroup>
-                        </select>
-                    </div>
-                    <div id="camposAssistencia" class="hidden">
-                        <select name="point_assistance" required>
-                            <option selected disabled value="None">Selecione o ponto</option>
-                            {% for i in points %}
-                            <option value="{{i.id}}">{{i.time}} - {{i.team_match.team.name}}{% if i.player %} - {{i.player}}{% endif%}</option>
-                            {% endfor %}
-                        </select>
-                        <br><br>
-                        <select name="player_assistance" required>
-                            <option selected disabled value="None">Selecione o jogador</option>
-                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
-                                {% for i in players_match_a %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                                </optgroup>
-                                <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
-                                {% for i in players_match_b %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                        </select>
-                    </div>
-                    <div id="camposSets" class="hidden">
-                        <select name="create_sets" required>
-                            <option selected disabled value="None">Selecione</option>
-                            <option value="0">Criar novo set</option>
-                        </select>
-                    </div>
-                    <div id="camposEnd" class="hidden">
-                        <p>OBS: somente quando finalizar e for entrar outra equipe*</p>
-                        <select name="finally_start_match" required>
-                            <option selected disabled value="None">Selecione a proxima equipe</option>
-                            {% for i in matches %}
-                            <option value="{{i.id}}">{{i.id}} - {{i.get_sport_display}}- {% for a in team_match_all %} {% if a.match.id == i.id %} {{a.team.name}} - {% endif %}{% empty %} - {% endfor %} {{i.get_sexo_display}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div id="camposWinner" class="hidden">
-                        <select name="player_winner">
-                            <option selected disabled value="None">Selecione o melhor jogador</option>
-                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
-                                {% for i in players_match_a %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                                </optgroup>
-                                <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
-                                {% for i in players_match_b %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                        </select>
-                    </div>
-                    <div id="camposBanner" class="hidden">
-                        <input type="hidden" name="databannerr">
-                        <select name="databanner">
-                            <option selected disabled value="none">Escolha o banner</option>
-                            {% for i in banner %}
-                            <option value="{{i.id}}">{{i.id}} - {{i.name}} - {{i.get_status_display}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div id="camposAcrescimo" class="hidden">
-                        <input name="add_time" type="time" placeholder="Informe a quantidade de minutos de acrescimo">
-                    </div>
-                    <input class="input-confirm" type="submit" value="Confirmar">
-                </form>        
-            </div>
-        </div>
+<div class="scoreboard-all-block">
+  <div class="title-adm">
+    <h1>PAINEL DE CONTROLE DO JOGO</h1>
+  </div>
+
+  <div class="sb-block-contend">
+    <!-- funcionalidades (menu) -->
+    <div class="sb-block" style="flex:0 1 300px;">
+      <p class="section-title">FUNCIONALIDADES</p>
+      <div class="voltar-wrapper" id="voltar-wrapper">
+        <div class="voltar-btn" id="voltar-btn">&larr; Voltar</div>
+      </div>
+      <ul class="penalities-list" id="menu-list">
+        <li data-target="penalities" id="penalities"><span class="label">PENALIDADES</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="assistance" id="assistance"><span class="label">ASSISTÊNCIA</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="banner" id="banner"><span class="label">BANNER</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="addition" id="addition"><span class="label">ACRÉSCIMO</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="replacement" id="replacement"><span class="label">SUBSTITUIÇÃO</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="athlete-a" id="athlete-a"><span class="label">ATLETAS {{team_match_a.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="athlete-b" id="athlete-b"><span class="label">ATLETAS {{team_match_b.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+      </ul>
     </div>
-    <div class="block-bottom">
-        <div class="block3-scoreboard">
-            <div class="title-scoreboard">
-                <h1>PONTUAÇÃO - PONTOS / GOLS</h1>
-            </div>
-            <div class="scoreboard">
-                <div class="scoreboard-top">
-                    <div class="title-scoreboard title-scoreboard-top">
-                        <h2 id="team-a-score" >{{team_match_a.team.name}}</h2>
-                        <h2 id="team-b-score" >{{team_match_b.team.name}}</h2>
-                    </div>
-                    <div class="title-scoreboard select-scoreboard">
-                        <form id="form1" class="select-scoreboard">
-                            {% csrf_token %}
-                            <select name="player_point">
-                                <option selected value="0">Selecione o jogador</option>
-                                {% for i in players_match_a %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                        <h2>PONTOS</h2>
-                        <form id="form3" class="select-scoreboard">
-                            {% csrf_token %}
-                            <select name="player_point">
-                                <option selected value="0">Selecione o jogador</option>
-                                {% for i in players_match_b %}
-                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                    </div>
-                </div>
-                <div class="scoreboard-center">
-                    <div class="buttons-scoreboard">
-                        <form method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_a_remove">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
-                            </button>
-                        </form>
-                        <form id="form2" method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_a_add" onclick="enviar1Formularios()">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
-                            </button>
-                        </form>
-                    </div>
-                    <div class="title-scoreboard">
-                        <h2 id="point"><span id="points-a-score">{{point_a}}</span> X <span id="points-b-score">{{point_b}}</span></h2>
-                    </div>
-                    <div class="buttons-scoreboard">
-                        <form method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_b_remove">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
-                            </button>
-                        </form>
-                        <form id="form4" method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_b_add" onclick="enviar2Formularios()">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% if match.sport == 1 %}
-                <div class="title-scoreboard" id="scoreboard-1" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}">
-                    <h2>ACES</h2>
-                </div>
-                <div class="scoreboard-bottom" id="scoreboard-2" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}">
-                    <div class="buttons-scoreboard">
-                        <form method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_a_sets_remove">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
-                            </button>
-                        </form>
-                        <form method="post" id="form5">
-                            {% csrf_token %}
-                            <button type="submit" name="team_a_sets_add" onclick="enviar3Formularios()">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
-                            </button>
-                        </form>
-                    </div>
-                    <div class="title-scoreboard">
-                        <h2><span id="aces_aa_score">{{aces_a}}</span> X <span id="aces_bb_score">{{aces_b}}</span></h2>
-                    </div>
-                    <div class="buttons-scoreboard">
-                        <form method="post">
-                            {% csrf_token %}
-                            <button type="submit" name="team_b_sets_remove">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
-                            </button>
-                        </form>
-                        <form method="post" id="form6">
-                            {% csrf_token %}
-                            <button type="submit" name="team_b_sets_add" onclick="enviar4Formularios()">
-                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+
+    <!-- dados gerais estáticos -->
+    <div class="sb-block" style="flex:0 1 300px;">
+      <p class="section-title">DADOS GERAIS</p>
+      <p><strong>Evento:</strong> {{match.event.name}}</p>
+      <p><strong>Local:</strong> {{match.event.local}}</p>
+      <p><strong>Esporte:</strong> {{match.get_sport_display}} - {{match.get_sexo_display}}</p>
+      <hr>
+      <p><strong>Time A:</strong> {{team_match_a.team.name}}</p>
+      <p><strong>Time B:</strong> {{team_match_b.team.name}}</p>
     </div>
+
+    <!-- cronômetro e placar -->
+    <div class="sb-block" style="flex:1 1 360px;">
+      <p class="section-title">CRONÔMETRO & PLACAR</p>
+      <div class="controls-grid">
+        <div class="scoreboard">
+          <p class="score-title">PLACAR</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:120px;">
+              <p style="margin:0;font-weight:600;">{{team_match_a.team.name}}</p>
+              <p class="score-value" id="points-a-score">{{point_a}}</p>
+              <form method="post" class="points-controls">{% csrf_token %}
+                <button name="team-a-point" value="+1" class="points-btn" data-team="A" data-delta="1">+1</button>
+                <button name="team-a-point" value="-1" class="points-btn" data-team="A" data-delta="-1">-1</button>
+                <select name="" id="">
+                  <option selected value="">Atletas</option>
+                  {% for i in players_match_a %}
+                  <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </div>
+            <div style="flex:1; min-width:120px;">
+              <p style="margin:0;font-weight:600;">{{team_match_b.team.name}}</p>
+              <p class="score-value" id="points-b-score">{{point_b}}</p>
+              <form method="post" class="points-controls">{% csrf_token %}
+                <button name="team-b-point" value="+1" class="points-btn" data-team="B" data-delta="1">+1</button>
+                <button name="team-b-point" value="-1" class="points-btn" data-team="B" data-delta="-1">-1</button>
+                <select name="" id="">
+                  <option selected value="">Atletas</option>
+                  {% for i in players_match_b %}
+                  <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="timer-block">
+          <p class="score-title">CRONÔMETRO</p>
+          <div class="timer">
+            <div class="timer-display" id="timer">00:00:00</div>
+            <div class="timer-controls">
+              <button class="timer-button" id="start-stop">Start</button>
+              <button class="timer-button" id="reset-timer">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- últimas informações (visível quando nenhuma funcionalidade está aberta) -->
+  <div class="conteudos-container" id="latest-wrapper">
+    <div class="conteudo-lo show" id="latest-info" style="background:#f8f8f8; max-height:none; display:block;">
+      <h2>ÚLTIMAS INFORMAÇÕES</h2>
+      <p><strong>Tempo decorrido:</strong> <span id="live-timer">00:00:00</span></p>
+      {% for i in occurrence %}
+      <p><strong>{{i.name}}</strong> {{i.details}}</p>
+      {% endfor %}
+    </div>
+
+    <!-- conteúdos dos itens abaixo -->
+    <form method="post" class="conteudo-lo" id="penalities-content">
+      {% csrf_token %}
+      <h2>PENALIDADES</h2>
+      <label for="">Tipo</label>
+      <select name="" id="">
+        <option value="">Selecione o tipo</option>
+        {% for value, name in penalities_types %}
+        <option value="{{value}}">{{name}}</option>
+        {% endfor %}
+      </select>
+      <br><br>
+      <label for="">Atleta</label>
+      <select name="" id="">
+        <option value="">Selecione o atleta</option>
+        <optgroup label="Jogadores do time: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="Jogadores do time: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="assistance-content">
+      {% csrf_token %}
+      <h2>ASSISTÊNCIA</h2>
+      <input type="hidden" name="assistance">
+      <label for="">Ponto</label>
+      <select name="point" required>
+        <option selected disabled value="None">Selecione o ponto</option>
+        {% for i in points %}
+        <option value="{{i.id}}">{{i.time}} - {{i.team_match.team.name}}{% if i.player %} - {{i.player.name}}{% endif%}</option>
+        {% endfor %}
+      </select>
+      <br><br>
+      <label for="">Atleta</label>
+      <select name="player_id" required>
+        <option selected disabled value="None">Selecione o atleta</option>
+        <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+        </optgroup>
+        <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          {% endfor %}
+      </select>
+      <button class="button-modal" type="submit">Salvar</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="banner-content">
+      {% csrf_token %}
+      <h2>BANNER</h2>
+      <p>Conteúdo relacionado a banner aparece aqui.</p>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="addition-content">
+      {% csrf_token %}
+      <h2>ACRÉSCIMO</h2>
+      <p>Conteúdo relacionado a acréscimo aparece aqui.</p>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="replacement-content">
+      {% csrf_token %}
+      <h2>SUBSTITUIÇÃO</h2>
+      <label for="">Saída</label>
+      <select name="replacement_end" required>
+        <option selected disabled value="None">Selecione o atleta</option>
+        <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          {% if i.activity == 0 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% endfor %}
+        </optgroup>
+        <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          {% if i.activity == 0 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% endfor %}
+      </select>
+      <label for="">Entrada</label>
+      <select name="replacement_init" required>
+        <option selected disabled value="None">Selecione o atleta</option>
+        <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+          {% for i in players_match_a %}
+          {% if i.activity == 1 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% endfor %}
+        </optgroup>
+        <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+          {% for i in players_match_b %}
+          {% if i.activity == 1 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% endfor %}
+      </select>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="athlete-a-content">
+      {% csrf_token %}
+      <input type="hidden" name="team-a">
+      <section class="all-table" style="width:100%; max-width:none; margin-top:15px;">
+        <table id="search-table" style="width:100%;">
+          <tr>
+            <th>NOME</th>
+            <th>TITULAR</th>
+            <th>NÚMERO</th>
+          </tr>
+          {% for i in players_match_a %}
+          <tr>
+            <td>{{i.player.name}}</td>
+            <td>
+              <select name="activity_a_{{i.id}}" id="">
+              {% for value, name in activity_types %}
+              <option value="{{value}}" {% if i.activity == value %} selected {% endif %}>{{name}}</option>
+              {% endfor %}
+              </select>
+            </td>
+            <td><input type="number" name="number_a_{{i.id}}" placeholder="{{i.player_number}}" value="{{i.player_number}}"></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </section>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+
+    <form method="post" class="conteudo-lo" id="athlete-b-content">
+      {% csrf_token %}
+      <input type="hidden" name="team-b">
+      <section class="all-table" style="width:100%; max-width:none; margin-top:15px;">
+        <table id="search-table" style="width:100%;">
+          <tr>
+            <th>NOME</th>
+            <th>TITULAR</th>
+            <th>NÚMERO</th>
+          </tr>
+          {% for i in players_match_b %}
+          <tr>
+            <td>{{i.player.name}}</td>
+            <td>
+              <select name="activity_b_{{i.id}}" id="">
+              {% for value, name in activity_types %}
+              <option value="{{value}}" {% if i.activity == value %} selected {% endif %}>{{name}}</option>
+              {% endfor %}
+              </select>
+            </td>
+            <td><input type="number" name="number_b_{{i.id}}" placeholder="{{i.player_number}}" value="{{i.player_number}}"></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </section>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
+    </form>
+    <br><br>
+  </div>
 </div>
+
+<script src="{% static 'js/timer.js' %}"></script>
+
+<script>
+  // menu e conteúdo
+  const menuItems = document.querySelectorAll('.penalities-list li');
+  const contentMap = {
+    'penalities': document.getElementById('penalities-content'),
+    'assistance': document.getElementById('assistance-content'),
+    'banner': document.getElementById('banner-content'),
+    'addition': document.getElementById('addition-content'),
+    'replacement': document.getElementById('replacement-content'),
+    'athlete-a': document.getElementById('athlete-a-content'),
+    'athlete-b': document.getElementById('athlete-b-content'),
+  };
+  const menuList = document.getElementById('menu-list');
+  const voltarWrapper = document.getElementById('voltar-wrapper');
+  const voltarBtn = document.getElementById('voltar-btn');
+  const originalItems = Array.from(menuList.children);
+  const latestInfo = document.getElementById('latest-info');
+  const liveScoreAEl = document.getElementById('live-score-a');
+  const liveScoreBEl = document.getElementById('live-score-b');
+  const liveTimerEl = document.getElementById('live-timer');
+
+  function resetAll() {
+    menuList.innerHTML = '';
+    originalItems.forEach(i => menuList.appendChild(i));
+    menuItems.forEach(i => i.classList.remove('active'));
+    Object.values(contentMap).forEach(c => c && c.classList.remove('show'));
+    voltarWrapper.style.display = 'none';
+    if (latestInfo) {
+      latestInfo.classList.add('show');
+      latestInfo.style.display = 'block';
+    }
+  }
+
+  menuItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const target = item.getAttribute('data-target');
+      const content = contentMap[target];
+      const isActive = item.classList.contains('active');
+      if (isActive) {
+        resetAll();
+        return;
+      }
+      // esconder últimas infos
+      if (latestInfo) {
+        latestInfo.classList.remove('show');
+        latestInfo.style.display = 'none';
+      }
+
+      menuList.innerHTML = '';
+      voltarWrapper.style.display = 'block';
+      menuList.appendChild(item);
+      item.classList.add('active');
+      Object.values(contentMap).forEach(c => c && c.classList.remove('show'));
+      if (content) {
+        content.classList.add('show');
+        content.scrollIntoView({ behavior:'smooth', block:'start' });
+      }
+    });
+  });
+
+  voltarBtn.addEventListener('click', resetAll);
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.penalities-list') && !e.target.closest('.conteudo-lo') && !e.target.closest('#voltar-btn')) {
+      resetAll();
+    }
+  });
+</script>
+{% if seconds %}
+  <script>
+      stopwatch({{seconds}}, {{status}})
+      console.log("Chegou o horario!", {{seconds}})
+  </script>
+{% endif %}
 {% endblock content %}
-{% block scripts %}
-    <script src="{% static 'js/timer.js' %}"></script>
-    {% if seconds %}
-        <script>
-            stopwatch({{seconds}}, {{status}})
-            console.log("Chegou o horario!")
-        </script>
-        
-    {% endif %}
-{% endblock scripts %}

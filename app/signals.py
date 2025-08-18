@@ -20,9 +20,8 @@ def serialize_players(players_qs):
         result.append({
             "name": player.name,
             "photo_url": player.photo.url if player.photo else default_photo_url,
-            "number": getattr(pm, 'player_number', None),  # ajuste conforme o nome do campo do número
+            "number": getattr(pm, 'player_number', None),
             "instagram": player.instagram,
-            # coloque aqui outros campos que desejar enviar
         })
     return result
 

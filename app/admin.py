@@ -130,8 +130,8 @@ class Time_pauseAdmin(admin.ModelAdmin):
 
 @admin.register(Assistance)
 class AssistanceAdmin(admin.ModelAdmin):
-    list_display = ('id','assis_to','player','match')
-    search_fields = ('id','assis_to','player','match')
+    list_display = ('id','assis_to','player')
+    search_fields = ('id','assis_to','player')
 
 @admin.register(Occurrence)
 class OccurrenceAdmin(admin.ModelAdmin):

@@ -124,3 +124,29 @@ form textarea {
 .toggle-label span {
     font-weight: bold;
 }
+
+.buttons-options{
+    width: 100%; 
+    height: auto; 
+    display: flex;
+    justify-content: space-around;
+}
+.buttons-options span{
+    width: 35%;
+    height: 3em;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+.buttons-options i{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+}
+.button-op-1:hover{
+    transform: scale(1.2);
+}
+.button-op-2:hover{
+    transform: scale(1.2);
+}

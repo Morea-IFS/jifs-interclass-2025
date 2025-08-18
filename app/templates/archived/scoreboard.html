@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+<style>.hidden { display: none; }</style>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block-scoreboard">
+    <div class="block-top">
+        <div class="block1-scoreboard">
+            <div class="title-scoreboard">
+                <h1>CRONOMETRO</h1>
+            </div>
+            <div class="timer-scoreboard">
+                <h1 id="timer">00:00</h1>
+            </div>
+            <div class="buttons-scoreboard">
+                <form method="post">
+                    {% csrf_token %}
+                    <button name="time_stop" type="submit">
+                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-stop.svg' %}" alt="icon-stop">
+                    </button>
+                </form>
+                <form method="post">
+                    {% csrf_token %}
+                    <button onclick="startTimer()" name="time_init" type="submit">
+                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-play.svg' %}" alt="icon-play">
+                    </button>
+                </form>
+                <form method="post">
+                    {% csrf_token %}
+                    <button name="time_pause" type="submit">
+                        <img class="buttons-scoreboard-img" src="{% static 'images/icon-pause.svg' %}" alt="icon-pause">
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="block2-scoreboard">
+            <div class="title-scoreboard">
+                <h1>SELECIONE</h1>
+            </div>
+            <div class="inputs-scoreboard">
+                <form class="block-inputs-form-scoreboard" id="formPrincipal" method="POST">
+                    {% csrf_token %}
+                    <br>
+                    <select id="tipo" name="tipo" onchange="mostrarCampos()">
+                        <option value="">Selecione a ação</option>
+                        <option value="penalidade">Penalidade</option>
+                        <option value="assistencia">Assistência</option>
+                        <option value="acrescimo">Acrescimo</option>
+                        <option value="winner">Melhor jogador da partida</option>
+                        <option value="sets">partida com sets</option>
+                        <option value="end">Proxima partida</option>
+                        <option value="banner">Banner</option>
+                    </select>
+                    <div id="camposPenalidade" class="hidden">                
+                        <select name="type_penalties" required>
+                            <option selected disabled value="None">Escolha a Penalidade</option>
+                            <option value="1">Cartão Amarelo</option>
+                            <option value="0">Cartão Vermelho</option>
+                            <option value="2">Falta</option>
+                        </select>
+                        <br><br>
+                        <select name="player_penalties" required>
+                            <option selected disabled value="None">Selecione o time</option>
+                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+                            {% for i in players_match_a %}
+                            <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                            {% endfor %}
+                            </optgroup>
+                            <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+                            {% for i in players_match_b %}
+                            <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                            {% endfor %}
+                        </optgroup>
+                        </select>
+                    </div>
+                    <div id="camposAssistencia" class="hidden">
+                        <select name="point_assistance" required>
+                            <option selected disabled value="None">Selecione o ponto</option>
+                            {% for i in points %}
+                            <option value="{{i.id}}">{{i.time}} - {{i.team_match.team.name}}{% if i.player %} - {{i.player}}{% endif%}</option>
+                            {% endfor %}
+                        </select>
+                        <br><br>
+                        <select name="player_assistance" required>
+                            <option selected disabled value="None">Selecione o jogador</option>
+                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+                                {% for i in players_match_a %}
+                                <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                                </optgroup>
+                                <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+                                {% for i in players_match_b %}
+                                <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                    <div id="camposSets" class="hidden">
+                        <select name="create_sets" required>
+                            <option selected disabled value="None">Selecione</option>
+                            <option value="0">Criar novo set</option>
+                        </select>
+                    </div>
+                    <div id="camposEnd" class="hidden">
+                        <p>OBS: somente quando finalizar e for entrar outra equipe*</p>
+                        <select name="finally_start_match" required>
+                            <option selected disabled value="None">Selecione a proxima equipe</option>
+                            {% for i in matches %}
+                            <option value="{{i.id}}">{{i.id}} - {{i.get_sport_display}}- {% for a in team_match_all %} {% if a.match.id == i.id %} {{a.team.name}} - {% endif %}{% empty %} - {% endfor %} {{i.get_sexo_display}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="camposWinner" class="hidden">
+                        <select name="player_winner">
+                            <option selected disabled value="None">Selecione o melhor jogador</option>
+                            <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
+                                {% for i in players_match_a %}
+                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                                </optgroup>
+                                <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
+                                {% for i in players_match_b %}
+                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                    <div id="camposBanner" class="hidden">
+                        <input type="hidden" name="databannerr">
+                        <select name="databanner">
+                            <option selected disabled value="none">Escolha o banner</option>
+                            {% for i in banner %}
+                            <option value="{{i.id}}">{{i.id}} - {{i.name}} - {{i.get_status_display}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="camposAcrescimo" class="hidden">
+                        <input name="add_time" type="time" placeholder="Informe a quantidade de minutos de acrescimo">
+                    </div>
+                    <input class="input-confirm" type="submit" value="Confirmar">
+                </form>        
+            </div>
+        </div>
+    </div>
+    <div class="block-bottom">
+        <div class="block3-scoreboard">
+            <div class="title-scoreboard">
+                <h1>PONTUAÇÃO - PONTOS / GOLS</h1>
+            </div>
+            <div class="scoreboard">
+                <div class="scoreboard-top">
+                    <div class="title-scoreboard title-scoreboard-top">
+                        <h2 id="team-a-score" >{{team_match_a.team.name}}</h2>
+                        <h2 id="team-b-score" >{{team_match_b.team.name}}</h2>
+                    </div>
+                    <div class="title-scoreboard select-scoreboard">
+                        <form id="form1" class="select-scoreboard">
+                            {% csrf_token %}
+                            <select name="player_point">
+                                <option selected value="0">Selecione o jogador</option>
+                                {% for i in players_match_a %}
+                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        <h2>PONTOS</h2>
+                        <form id="form3" class="select-scoreboard">
+                            {% csrf_token %}
+                            <select name="player_point">
+                                <option selected value="0">Selecione o jogador</option>
+                                {% for i in players_match_b %}
+                                <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                </div>
+                <div class="scoreboard-center">
+                    <div class="buttons-scoreboard">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_a_remove">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
+                            </button>
+                        </form>
+                        <form id="form2" method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_a_add" onclick="enviar1Formularios()">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
+                            </button>
+                        </form>
+                    </div>
+                    <div class="title-scoreboard">
+                        <h2 id="point"><span id="points-a-score">{{point_a}}</span> X <span id="points-b-score">{{point_b}}</span></h2>
+                    </div>
+                    <div class="buttons-scoreboard">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_b_remove">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
+                            </button>
+                        </form>
+                        <form id="form4" method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_b_add" onclick="enviar2Formularios()">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% if match.sport == 1 %}
+                <div class="title-scoreboard" id="scoreboard-1" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}">
+                    <h2>ACES</h2>
+                </div>
+                <div class="scoreboard-bottom" id="scoreboard-2" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}">
+                    <div class="buttons-scoreboard">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_a_sets_remove">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
+                            </button>
+                        </form>
+                        <form method="post" id="form5">
+                            {% csrf_token %}
+                            <button type="submit" name="team_a_sets_add" onclick="enviar3Formularios()">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
+                            </button>
+                        </form>
+                    </div>
+                    <div class="title-scoreboard">
+                        <h2><span id="aces_aa_score">{{aces_a}}</span> X <span id="aces_bb_score">{{aces_b}}</span></h2>
+                    </div>
+                    <div class="buttons-scoreboard">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="team_b_sets_remove">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-minus.svg' %}" alt="icon menos">
+                            </button>
+                        </form>
+                        <form method="post" id="form6">
+                            {% csrf_token %}
+                            <button type="submit" name="team_b_sets_add" onclick="enviar4Formularios()">
+                                <img class="buttons-scoreboard-img" src="{% static 'images/icon-plus.svg' %}" alt="icon mais">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+    <script src="{% static 'js/timer.js' %}"></script>
+    {% if seconds %}
+        <script>
+            stopwatch({{seconds}}, {{status}})
+            console.log("Chegou o horario!")
+        </script>
+        
+    {% endif %}
+{% endblock scripts %}
