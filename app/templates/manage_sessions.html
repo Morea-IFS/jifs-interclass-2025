@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>ATUM ADMIN</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1" style="justify-content: start;">
+        <div class="title-adm">
+            <h1>
+                SESSÕES
+            </h1>
+            <div class="title-buttons">
+                {% if user.type != 2 %} <span onclick="openModal('{% if user.type == 1 %} {{user.event_user.id}} {% else %} {{ select_event }} {% endif %}')" {% else %} <span onclick="openTimeModal('{{ team.id }}')" {% endif %}><p>Novo</p></span>
+                <h3>
+                    {{user.event_user.name}}
+                </h3>
+            </div>
+        </div>
+        <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
+            <table id="search-table" style="width: 100%;">
+                <tr class="hidden">
+                    <th>IP</th>
+                    <th>Navegador</th>
+                    <th>Última atividade</th>
+                    <th>Ação</th>
+                </tr>
+                {% for s in sessions %}
+                <tr>
+                    <td>{{ s.ip_address }}</td>
+                    <td>{{ s.user_agent}}</td>
+                    <td>{{ s.last_activity }}</td>
+                    <td>
+                        {% if request.session.session_key == s.session.session_key %}
+                            <span class="self">(esta sessão)</span>
+                        {% else %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="session_key" value="{{ s.session.session_key }}">
+                                <button type="submit">Encerrar</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <style>
+                    .hiddden {
+                        display: none;
+                    }
+                </style>
+                {% endfor %}
+            </table>
+        </section>
+    </div>
+</div>
+
+{% endblock content %}

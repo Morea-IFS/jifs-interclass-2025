@@ -3,69 +3,12 @@
 
 {% block head %}
 <title>ATUM ADMIN</title>
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
 {% endblock head %}
 
 {% block navbar %}
 <style>
-    .title-adm{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        height: 7em;
-        width: 100%;
-        color: var(--global-header-color);
-    }
-    @media screen and (max-width: 700px) {
-        .title-adm{
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding-top: 15px;
-            height: auto;
-            padding-bottom: 15px;
-            gap: 15px;
-        }
-        .block1{
-            padding-inline: 4vw;
-        }
-    }
 
-    .title-buttons{
-        width: 20em;
-        height: auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .title-buttons > span{
-        width: 7em;
-        height: 2.8em;
-        padding: 0;
-        border-radius: 8px;
-        background-color: var(--global-header-color);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        margin-right: 5px;
-    }
-    .title-buttons p{
-        color: white;
-        font-size: 20px;
-        font-weight: 500;
-    }
-    .title-buttons > select{
-        width: 12em;
-        height: 2.8em;
-        font-size: 16px;
-        cursor: pointer;
-    }
-    .input-search-adm{
-        width: 100%;
-    }
-    .input-search-adm input{
-        width: 100%;
-    }
 </style>
 {% endblock navbar %}
 
@@ -122,7 +65,7 @@
                                 alt="Gear Icon" />
                         </div>
                     </a>
-                    <a class="games-config-link" href="{% url 'players_in_teams' i.match.id %}">
+                    <a class="games-config-link" href="">
                         <div class="games-config-item games-config-item-player">
                             <img class="games-config-item-img" src="{% static 'images/icon-player.png' %}"
                                 alt="Player Icon" />
@@ -144,4 +87,64 @@
         </div>
     </div>
 </div>
+
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Cadastrar partida</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="sport">Esporte</label>
+            <select id="sport" name="sport">
+                <option selected disabled value="None">Selecione o esporte</option>
+                {% for value, name in sport %}
+                <option value="{{value }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <label for="sexo">Sexo</label>
+            <select id="sexo" name="sexo">
+                <option selected disabled value="None">Selecione o sexo</option>
+                <option value="0">Masculino</option>
+                <option value="1">Feminino</option>
+            </select>
+            <label for="times-a">Time A</label>
+            <select id="time-a" name="time_a" required>
+                <option selected disabled value="None">Selecione o time</option>
+                {% for i in team %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <label for="times-b">Time B</label>
+            <select id="times-b" name="time_b" required>
+                <option selected disabled value="None">Selecione o time</option>
+                {% for i in team %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% if not user.event_user %}
+            <label for="nome">Evento</label>
+            <select id="user_admin" name="event">
+                <option selected disabled>Selecione o evento</option>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <label for="date-game">Horário</label>
+            <input class="input-data" type="datetime-local" name="datetime" id="date-game" />
+            <p style="color: #6d6c6c; font-size: 15px;">*Informe a data e horário da partida ou coloque o horário por ordem de partida.</p>
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("eventModal").style.display = "none";
+    }
+</script>
 {% endblock content %}

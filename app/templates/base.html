@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{% static 'images/ATUM-FAV-ICON.svg' %}" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
     <link rel="stylesheet" href="{% static 'css/navbar-layout.css' %}" />
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
@@ -23,7 +23,7 @@
                 <span class="line second-line"></span>
             </div>
             <section class="side-bar">
-                <img class="side-bar-logo" {% if useer.event_user %} src="{{user.event_user.logo.url}}" {% else %} src="{% static 'images/morea-sports-white.svg' %}" {% endif %} alt="Logo Placeholder" />
+                <img class="side-bar-logo" src="{% static 'images/ATUM-FAV-ICON.svg' %}"  alt="Logo Placeholder" />
                 <div class="side-bar-top">
                     <div class="side-bar-buttons">
                         <a class="side-init" href="{% url 'Home' %}">
@@ -80,9 +80,6 @@
                                 {% if perms.app.view_match %}
                                 <a href="{% url 'games' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>{% trans "MINHAS PARTIDAS" %}</a>
                                 {% endif %}
-                                {% if perms.app.add_match %}
-                                <a href="{% url 'matches_register' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-plus"></i>{% trans "REGISTRAR" %}</a>
-                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -106,6 +103,7 @@
                                 <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>{% trans "ANEXOS" %}</a>
                                 {% endif %}
                                 <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>{% trans "CONFIGURAÇÕES" %}</a>
+                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>{% trans "NOVA CONIFG" %}</a>
                             </div>
                         </div>
 

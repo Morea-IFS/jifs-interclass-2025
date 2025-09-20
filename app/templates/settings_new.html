@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/settings_new.css' %}" />
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="container">
+        <header>
+            <div class="logo">Configurações</div>
+            <div class="user-header">
+                <div class="avatar">IFS
+
+                </div>
+                <span>{{user.username}}</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="nav-item active" data-target="profile">
+                    <i class="fas fa-user"></i> Perfil
+                </div>
+                <div class="nav-item" data-target="security">
+                    <i class="fas fa-shield-alt"></i> Segurança
+                </div>
+                <div class="nav-item" data-target="notifications">
+                    <i class="fas fa-question-circle"></i> Help
+                </div>
+                <div class="nav-item" data-target="statement">
+                    <i class="fas fa-bell"></i> Avisos
+                </div>
+                <div class="nav-item" data-target="language">
+                    <i class="fas fa-file"></i> Anexos
+                </div>
+                <div class="nav-item" data-target="help">
+                    <i class="fas fa-film"></i> Banner
+                </div>
+                <div class="nav-item" data-target="subscription">
+                    <i class="fas fa-brush"></i> Assinatura
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="content-section active" id="profile-section">
+                    <h1 class="section-title">Configurações do Perfil</h1>
+                    
+                    <div class="user-profile">
+                        <div class="profile-avatar">IFS</div>
+                        <div class="profile-info">
+                            <h2>{{user.username}}</h2>
+                            <p>{{user.email}}</p>
+                        </div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h3>Telefone</h3>
+                            <p>+55 {{user.telefone}}</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Data de Nascimento</h3>
+                            <p>{{user.date_nasc}}</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Tipo</h3>
+                            <p>{{user.get_type_display}}</p>
+                        </div>
+                        <div class="info-card">
+                            <h3>Endereço</h3>
+                            <p>{{user.address}}</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Preferências de Conta</h3>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Notificações por Email</h4>
+                                <p>Receber notificações importantes por email</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Notificações por Push</h4>
+                                <p>Receber notificações no dispositivo</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Modo Escuro</h4>
+                                <p>Ativar interface em modo escuro</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Configurações de Privacidade</h3>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Perfil Público</h4>
+                                <p>Permitir que outros usuários vejam seu perfil</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Compartilhamento de Dados</h4>
+                                <p>Permitir compartilhamento de dados com parceiros</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-outline">Cancelar</button>
+                        <button class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </div>
+
+                <div class="content-section" id="security-section">
+                    <h1 class="section-title">Configurações de Segurança</h1>
+                    
+                    <div class="settings-group">
+                        <h3>Autenticação</h3>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Senha
+                                    <span class="security-badge badge-success">
+                                        <i class="fas fa-check-circle"></i> Forte
+                                    </span>
+                                </h4>
+                                <p>Altere sua senha regularmente para manter a conta segura</p>
+                            </div>
+                            <div class="settings-item-actions">
+                                <button class="btn btn-outline btn-sm">Alterar Senha</button>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Autenticação de Dois Fatores (2FA)
+                                    <span class="security-badge badge-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> Desativado
+                                    </span>
+                                </h4>
+                                <p>Adicione uma camada extra de segurança à sua conta</p>
+                            </div>
+                            <div class="settings-item-actions">
+                                <button class="btn btn-primary btn-sm">Ativar 2FA</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Dispositivos Conectados</h3>
+                        <p>Gerencie os dispositivos que têm acesso à sua conta</p>
+                        
+                        <div class="devices-list">
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <div class="device-icon">
+                                        <i class="fas fa-laptop"></i>
+                                    </div>
+                                    <div>
+                                        <h4>MacBook Pro</h4>
+                                        <p>Dispositivo atual • São Paulo, SP</p>
+                                    </div>
+                                </div>
+                                <div class="settings-item-actions">
+                                    <button class="btn btn-outline btn-sm">Desconectar</button>
+                                </div>
+                            </div>
+                            
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <div class="device-icon">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div>
+                                        <h4>iPhone 12</h4>
+                                        <p>Conectado há 2 dias • Rio de Janeiro, RJ</p>
+                                    </div>
+                                </div>
+                                <div class="settings-item-actions">
+                                    <button class="btn btn-outline btn-sm">Desconectar</button>
+                                </div>
+                            </div>
+                            
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <div class="device-icon">
+                                        <i class="fas fa-tablet-alt"></i>
+                                    </div>
+                                    <div>
+                                        <h4>iPad Air</h4>
+                                        <p>Conectado há 2 semanas • Brasília, DF</p>
+                                    </div>
+                                </div>
+                                <div class="settings-item-actions">
+                                    <button class="btn btn-outline btn-sm">Desconectar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Atividade de Login</h3>
+                        <p>Revise os logins recentes na sua conta</p>
+                        
+                        <div class="login-activity">
+                            <div class="activity-item">
+                                <div class="activity-info">
+                                    <span class="activity-location">São Paulo, SP</span>
+                                    <span class="activity-details">Dispositivo: Chrome no macOS • 15 Jan 2023 às 14:30</span>
+                                </div>
+                                <div class="activity-status status-success">Bem-sucedido</div>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-info">
+                                    <span class="activity-location">Rio de Janeiro, RJ</span>
+                                    <span class="activity-details">Dispositivo: Safari no iOS • 14 Jan 2023 às 09:15</span>
+                                </div>
+                                <div class="activity-status status-success">Bem-sucedido</div>
+                            </div>
+                            
+                            <div class="activity-item">
+                                <div class="activity-info">
+                                    <span class="activity-location">Brasília, DF</span>
+                                    <span class="activity-details">Dispositivo: Android App • 13 Jan 2023 às 18:40</span>
+                                </div>
+                                <div class="activity-status status-success">Bem-sucedido</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Sessões Ativas</h3>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <h4>Encerrar Todas as Sessões</h4>
+                                <p>Faça logout de todos os dispositivos, exceto este</p>
+                            </div>
+                            <div class="settings-item-actions">
+                                <button class="btn btn-outline btn-sm">Encerrar Sessões</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outras seções seriam adicionadas aqui -->
+                <div class="content-section" id="notifications-section">
+                    <h1 class="section-title">Configurações de Notificações</h1>
+                    <p>Conteúdo da seção de notificações...</p>
+                </div>
+                
+                <div class="content-section" id="statement-section">
+                    <h1 class="section-title">Configurações de avisos</h1>
+                    <div class="devices-list">
+                        {% for i in statement %}
+                        <div class="device-item">
+                            <div class="device-info">
+                                <div class="device-icon">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div>
+                                    <h4>{{i.name}}</h4>
+                                    <p>O aviso está enumado como {{i.id}}</p>
+                                </div>
+                            </div>
+                            <form class="settings-item-actions" method="POST">
+                                {% csrf_token %}
+                                <button name="statement_delete" value="{{i.id}}" class="btn btn-outline btn-sm">Apagar</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="content-section" id="help-section">
+                    <h1 class="section-title">Configurações de banner</h1>
+                    <div class="devices-list">
+                        {% for i in banners %}
+                        <div class="device-item">
+                            <div class="device-info">
+                                <div class="device-icon">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <div>
+                                    <h4>{{i.id}} - {{i.name}}</h4>
+                                    <p>O banner de número {{i.id}} está {{i.get_status_display}}</p>
+                                </div>
+                            </div>
+                            <form class="settings-item-actions" method="POST">
+                                {% csrf_token %}
+                                <button name="banner_delete" value="{{i.id}}" class="btn btn-outline btn-sm">Apagar</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="content-section" id="language-section">
+                    <h1 class="section-title">Configurações de anexos</h1>
+                    <div class="devices-list">
+                        {% for i in attachments %}
+                        <div class="device-item">
+                            <div class="device-info">
+                                <div class="device-icon">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div>
+                                    <h4>{{i.name}}</h4>
+                                    <p>O anexo de número {{i.id}} está como {{i.public}}</p>
+                                </div>
+                            </div>
+                            <form class="settings-item-actions" method="POST">
+                                {% csrf_token %}
+                                <button name="attachments_delete" value="{{i.id}}" class="btn btn-outline btn-sm">Apagar</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Oculta todas as seções
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Mostra a seção correspondente
+                const target = this.getAttribute('data-target');
+                document.getElementById(`${target}-section`).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const buttonText = this.textContent;
+                
+                if (buttonText.includes('Alterar Senha')) {
+                    alert('Redirecionando para a página de alteração de senha...');
+                } else if (buttonText.includes('Ativar 2FA')) {
+                    alert('Redirecionando para configuração de autenticação de dois fatores...');
+                } else if (buttonText.includes('Desconectar')) {
+                    alert('Dispositivo será desconectado...');
+                } else if (buttonText.includes('Encerrar Sessões')) {
+                    alert('Todas as outras sessões serão encerradas...');
+                }
+            });
+        });
+    </script>
+{% endblock content %}

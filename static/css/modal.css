@@ -53,6 +53,16 @@ form textarea {
     border: 1px solid #ccc;
 }
 
+form button {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #273c75;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .button-modal{
     margin-top: 20px;
     padding: 10px 15px;

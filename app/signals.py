@@ -8,7 +8,10 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import Group, Permission
 from .generators import generate_timer
 from django.contrib.auth import get_user_model
-from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Player_team_sport
+from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Player_team_sport, UserSession
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 
 User = get_user_model()
 default_photo_url = f"{settings.MEDIA_URL}defaults/team.png"
@@ -423,3 +426,38 @@ def create_user_common_group(sender, **kwargs):
         print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
     else:
         print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
+
+@user_logged_in.connect
+def on_user_logged_in(sender, request, user, **kwargs):
+    session_key = request.session.session_key
+    session = Session.objects.get(session_key=session_key)
+    ip = get_client_ip(request)
+    device = request.user_agent.device.family
+    browser = request.user_agent.browser.family
+    os = request.user_agent.os.family
+
+
+    UserSession.objects.update_or_create(
+        session=session,
+        defaults={
+            "user": user,
+            "ip_address": ip,
+            "device": device,
+            "browser": browser,
+            "os": os,
+            "last_activity": timezone.now(),
+        }
+    )
+
+@user_logged_out.connect
+def on_user_logged_out(sender, request, user, **kwargs):
+    try:
+        UserSession.objects.filter(session__session_key=request.session.session_key).delete()
+    except:
+        pass

@@ -24,8 +24,8 @@
     gap:1rem;
     padding-inline:2vw;
   }
-  .title-adm { display:flex; align-items:center; height:6em; }
-  .title-adm h1 { margin:0; font-size:1.8rem; }
+  .title-ad-scor { display:flex; align-items:center; height:6em; }
+  .title-ad-scor h1 { margin:0; font-size:1.8rem; }
 
   .sb-block-contend {
     width:100%;
@@ -227,7 +227,7 @@
 
 {% block content %}
 <div class="scoreboard-all-block">
-  <div class="title-adm">
+  <div class="title-ad-scor">
     <h1>PAINEL DE CONTROLE DO JOGO</h1>
   </div>
 
@@ -273,10 +273,10 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-a-point" value="+1" class="points-btn" data-team="A" data-delta="1">+1</button>
                 <button name="team-a-point" value="-1" class="points-btn" data-team="A" data-delta="-1">-1</button>
-                <select name="" id="">
+                <select name="player-a-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_a %}
-                  <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                  <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
                   {% endfor %}
                 </select>
               </form>
@@ -287,26 +287,27 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-b-point" value="+1" class="points-btn" data-team="B" data-delta="1">+1</button>
                 <button name="team-b-point" value="-1" class="points-btn" data-team="B" data-delta="-1">-1</button>
-                <select name="" id="">
+                <select name="player-b-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_b %}
-                  <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
+                  <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
                   {% endfor %}
                 </select>
               </form>
             </div>
           </div>
         </div>
-        <div class="timer-block">
+        <form class="timer-block" method="post">
+          {% csrf_token %}
           <p class="score-title">CRONÔMETRO</p>
           <div class="timer">
             <div class="timer-display" id="timer">00:00:00</div>
             <div class="timer-controls">
-              <button class="timer-button" id="start-stop">Start</button>
-              <button class="timer-button" id="reset-timer">Reset</button>
+              <button name="time_init" class="timer-button" id="start-stop">Start</button>
+              <button name="time_stop" class="timer-button" id="reset-timer">Reset</button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>

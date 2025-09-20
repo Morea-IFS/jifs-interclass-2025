@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.timezone import localtime
 from django.utils import timezone
@@ -72,8 +73,8 @@ class Events_need(models.IntegerChoices):
     mixed = 2, "Misto"
 
 class Type_Banner(models.IntegerChoices):
-    In_use = 0, "Em uso"
-    empty = 1, "Nenhum"
+    In_use = 0, "Ativo"
+    empty = 1, "Inativo"
 
 class Type_service(models.IntegerChoices):
     voluntary = 0, "Voluntário"
@@ -86,6 +87,19 @@ class Sexo_types(models.IntegerChoices):
     masculine = 0, "Masculino"
     feminine = 1, "Feminino"
     mixed = 2, "Misto"
+
+class UserSession(models.Model):
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="extra")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sessions")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    device = models.TextField(null=True, blank=True)
+    browser = models.TextField(null=True, blank=True)
+    os = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.ip_address or 'desconhecido'}"
 
 class Event(models.Model):
     name = models.CharField(max_length=100)
@@ -100,19 +114,6 @@ class Event(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
     age = models.IntegerField(default=99)
-
-    #Needs
-    player_need_instagram = models.BooleanField(default=True) 
-    player_need_photo = models.BooleanField(default=True) 
-    player_need_bulletin = models.BooleanField(default=True) 
-    player_need_rg = models.BooleanField(default=True) 
-    player_need_sexo = models.BooleanField(default=True) 
-    player_need_registration = models.BooleanField(default=True) 
-    player_need_cpf = models.BooleanField(default=True) 
-    player_need_date_nasc = models.BooleanField(default=True) 
-
-    voluntary_need_photo = models.BooleanField(default=True) 
-    voluntary_need_registration = models.BooleanField(default=True) 
 
     def __str__(self):
         return self.name
@@ -136,6 +137,7 @@ class CustomUser(AbstractUser):
     team = models.ForeignKey('Team', on_delete=models.CASCADE, blank=True, null=True)
     event_user = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True, null=True, related_name="user_set")
     type = models.IntegerField(choices=Users_types.choices, default=3)
+    address = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return self.username
@@ -194,9 +196,9 @@ class Team(models.Model):
     
 class Attachments(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file = models.FileField(upload_to='attachments/', blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    public = models.BooleanField(default=False)
 
     def __str__(self):    
         return f"{self.name} - {self.id}"

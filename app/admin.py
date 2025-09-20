@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Settings_access, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -14,13 +14,13 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = UserAdmin.fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address')
         }),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address')
         }),
     )
 
@@ -38,6 +38,11 @@ class Event_sportAdmin(admin.ModelAdmin):
     list_display = ('id','event','sport','min_sport','max_sport')
     search_fields = ('id','event','sport','min_sport','max_sport')
 
+@admin.register(UserSession)
+class UserSessionAdmin(admin.ModelAdmin):
+    list_display = ('id','ip_address')
+    search_fields = ('id','ip_address')
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ('id','name','logo')
@@ -50,8 +55,8 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(Attachments)
 class AttachmentsvAdmin(admin.ModelAdmin):
-    list_display = ('id','name','user','file')
-    search_fields = ('id','name','user','file')
+    list_display = ('id','name','file')
+    search_fields = ('id','name','file')
 
 
 @admin.register(Statement)

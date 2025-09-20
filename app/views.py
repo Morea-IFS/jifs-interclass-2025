@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access,Campus_types, Help, Type_penalties, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Campus_types, Help, Type_penalties, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
 from django.db import IntegrityError
 from django.templatetags.static import static
 from django.contrib.auth.models import User, Group, Permission
+from django.contrib.sessions.models import Session
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import login as auth_login, authenticate, logout, get_user_model
 from django.template.loader import render_to_string
@@ -84,19 +85,6 @@ def event_manage(request):
             age = request.POST.get('age')
             regulation = request.FILES.get('regulation')
 
-            # Campos booleanos dos toggles
-            player_need_instagram = 'player_need_instagram' in request.POST
-            player_need_photo = 'player_need_photo' in request.POST
-            player_need_bulletin = 'player_need_bulletin' in request.POST
-            player_need_rg = 'player_need_rg' in request.POST
-            player_need_sexo = 'player_need_sexo' in request.POST
-            player_need_registration = 'player_need_registration' in request.POST
-            player_need_cpf = 'player_need_cpf' in request.POST
-            player_need_date_nasc = 'player_need_date_nasc' in request.POST
-
-            voluntary_need_photo = 'voluntary_need_photo' in request.POST
-            voluntary_need_registration = 'voluntary_need_registration' in request.POST
-
             Event.objects.create(
                 name=name,
                 logo=logo,
@@ -109,18 +97,7 @@ def event_manage(request):
                 age=age,
                 regulation=regulation,
                 user=request.user,
-
-                player_need_instagram=player_need_instagram,
-                player_need_photo=player_need_photo,
-                player_need_bulletin=player_need_bulletin,
-                player_need_rg=player_need_rg,
-                player_need_sexo=player_need_sexo,
-                player_need_registration=player_need_registration,
-                player_need_cpf=player_need_cpf,
-                player_need_date_nasc=player_need_date_nasc,
-
-                voluntary_need_photo=voluntary_need_photo,
-                voluntary_need_registration=voluntary_need_registration
+                
             )
 
         return redirect('event_manage')
@@ -325,7 +302,6 @@ def home_admin(request):
         return render(request, 'home_admin_adm.html', context)
 
 def login(request):
-    try:
         if request.user.is_authenticated == False:
             if request.method == "GET":
                 return render(request, 'login.html')
@@ -345,9 +321,6 @@ def login(request):
                     return redirect('login')
         else:
             return redirect('Home')
-    except Exception as e:
-        messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-        return redirect('login')
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -903,105 +876,114 @@ def matches_edit(request, id):
 
 @login_required(login_url="login")
 @terms_accept_required
-@permission_required('app.add_match', raise_exception=True)
-def matches_register(request):
-    team = Team.objects.all()
-    sport = Sport_types.choices
-    events = Event.objects.all()
-    if request.method ==  "GET":
-        return render(request, 'matches/matches_register.html',{'team': team,'sport': sport, 'events': events})
-    else:
-        try:
-            sport_id = int(request.POST.get('sport'))
-            sexo = request.POST.get('sexo')
-            team_a_id = request.POST.get('time_a')
-            team_b_id = request.POST.get('time_b')
-            datetime = request.POST.get('datetime')
-            if not request.user.event_user: event = Event.objects.get(id=request.POST.get('event'))
-            else: event = request.user.event_user
-            if team_a_id == team_b_id:
-                messages.error(request, "Você não pode criar uma partida com times iguais!")
-                return redirect('matches_register')
-            team_a = Team.objects.get(id=team_a_id)
-            team_b = Team.objects.get(id=team_b_id)
-            if not Team_sport.objects.filter(team=team_a, sexo=sexo).exists() or not Team_sport.objects.filter(team=team_b, sexo=sexo).exists():
-                messages.error(request, "Algum campus não está cadastrado na modalidade!")
-                return redirect('matches_register')
-
-            if sport_id == 2 or sport_id == 1:
-                volley_match = Volley_match.objects.create(status=0, event=event)
-                volley_match.save()
-                print("O esporte tem sets, blz? :)")
-                if not Match.objects.filter(sport=sport_id, sexo=sexo, time_match=datetime, volley_match=volley_match, event=event).exists():
-                    match = Match.objects.create(sport=sport_id, sexo=sexo, time_match=datetime, volley_match=volley_match, event=event)
-                    Team_match.objects.create(match=match, team=team_a)
-                    Team_match.objects.create(match=match, team=team_b)
-                    messages.success(request, "Partida cadastrada com sucesso!")
-                else:
-                    match = Match.objects.get(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
-                    messages.info(request, f"Essa partida já foi cadastrada! aidentificação dela é #{match.id}")
-            else:  
-                print("nao volei")  
-                if not Match.objects.filter(sport=sport_id, sexo=sexo, time_match=datetime, event=event).exists():
-                    match = Match.objects.create(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
-                    Team_match.objects.create(match=match, team=team_a)
-                    Team_match.objects.create(match=match, team=team_b)
-                    messages.success(request, "Partida cadastrada com sucesso!")
-                else:
-                    match = Match.objects.get(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
-                    messages.info(request, f"Essa partida já foi cadastrada! aidentificação dela é #{match.id}")
-            match.save()
-            return redirect('games')
-        except (TypeError, ValueError):
-            messages.error(request, 'Um valor foi informado incorretamente!')
-        except IntegrityError as e:
-            messages.error(request, 'Algumas informações não foram preenchidas :(')
-        except Team.DoesNotExist:
-            messages.error(request, 'Um dos times não foi informado ou é inexistente!')
-        except Exception as e:
-            messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-        return redirect('matches_register')
-
-@login_required(login_url="login")
-@terms_accept_required
 def games(request):
-    contex = {}
-    if request.user.type in [1,2]:
-        matchs = Match.objects.filter(event=request.user.event_user).prefetch_related('teams__team').order_by('time_match')
-    elif 'e' in request.GET and request.GET['e'] != '':
-        matchs = Match.objects.filter(event=Event.objects.get(id=request.GET['e'])).prefetch_related('teams__team').order_by('time_match')
-        contex['select_event'] = request.GET['e']
-    else:
-        matchs = Match.objects.all().prefetch_related('teams__team').order_by('time_match')
-    context = [
-        {
-            'match': match,
-            'times': list(match.teams.all()),
-            'points_a': Point.objects.filter(team_match=match.teams.first()).count(),
-            'points_b': Point.objects.filter(team_match=match.teams.last()).count(),
-            
+    if request.method == "GET":
+        contex = {
+            'team': Team.objects.all(),
+            'sport': Sport_types.choices,
+            'events': Event.objects.all(),
         }
-        for match in matchs
+        if request.user.type in [1,2]:
+            matchs = Match.objects.filter(event=request.user.event_user).prefetch_related('teams__team').order_by('time_match')
+        elif 'e' in request.GET and request.GET['e'] != '':
+            matchs = Match.objects.filter(event=Event.objects.get(id=request.GET['e'])).prefetch_related('teams__team').order_by('time_match')
+            contex['select_event'] = request.GET['e']
+        else:
+            matchs = Match.objects.all().prefetch_related('teams__team').order_by('time_match')
+        context = [
+            {
+                'match': match,
+                'times': list(match.teams.all()),
+                'points_a': Point.objects.filter(team_match=match.teams.first()).count(),
+                'points_b': Point.objects.filter(team_match=match.teams.last()).count(),
+                
+            }
+            for match in matchs
 
-    ]
-    contex['context'] = context
-    contex['events'] = Event.objects.all()
-    
-    return render(request, 'games.html', contex)
+        ]
+        contex['context'] = context
+        contex['events'] = Event.objects.all()
+        
+        return render(request, 'games.html', contex)
+    else:
+        sport_id = int(request.POST.get('sport'))
+        sexo = request.POST.get('sexo')
+        team_a_id = request.POST.get('time_a')
+        team_b_id = request.POST.get('time_b')
+        datetime = request.POST.get('datetime')
+        if not request.user.event_user: event = Event.objects.get(id=request.POST.get('event'))
+        else: event = request.user.event_user
+        if team_a_id == team_b_id:
+            messages.error(request, "Você não pode criar uma partida com times iguais!")
+            return redirect('matches_register')
+        team_a = Team.objects.get(id=team_a_id)
+        team_b = Team.objects.get(id=team_b_id)
+        if not Team_sport.objects.filter(team=team_a, sexo=sexo).exists() or not Team_sport.objects.filter(team=team_b, sexo=sexo).exists():
+            messages.error(request, "Algum campus não está cadastrado na modalidade!")
+            return redirect('matches_register')
+
+        if sport_id == 2 or sport_id == 1:
+            volley_match = Volley_match.objects.create(status=0, event=event)
+            volley_match.save()
+            print("O esporte tem sets, blz? :)")
+            if not Match.objects.filter(sport=sport_id, sexo=sexo, time_match=datetime, volley_match=volley_match, event=event).exists():
+                match = Match.objects.create(sport=sport_id, sexo=sexo, time_match=datetime, volley_match=volley_match, event=event)
+                Team_match.objects.create(match=match, team=team_a)
+                Team_match.objects.create(match=match, team=team_b)
+                messages.success(request, "Partida cadastrada com sucesso!")
+            else:
+                match = Match.objects.get(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
+                messages.info(request, f"Essa partida já foi cadastrada! aidentificação dela é #{match.id}")
+        else:  
+            print("nao volei")  
+            if not Match.objects.filter(sport=sport_id, sexo=sexo, time_match=datetime, event=event).exists():
+                match = Match.objects.create(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
+                Team_match.objects.create(match=match, team=team_a)
+                Team_match.objects.create(match=match, team=team_b)
+                messages.success(request, "Partida cadastrada com sucesso!")
+            else:
+                match = Match.objects.get(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
+                messages.info(request, f"Essa partida já foi cadastrada! aidentificação dela é #{match.id}")
+        match.save()
+        return redirect('games')
+
+@login_required
+def manage_session(request):
+    if request.method == "POST":
+        session_key = request.POST.get("session_key")
+        if session_key and session_key != request.session.session_key:
+            try:
+                Session.objects.get(session_key=session_key).delete()
+                UserSession.objects.filter(session__session_key=session_key).delete()
+            except Session.DoesNotExist:
+                pass
+        return redirect("manage_sessions")
+
+    sessions = UserSession.objects.filter(user=request.user).select_related("session")
+    return render(request, "manage_sessions.html", {"sessions": sessions})
 
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_customuser', raise_exception=True)
 def user_manage(request):
-    if request.user.type == 0 or request.user.is_staff:
-        users_none = User.objects.filter(event_user=None)
-        type_user = Users_types.choices
-    else:
-        users_none = ''
-        type_user = Users_types.choices[2:]
     team = Team.objects.all()
+    context = {
+        'team':team, 
+        'events': Event.objects.all(), 
+    }
+    if not request.user.type in [0]:
+        context['type_user'] = Users_types.choices[2:]
+        context['users_all'] = User.objects.filter(event_user=request.user.event_user)
+    elif 'e' in request.GET and request.GET['e'] != '':
+        context['type_user'] = Users_types.choices
+        context['users_all'] = User.objects.filter(event_user=Event.objects.get(id=request.GET['e']))
+        context['select_event'] = request.GET['e']
+    else:
+        context['type_user'] = Users_types.choices
+        context['users_all'] = User.objects.filter(event_user=None)
+    
     if request.method == "GET":
-        return render(request, 'settings/user_manage.html', {'team':team, 'events': Event.objects.all(), 'users_none': users_none,'type_user':type_user})
+        return render(request, 'settings/user_manage.html', context)
     else:
             print(request.POST, request.FILES)
             if 'user_id' in request.POST:
@@ -1453,6 +1435,28 @@ def terms_use(request):
 def settings(request):
     return render(request, 'settings.html')
 
+@login_required(login_url="login")  
+def settings_new(request):
+    if request.POST:
+        if 'banner_delete' in request.POST:
+            banner = Banner.objects.get(id=request.POST.get('banner_delete'))
+            banner.image.delete()
+            banner.delete()
+        elif 'attachments_delete' in request.POST:
+            attachments = Attachments.objects.get(id=request.POST.get('attachments_delete'))
+            attachments.file.delete()
+            attachments.delete()
+        elif 'statement_delete' in request.POST:
+            statement = Statement.objects.get(id=request.POST.get('statement_delete'))
+            statement.image.delete()
+            statement.delete()
+    context = {
+        'banners': Banner.objects.all(),
+        'attachments': Attachments.objects.all(),
+        'statement': Statement.objects.all(),
+    }
+    return render(request, 'settings_new.html', context)
+
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.add_statement', raise_exception=True)
@@ -1619,6 +1623,7 @@ def enrollment_register(request):
         return redirect('enrollment_manage')
 
 def scoreboard(request):  
+    time_now = time.strftime("%H:%M:%S", time.localtime())
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
         team_matchs = Team_match.objects.filter(match=match)
@@ -1697,12 +1702,68 @@ def scoreboard(request):
             player_end = get_object_or_404(Player_match, id=request.POST.get("replacement_end"))
             player_end.activity = 1
             player_init.save(), player_end.save()
+        elif 'penalties' in request.POST:
+            
+            pass
         elif 'team-a-point' in request.POST:
-            if request.POST.get("team-a-point") == "+1": Point.objects.create(team_match=team_match_a)
-            elif request.POST.get("team-a-point") == "-1": Point.objects.filter(team_match=team_match_a).last().delete()
+            if request.POST.get("team-a-point") == "+1" and request.POST.get("player-a-point"): 
+                player = Player.objects.get(id=request.POST.get("player-a-point"))
+                Point.objects.create(team_match=team_match_a, player=player)
+            elif request.POST.get("team-a-point") == "+1": 
+                Point.objects.create(team_match=team_match_a)
+            elif request.POST.get("team-a-point") == "-1": 
+                Point.objects.filter(team_match=team_match_a).last().delete()
         elif 'team-b-point' in request.POST:
-            if request.POST.get("team-b-point") == "+1": Point.objects.create(team_match=team_match_b)
-            elif request.POST.get("team-b-point") == "-1": Point.objects.filter(team_match=team_match_b).last().delete()
+            if request.POST.get("team-b-point") == "+1" and request.POST.get("player-b-point"):
+                player = Player.objects.get(id=request.POST.get("player-b-point"))
+                Point.objects.create(team_match=team_match_b, player=player)
+            elif request.POST.get("team-b-point") == "+1": 
+                Point.objects.create(team_match=team_match_b)
+            elif request.POST.get("team-b-point") == "-1": 
+                Point.objects.filter(team_match=team_match_b).last().delete()
+        elif 'time_init' in request.POST:
+            if match.time_start and match.time_end:
+                print("O cronometro já finalizou!")
+                return redirect('scoreboard')
+            
+            elif match.time_start:
+                if Time_pause.objects.filter(match=match):
+                    pause = Time_pause.objects.filter(match=match).last()
+                    if pause.start_pause and not pause.end_pause:
+                        pause.end_pause = time_now
+                        pause.save()
+                        return redirect('scoreboard')                
+                    else:
+                        pause_time = Time_pause.objects.create(start_pause=time_now,match=match)
+                        pause_time.save()
+                        return redirect('scoreboard')
+                else:
+                    pause_time = Time_pause.objects.create(start_pause=time_now,match=match)
+                    pause_time.save()
+                    print(pause_time)
+                    return redirect('scoreboard')
+            
+            else:
+                match.time_start = time_now
+                match.save()
+                return redirect('scoreboard')
+                
+        elif 'time_stop' in request.POST:
+            if match.time_start and match.time_end:
+                print("O cronometro foi finalizado!")
+                return redirect('scoreboard')
+            elif match.time_start:
+                if Time_pause.objects.filter(match=match).last():
+                    pause = Time_pause.objects.filter(match=match).last()
+                    if pause.start_pause and not pause.end_pause:
+                        pause.end_pause = time_now
+                        pause.save()
+                match.time_end = time_now
+                match.save()
+                return redirect('scoreboard')
+            else:
+                print("o cronometro precisa ser iniciado, para ser finalizado!")
+                return redirect('scoreboard')
         return redirect('scoreboard')
 
 @login_required(login_url="login")

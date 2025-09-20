@@ -13,135 +13,75 @@
 {% block content %}
 <div class="all-block">
     <div class="block1" style="justify-content: start;">
-        <div class="title">
-            <h1>GERENCIAMENTO DOS USUÁRIOS</h1>
-        </div>
-        {% if perms.app.add_customuser %}
-        <button onclick="openModal()" class="side-bar-buttons-items2 custom-buttons-sport-nav">
-            <p> CADASTRAR USUÁRIO </p>
-        </button>
-        {% endif %}
-        <br><br>
-        <div class="all-manage">
-            {% for event in events %}
-                {% if event.user_set.all %}
-                <div  style="width: 100%;">
-                    <br>  
-                    <p class="title-table-event">{{event.name}}</p>
-                    <br>
-                    <section class="all-table" style="width: 100%;">
-                        <table id="search-table" style="width: 100%;">
-                            <tr class="hidden">
-                                <th>NOME</th>
-                                <th>TIPO</th>
-                                <th>TIME</th>
-                                <th>FOTO</th>
-                                <th>EMAIL</th>
-                                {% if perms.app.change_customuser %}
-                                <th>EDITAR</th>
-                                {% endif %}
-                                {% if perms.app.delete_customuser %}
-                                <th>DELETAR</th>
-                                {% endif %}
-                            </tr>
-                            {% for i in event.user_set.all %}
-                            <tr>
-                                <td>
-                                    <a>{{ i.username }}</a>
-                                </td>
-                                <td>{{i.get_type_display}}</td>
-                                <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
-                                <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                                <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
-                                {% if perms.app.change_customuser %}
-                                <td>
-                                    <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}','{{ i.is_active }}')" src="{% static 'images/icon-edit.svg' %}">
-                                </td>
-                                {% endif %}
-                                {% if perms.app.delete_customuser %}
-                                <td>
-                                    <form method="POST" action="">
-                                        {% csrf_token %}
-                                        <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
-                                            <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
-                                        </button>
-                                    </form>
-                                </td>
-                                {% endif %}
-                            </tr>
-                            {% empty %}
-                            <style>
-                                .hidden {
-                                    display: none;
-                                }
-                            </style>
-                            <div class="title2">
-                                <h2>NÃO HÁ NENHUM GESTOR CADASTRADO <br> <span style="font-size: 20px;">Os gestores tem acesso ao sistema!</span></h2>
-                            </div>
-                            {% endfor %}
-                        </table>
-                    </section>
-                </div>
-                {% endif %}
-            {% endfor %}
-            {% if user.type == 0 %}
-            <div style="width: 100%;">
-                <br>  
-                <p class="title-table-event hidden">USUÁRIOS SEM EVENTO</p>
-                <br>
-                <section class="all-table" style="width: 100%;">
-                    <table id="search-table" style="width: 100%;">
-                        <tr class="hiddden">
-                            <th>NOME</th>
-                            <th>TIPO</th>
-                            <th>TIME</th>
-                            <th>FOTO</th>
-                            <th>EMAIL</th>
-                            {% if perms.app.change_customuser %}
-                            <th>EDITAR</th>
-                            {% endif %}
-                            {% if perms.app.delete_customuser %}
-                            <th>DELETAR</th>
-                            {% endif %}
-                        </tr>
-                        {% for i in users_none %}
-                        <tr>
-                            <td>
-                                <a>{{ i.username }}</a>
-                            </td>
-                            <td>{{i.get_type_display}}</td>
-                            <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
-                            <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                            <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
-                            <td>
-                                {% if not i.type_i == 4 or user.is_staff %}
-                                    <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}'),'{{ i.is_active }}'" src="{% static 'images/icon-edit.svg' %}">
-                                {% endif %}
-                            </td>
-                            <td>
-                                <form method="POST" action="">
-                                    {% csrf_token %}
-                                    <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
-                                        <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <style>
-                            .hiddden {
-                                display: none;
-                            }
-                        </style>
+        <div class="title-adm">
+            <h1>
+                GERENCIAMENTO DE USUÁRIOS
+            </h1>
+            <div class="title-buttons">
+                {% if user.type != 2 %} <span onclick="openModal('{% if user.type == 1 %} {{user.event_user.id}} {% else %} {{ select_event }} {% endif %}')" {% else %} <span onclick="openTimeModal('{{ team.id }}')" {% endif %}><p>Novo</p></span>
+                {% if user.type == 0 %}
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Evento</option>
+                        {% for i in events %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
                         {% endfor %}
-                    </table>
-                </section>
+                    </select>
+                </form>
+                {% else %}
+                <h3>
+                    {{user.event_user.name}}
+                </h3>
+                {% endif %}
             </div>
-            {% endif %}
-            <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color); margin-top: 40px;">
-                <a href="{% url 'settings' %}">VOLTAR</a>
-            </button>
         </div>
+        <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
+            <table id="search-table" style="width: 100%;">
+                <tr class="hiddden">
+                    <th>NOME</th>
+                    <th>TIPO</th>
+                    <th>TIME</th>
+                    <th>FOTO</th>
+                    <th>EMAIL</th>
+                    {% if perms.app.change_customuser %}
+                    <th>EDITAR</th>
+                    {% endif %}
+                    {% if perms.app.delete_customuser %}
+                    <th>DELETAR</th>
+                    {% endif %}
+                </tr>
+                {% for i in users_all %}
+                <tr>
+                    <td>
+                        <a>{{ i.username }}</a>
+                    </td>
+                    <td>{{i.get_type_display}}</td>
+                    <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
+                    <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                    <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
+                    <td>
+                        {% if not i.type_i == 4 or user.is_staff %}
+                            <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}'),'{{ i.is_active }}'" src="{% static 'images/icon-edit.svg' %}">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
+                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <style>
+                    .hiddden {
+                        display: none;
+                    }
+                </style>
+                {% endfor %}
+            </table>
+        </section>
     </div>
 </div>
 

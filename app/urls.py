@@ -22,7 +22,6 @@ urlpatterns = [
     path('manage/match', views.matches_manage, name = "matches_manage"),
     path('edit/match/<int:id>', views.matches_edit, name = "matches_edit"),
     path('add/player/team/<int:id>', views.add_player_team, name = "add_player_team"),
-    path('register/match', views.matches_register, name = "matches_register"),
     path('games', views.games, name = "games"),
     path('attachments', views.attachments, name = "attachments"),
     path('manage/user', views.user_manage, name = "user_manage"),
@@ -38,6 +37,8 @@ urlpatterns = [
     path('termos', views.terms_use, name='terms_use'),
     path('erro404', views.page_in_erro404),
     path('settings', views.settings, name="settings"),
+    path('settings_new', views.settings_new, name="settings_new"),
+    path("status/", views.manage_session, name="manage_sessions"),
 
     path('manage/statement', views.statement_manage, name="statement_manage"),
     path('register/statement', views.statement_register, name="statement_register"),

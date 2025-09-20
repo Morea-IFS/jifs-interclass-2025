@@ -35,7 +35,6 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 domains = os.getenv("HOST", "").split(",")
 
 ALLOWED_HOSTS = [f"{domain.strip()}" for domain in domains]
-print(ALLOWED_HOSTS)
 
 
 # Application definition
@@ -43,13 +42,32 @@ print(ALLOWED_HOSTS)
 INSTALLED_APPS = [
     'app',
     'channels',
-    'django.contrib.admin',
     'django.contrib.auth',
+    "jazzmin", 
+    'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "django_user_agents",
 ]
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Painel JIFS",
+    "site_header": "Administração JIFS",
+    "site_brand": "JIFS",
+    "welcome_sign": "Bem-vindo ao painel",
+    "copyright": "JIFS Interclass 2025",
+    "search_model": ["auth.User", "auth.Group"],
+
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    #"hide_apps": ["auth"],   
+    "hide_models": [],
+
+    "theme": "cerulean",  
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -61,6 +79,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    "django_user_agents.middleware.UserAgentMiddleware",
 ]
 
 ROOT_URLCONF = 'interclasse.urls'
@@ -192,3 +211,5 @@ CSRF_TRUSTED_ORIGINS = [f"http://{domain.strip()}" for domain in domains] + \
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
