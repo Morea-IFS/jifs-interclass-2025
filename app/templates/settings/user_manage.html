@@ -17,6 +17,7 @@
             <h1>
                 GERENCIAMENTO DE USUÁRIOS
             </h1>
+            {% if perms.app.add_customuser %}
             <div class="title-buttons">
                 {% if user.type != 2 %} <span onclick="openModal('{% if user.type == 1 %} {{user.event_user.id}} {% else %} {{ select_event }} {% endif %}')" {% else %} <span onclick="openTimeModal('{{ team.id }}')" {% endif %}><p>Novo</p></span>
                 {% if user.type == 0 %}
@@ -34,6 +35,7 @@
                 </h3>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
         <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
             <table id="search-table" style="width: 100%;">
@@ -242,6 +244,25 @@
             }
         });
     }
+
+    const NewtypeSelect = document.getElementById("type");
+    const Newteam = document.getElementById("team");
+    const NewteamLabel = document.getElementById("teamLabel");
+
+    if (NewtypeSelect) {
+        NewtypeSelect.addEventListener("input", function (e) {
+            const value = e.target.value;
+            if (value == "2") {
+                console.log("libera ela")
+                Newteam.style.display = 'flex';
+                NewteamLabel.style.display = 'flex';
+            } else {
+                Newteam.style.display = 'none';
+                NewteamLabel.style.display = 'none';
+            }
+        });
+    }
+
     function openModal() {
         document.getElementById("eventModal").style.display = "block";
     }
