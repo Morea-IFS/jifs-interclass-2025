@@ -85,6 +85,7 @@
                         {% endif %}
 
                         <!-- OUTROS -->
+                        {% if user.is_staff %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
                                 <i class="fa-solid fa-compass"></i>OUTROS
@@ -106,6 +107,7 @@
                                 <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONIFG</a>
                             </div>
                         </div>
+                        {% endif %}
 
                         {% block navbar %}{% endblock navbar %}
 
