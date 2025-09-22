@@ -260,6 +260,7 @@
             <h1>
                 GERENCIAMENTO DE MODALIDADES
             </h1>
+            {% if perms.app.add_team or perms.app.add_team_sport %}
             <div class="title-buttons">
                 {% if user.type != 2 %} <span onclick="openModal('{% if user.type == 1 %} {{user.event_user.id}} {% else %} {{ select_event }} {% endif %}')" {% else %} <span onclick="openTimeModal('{{ team.id }}')" {% endif %}><p>Novo</p></span>
                 {% if user.type == 0 %}
@@ -277,6 +278,7 @@
                 </h3>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
         <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
             <input name="q" type="search" placeholder="Procure por esportes, por sexo ou pelo ID">
@@ -318,35 +320,47 @@
                 <tr class="hidden error">
                     <th>ESPORTE</th>
                     <th>SEXO</th>
+                    {% if perms.app.view_player_team_sport %}
                     <th>AÇÕES</th>
+                    {% endif %}
+                    {% if perms.app.change_team_sport and perms.app.change_team %}
                     <th>EDITAR</th>
+                    {% endif %}
                     <th>STATUS</th>
+                    {% if perms.app.delete_team_sport %}
                     <th>DELETAR</th>
+                    {% endif %}
                 </tr>
 
                 {% for team_sport in team_sports %}
                 <tr>
                     <td>{{ team_sport.sport.get_sport_display }}</td>
                     <td>{{ team_sport.get_sexo_display }}</td>
+                    {% if perms.app.view_player_team_sport %}
                     <td>
                         <a style="color: #0099ff;" href="{% url 'team_players_manage' team_sport.id %}"><i style="font-size: 21px;" class="fa-solid fa-eye"></i></a>
                     </td>
+                    {% endif %}
+                    {% if perms.app.change_team_sport and perms.app.change_team %}
                     <td>
                         <a href="{% url 'team_edit' team_sport.id %}">
                             <img src="{% static 'images/icon-edit.svg' %}">
                         </a>
                     </td>
+                    {% endif %}
                     <td>{% if team_sport.status %} <span class="table-span-true">COMPLETO</span> {% else %} <span class="table-span-false">INCOMPLETO</span> {% endif %}</td>
+                    {% if perms.app.delete_team_sport %}
                     <td>
                         <form method="POST">
                             {% csrf_token %}
                             <button data-confirm="Você realmente deseja excluir esta modalidade?"
                                 name="team_sport_delete" value="{{team_sport.id}}"
-                                style="background-color: transparent; border: none;">
-                                <img src="{% static 'images/icon-trash.svg' %}" alt="">
+                                style="background-color: transparent; border: none; margin: 0;">
+                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
                             </button>
                         </form>
                     </td>
+                    {% endif %}
                 </tr>
                 {% empty %}
                 <style>

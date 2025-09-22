@@ -394,11 +394,7 @@ def create_user_common_group(sender, **kwargs):
         "change_team_sport",
         "delete_team_sport",
         "view_team_sport",
-        
-        "add_voluntary",
-        "change_voluntary",
-        "delete_voluntary",
-        "view_voluntary",
+
     ]
 
     permissions = Permission.objects.filter(codename__in=permission_codenames)

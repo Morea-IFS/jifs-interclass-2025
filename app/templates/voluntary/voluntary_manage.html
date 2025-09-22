@@ -78,6 +78,7 @@
             <h1>
                 COMISSÃO TÉCNICA
             </h1>
+            {% if perms.app.add_voluntary %}
             <div class="title-buttons">
                 <span onclick="openModal()"><p>Novo</p></span>
                 {% if user.type == 0 %}
@@ -95,6 +96,7 @@
                 </h3>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
         <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
             <input name="q" type="search" placeholder="Procure pelos membros da comissão técnica">

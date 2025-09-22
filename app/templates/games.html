@@ -20,6 +20,7 @@
             <h1>
                 GERENCIAMENTO DE PARTIDAS
             </h1>
+            {% if perms.app.add_match %}
             <div class="title-buttons">
                 <span onclick="openModal()"><p>Novo</p></span>
                 {% if user.type == 0 %}
@@ -37,6 +38,7 @@
                 </h3>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
         <div class="games">
             {% for i in context %}
@@ -87,6 +89,7 @@
         </div>
     </div>
 </div>
+{% if perms.app.add_match %}
 
 <div id="eventModal" class="modal">
     <div class="modal-content">
@@ -147,4 +150,5 @@
         document.getElementById("eventModal").style.display = "none";
     }
 </script>
+{% endif %}
 {% endblock content %}
