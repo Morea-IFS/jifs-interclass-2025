@@ -985,67 +985,67 @@ def user_manage(request):
     if request.method == "GET":
         return render(request, 'settings/user_manage.html', context)
     else:
-            print(request.POST, request.FILES)
-            if 'user_id' in request.POST:
-                user = get_object_or_404(User, id=request.POST.get('user_id'))
-                print(user.username)
-                print(user.password)
-                if request.POST.get('name'): user.username = str(request.POST.get('name'))
-                if request.POST.get('password'):
-                    senha = request.POST.get('password') 
-                    print("trocando: ", senha)
-                    user.set_password(senha)
-                print("uaii")
-                if int(request.POST.get('event')) != 0: user.event_user = Event.objects.get(id=request.POST.get('event'))
-                else: user.event_user = None
-                if request.POST.get('telephone'): user.telefone = request.POST.get('telephone')
-                if request.POST.get('email'): user.email = str(request.POST.get('email'))
-                if request.POST.get('active') == 'on': user.is_active = True
-                else: user.is_active = False
-                if request.POST.get('type'): 
-                    if int(request.POST.get('type')) == 2:
-                        if request.POST.get('team'):
-                            user.team = Team.objects.get(id=request.POST.get('team'))
-                            user.type = request.POST.get('type')
-                        else:
-                            messages.info(request, f"O time/ou o tipo não foi alterado porque faltou informar o time.")
-                    else:
+        print(request.POST, request.FILES)
+        if 'user_id' in request.POST:
+            user = get_object_or_404(User, id=request.POST.get('user_id'))
+            print(user.username)
+            print(user.password)
+            if request.POST.get('name'): user.username = str(request.POST.get('name'))
+            if request.POST.get('password'):
+                senha = request.POST.get('password') 
+                print("trocando: ", senha)
+                user.set_password(senha)
+            print("uaii")
+            if int(request.POST.get('event')) != 0: user.event_user = Event.objects.get(id=request.POST.get('event'))
+            else: user.event_user = None
+            if request.POST.get('telephone'): user.telefone = request.POST.get('telephone')
+            if request.POST.get('email'): user.email = str(request.POST.get('email'))
+            if request.POST.get('active') == 'on': user.is_active = True
+            else: user.is_active = False
+            if request.POST.get('type'): 
+                if int(request.POST.get('type')) == 2:
+                    if request.POST.get('team'):
+                        user.team = Team.objects.get(id=request.POST.get('team'))
                         user.type = request.POST.get('type')
-                        user.team = None
-                    
-                if request.FILES.get('photo'):
-                    if user.photo: 
-                        status = verificar_foto(str(user.photo))
-                        if status:
-                            user.photo.delete()
-                    user.photo = request.FILES.get('photo')
-                user.save()
-                print("Nova: ",user.password)
-                messages.success(request, f"{user.username} do sistema atualizado com sucesso!")
-            elif 'name' in request.POST:
-                name = request.POST.get('name')
-                if request.POST.get('event') and int(request.POST.get('event')) != 0: event = Event.objects.get(id=request.POST.get('event'))
-                elif request.user.type == 1: event = request.user.event_user
-                else: event = None
-                type = request.POST.get('type')
-                team = request.POST.get('team')
-                email = request.POST.get('email')
-                telephone = request.POST.get('telephone')
-                password = request.POST.get('password')
-                photo = request.FILES.get('photo')
-                if int(type) == 2:
-                    if team: User.objects.create_user(username=name, password=password, photo=photo, type=type, team=Team.objects.get(id=team), email=email, telefone=telephone, event_user=event)
-                    elif request.user.team: User.objects.create_user(username=name, password=password, photo=photo, type=type, team=request.user.team, email=email, telefone=telephone, event_user=event)
-                    else: messages.error(request, "Você não informou o time associado ao usuário.")
+                    else:
+                        messages.info(request, f"O time/ou o tipo não foi alterado porque faltou informar o time.")
                 else:
-                    User.objects.create_user(username=name, password=password, photo=photo, type=type, email=email, telefone=telephone, event_user=event )
-                    messages.success(request, f"{name} cadastrado do sistema com sucesso!")
-            elif 'user_delete' in request.POST:
-                user_id = request.POST.get('user_delete')
-                user_delete = User.objects.get(id=user_id)
-                user_delete.delete()
-                messages.info(request, f"{user_delete.username} removido do sistema com sucesso!")
-            return redirect('user_manage')
+                    user.type = request.POST.get('type')
+                    user.team = None
+                
+            if request.FILES.get('photo'):
+                if user.photo: 
+                    status = verificar_foto(str(user.photo))
+                    if status:
+                        user.photo.delete()
+                user.photo = request.FILES.get('photo')
+            user.save()
+            print("Nova: ",user.password)
+            messages.success(request, f"{user.username} do sistema atualizado com sucesso!")
+        elif 'name' in request.POST:
+            name = request.POST.get('name')
+            if request.POST.get('event') and int(request.POST.get('event')) != 0: event = Event.objects.get(id=request.POST.get('event'))
+            elif request.user.type == 1: event = request.user.event_user
+            else: event = None
+            type = request.POST.get('type')
+            team = request.POST.get('team')
+            email = request.POST.get('email')
+            telephone = request.POST.get('telephone')
+            password = request.POST.get('password')
+            photo = request.FILES.get('photo')
+            if int(type) == 2:
+                if team: User.objects.create_user(username=name, password=password, photo=photo, type=type, team=Team.objects.get(id=team), email=email, telefone=telephone, event_user=event)
+                elif request.user.team: User.objects.create_user(username=name, password=password, photo=photo, type=type, team=request.user.team, email=email, telefone=telephone, event_user=event)
+                else: messages.error(request, "Você não informou o time associado ao usuário.")
+            else:
+                User.objects.create_user(username=name, password=password, photo=photo, type=type, email=email, telefone=telephone, event_user=event )
+                messages.success(request, f"{name} cadastrado do sistema com sucesso!")
+        elif 'user_delete' in request.POST:
+            user_id = request.POST.get('user_delete')
+            user_delete = User.objects.get(id=user_id)
+            user_delete.delete()
+            messages.info(request, f"{user_delete.username} removido do sistema com sucesso!")
+        return redirect('user_manage')
     
 @login_required(login_url="login")
 @terms_accept_required

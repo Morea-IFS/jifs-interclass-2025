@@ -27,17 +27,17 @@
                 <div class="side-bar-top">
                     <div class="side-bar-buttons">
                         <a class="side-init" href="{% url 'Home' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-house"></i>{% trans "INÍCIO" %}</button>
+                            <button class="side-bar-buttons-items"><i class="fa-solid fa-house"></i>INÍCIO</button>
                         </a>
 
                         {% if perms.app.view_events %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-calendar-days"></i>{% trans "EVENTOS" %}
+                                <i class="fa-solid fa-calendar-days"></i>EVENTOS
                             </button>
                             <div class="dropdown-menu">
                                 {% if perms.app.view_event %}
-                                <a href="{% url 'event_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>{% trans "VER OS EVENTOS" %}</a>
+                                <a href="{% url 'event_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>VER OS EVENTOS</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -45,14 +45,14 @@
                         {% if perms.app.view_team_sport %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-volleyball"></i>{% trans "TIMES" %}
+                                <i class="fa-solid fa-volleyball"></i>TIMES
                             </button>
                             <div class="dropdown-menu">
                                 {% if perms.app.view_team_sport %}
-                                <a href="{% url 'team_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-users"></i>{% trans "MEUS TIMES" %}</a>
+                                <a href="{% url 'team_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-users"></i>MEUS TIMES</a>
                                 {% endif %}
                                 {% if perms.app.view_player %}
-                                <a href="{% url 'player_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-user"></i>{% trans "ATLETAS" %}</a>
+                                <a href="{% url 'player_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-user"></i>ATLETAS</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -61,11 +61,11 @@
                         {% if perms.app.view_voluntary or perms.app.add_voluntary %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-users"></i>{% trans "EQUIPE" %}
+                                <i class="fa-solid fa-users"></i>EQUIPE
                             </button>
                             <div class="dropdown-menu">
                                 {% if perms.app.view_voluntary %}
-                                <a href="{% url 'voluntary_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-people-group"></i>{% trans "MINHA EQUIPE" %}</a>
+                                <a href="{% url 'voluntary_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-people-group"></i>MINHA EQUIPE</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -74,43 +74,45 @@
                         {% if perms.app.view_match or perms.app.add_match %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-users-rectangle"></i>{% trans "PARTIDAS" %}
+                                <i class="fa-solid fa-users-rectangle"></i>PARTIDAS
                             </button>
                             <div class="dropdown-menu">
                                 {% if perms.app.view_match %}
-                                <a href="{% url 'games' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>{% trans "MINHAS PARTIDAS" %}</a>
+                                <a href="{% url 'games' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-list"></i>MINHAS PARTIDAS</a>
                                 {% endif %}
                             </div>
                         </div>
                         {% endif %}
 
                         <!-- OUTROS -->
+                        {% if user.is_staff %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-compass"></i>{% trans "OUTROS" %}
+                                <i class="fa-solid fa-compass"></i>OUTROS
                             </button>
                             <div class="dropdown-menu">
                                 {% if not user.type == 3 %}
-                                <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>{% trans "CRACHÁS" %}</a>
+                                <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
                                 {% endif %}
                                 {% if perms.app.data %}
-                                <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>{% trans "RELATÓRIOS" %}</a>
+                                <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
                                 {% endif %}
                                 {% if perms.app.view_certificate and perms.app.add_certificate %}
-                                <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>{% trans "CERTIFICADOS" %}</a>
+                                <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>CERTIFICADOS</a>
                                 {% endif %}
                                 {% if not user.type == 3 %}
-                                <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>{% trans "ANEXOS" %}</a>
+                                <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>ANEXOS</a>
                                 {% endif %}
-                                <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>{% trans "CONFIGURAÇÕES" %}</a>
-                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>{% trans "NOVA CONIFG" %}</a>
+                                <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>CONFIGURAÇÕES</a>
+                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONIFG</a>
                             </div>
                         </div>
+                        {% endif %}
 
                         {% block navbar %}{% endblock navbar %}
 
                         <a class="exit-hover" href="{% url 'logout' %}">
-                            <button class="side-bar-buttons-items"><i class="fa-solid fa-right-from-bracket"></i>{% trans "SAIR" %}</button>
+                            <button class="side-bar-buttons-items"><i class="fa-solid fa-right-from-bracket"></i>SAIR</button>
                         </a>
                     </div>
                 </div>

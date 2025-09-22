@@ -23,14 +23,14 @@
 </script>
 <div id="popupAviso" class="popup">
     <div class="popup-content">
-        <img src="{{imagem.image.url}}" alt="{% trans 'Imagem de aviso' %}">
-        <button onclick="fecharPopup()">{% trans "Fechar a mensagem" %}</button>
+        <img src="{{imagem.image.url}}" alt="Imagem de aviso' %}">
+        <button onclick="fecharPopup()">Fechar a mensagem</button>
     </div>
 </div>
 <div class="all-block" style="flex-direction: column; display: flex; align-items: center;">
     {% if ins %}
     <div class="notices">
-        <marquee>{% blocktrans %}O período de inscrições do JIFS vai até dia {{ins.end}}, não deixe para última hora!{% endblocktrans %}</marquee>
+        <marquee>O período de inscrições do JIFS vai até dia {{ins.end}}, não deixe para última hora!</marquee>
     </div>
     {% endif %}
     {% if imagem %}
@@ -40,9 +40,9 @@
     {% endif %}
     <section class="about-morea">
         <div class="content">
-            <h1>{% trans "Mais Um Projeto" %} <span class="stroke-morea">MOREA</span></h1>
-            <p>{% trans "Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto" %}</p>
-            <p>{% trans "Veja mais em nosso" %} <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">{% trans "site" %}</a>.</p>
+            <h1>Mais Um Projeto <span class="stroke-morea">MOREA</span></h1>
+            <p>Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto</p>
+            <p>Veja mais em nosso <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">site</a>.</p>
         </div>
         <div class="img-morea">
             <img src="{% static 'images/logo-morea-sports.svg' %}" alt="" aria-hidden="true" />
@@ -113,7 +113,7 @@
     <div class="title-home-admin">
         AVISOS
     </div>
-    <section class="alert-page">
+    <section class="alert-page" style="width: 70vw;">
         <div class="alert-img">
            <i class="fa-solid fa-circle-exclamation"></i> 
         </div>
