@@ -115,6 +115,15 @@ class Event(models.Model):
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
     age = models.IntegerField(default=99)
 
+    player_need_instagram = models.BooleanField(default=True) 
+    player_need_photo = models.BooleanField(default=True) 
+    player_need_bulletin = models.BooleanField(default=True) 
+    player_need_rg = models.BooleanField(default=True) 
+    player_need_sexo = models.BooleanField(default=True) 
+    player_need_registration = models.BooleanField(default=True) 
+    player_need_cpf = models.BooleanField(default=True) 
+    player_need_date_nasc = models.BooleanField(default=True) 
+
     def __str__(self):
         return self.name
 
@@ -160,6 +169,7 @@ class Help(models.Model):
 class Player(models.Model):
     name = models.CharField(max_length=100)
     instagram = models.CharField(max_length=100, blank=True, null=True)
+    classroom = models.CharField(max_length=100, blank=True, null=True)
     photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     bulletin = models.FileField(upload_to='bulletins/', blank=True, null=True)
     rg = models.FileField(upload_to='rg/', blank=True, null=True)

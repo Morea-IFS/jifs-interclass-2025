@@ -55,7 +55,7 @@
                     <h3>{% if i.match.Winner_team %} Vencedor:  {{ i.match.Winner_team }} {% else %} {{i.match.time_match|date:"d/m/Y - H:i" }} {% endif %}</h3>
                 </div>
                 <div class="games-config">  
-                    <a class="games-config-link" {% if i.match.status == 1 %} href="{% url 'scoreboard' %}" {% endif %}>
+                    <a class="games-config-link" {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' %}" {% endif %}>
                         <div {% if i.match.status == 1 %} class="games-config-item games-config-item-active" {% else %} class="games-config-item games-config-item-desactive"{% endif %}>
                             <img class="games-config-item-img" src="{% static 'images/icon-timer.png' %}"
                                 alt="Timer Icon" />

@@ -7,8 +7,6 @@
 {% endblock head %}
 
 {% block navbar %}
-
-
 <style>
     .title-adm{
         display: flex;
@@ -32,7 +30,6 @@
             padding-inline: 4vw;
         }
     }
-
     .title-buttons{
         width: 20em;
         height: auto;
@@ -58,7 +55,6 @@
         font-size: 20px;
         font-weight: 500;
     }
-
     .title-buttons > select{
         width: 12em;
         height: 2.8em;
@@ -72,199 +68,106 @@
         width: 100%;
     }
 </style>
-
-
 {% endblock navbar %}
 
 {% block content %}
-
 <div class="all-block">
     <div class="block1">
         <div class="title-adm">
-            <h1>
-                ATLETAS DO {{team_sport.team.name|upper}} {{team_sport.sport.get_sport_display|upper}} {{team_sport.get_sexo_display|upper}} 
-            </h1>
+            <h1>ATLETAS DO {{team_sport.team.name|upper}} {{team_sport.sport.get_sport_display|upper}} {{team_sport.get_sexo_display|upper}}</h1>
+            {% if perms.app.add_player_team_sport and perms.app.add_player %}
             <div class="title-buttons">
                 <span onclick="openChooseModal()"><p>Novo</p></span>
-                <span style="background-color: var(--global-seventh-color);"> <a {% if user.type == 0 %} href="{% url 'team_manage' %}?e={{team_sport.team.event.id}}&t={{team_sport.team.id}}" {% else %} href="{% url 'team_manage' %}?t={{team_sport.team.id}}" {% endif %}>Voltar</a></span>
+                <span style="background-color: var(--global-seventh-color);">
+                    <a {% if user.type == 0 %} href="{% url 'team_manage' %}?e={{team_sport.team.event.id}}&t={{team_sport.team.id}}" {% else %} href="{% url 'team_manage' %}?t={{team_sport.team.id}}" {% endif %}>Voltar</a>
+                </span>
             </div>
+            {% endif %}
         </div>
+
+        {% if perms.app.add_player_team_sport %}
         <form method="post" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
             {% csrf_token %}
             <input name="search" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure pelo nome">
         </form>
+        {% endif %}
+
         <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
             <table id="search-table" style="width: 100%;">
                 <tr class="hidden">
                     <th>ID</th>
                     <th>NOME</th>
-                    <th>MATRÍCULA</th>
-                    <th>SEXO</th>
-                    <th>DATA NASC.</th>
-                    <th>FOTO</th>
-                    <th>BOLETIM</th>
-                    <th>RG</th>
-                    {% if allowed and perms.app.change_player_team_sport and perms.app.change_player %}
-                    <th>EDITAR</th>
-                    {% endif %}
-                    {% if allowed and perms.app.delete_player_team_sport and perms.app.delete_player %}
-                    <th>REMOVER</th>
-                    {% endif %}
+                    <th>TURMA</th>
+                    {% if team_sport.team.event.player_need_registration %}<th>MATRÍCULA</th>{% endif %}
+                    {% if team_sport.team.event.player_need_sexo %}<th>SEXO</th>{% endif %}
+                    {% if team_sport.team.event.player_need_date_nasc %}<th>DATA NASC.</th>{% endif %}
+                    {% if team_sport.team.event.player_need_photo %}<th>FOTO</th>{% endif %}
+                    {% if team_sport.team.event.player_need_bulletin %}<th>BOLETIM</th>{% endif %}
+                    {% if team_sport.team.event.player_need_rg %}<th>RG</th>{% endif %}
+                    {% if perms.app.change_player_team_sport and perms.app.change_player %}<th>EDITAR</th>{% endif %}
+                    {% if perms.app.delete_player_team_sport and perms.app.delete_player %}<th>REMOVER</th>{% endif %}
                 </tr>
+
                 {% for i in player_team_sport %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
+                    <td>{{ i.player.name }}</td>
+                    <td>{{ i.player.classroom }}</td>
+                    {% if team_sport.team.event.player_need_registration %}<td>{{i.player.registration}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_sexo %}<td>{{i.player.get_sexo_display}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_date_nasc %}<td>{{i.player.date_nasc}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_photo %}
+                        <td>{% if i.player.photo %}<img src="{% static 'images/icon-true.svg' %}">{% else %}<img src="{% static 'images/icon-false.svg' %}">{% endif %}</td>
+                    {% endif %}
+                    {% if team_sport.team.event.player_need_bulletin %}
+                        <td>
+                            {% if i.player.bulletin %}
+                                <a href="{{ i.player.bulletin.url }}" download="{{ i.player.bulletin.name }}">
+                                    <img style="width: 1.5em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
+                                </a>
+                            {% else %}
+                                <img src="{% static 'images/icon-false.svg' %}">
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    {% if team_sport.team.event.player_need_rg %}
+                        <td>
+                            {% if i.player.rg %}
+                                <a href="{{ i.player.rg.url }}" download="{{ i.player.rg.name }}">
+                                    <img style="width: 1.5em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
+                                </a>
+                            {% else %}
+                                <img src="{% static 'images/icon-false.svg' %}">
+                            {% endif %}
+                        </td>
+                    {% endif %}
+
+                    {% if perms.app.change_player_team_sport and perms.app.change_player %}
                     <td>
-                        {{ i.player.name }}
-                    </td>
-                    <td>{{i.player.registration}}</td>
-                    <td>{{i.player.get_sexo_display}}</td>
-                    <td>{{i.player.date_nasc}}</td>
-                    <td>{% if i.player.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                    <td>
-                        {% if i.player.bulletin %}                      
-                        <a href="{{ i.player.bulletin.url }}" download="{{ i.player.bulletin.name }}">
-                            <img style="width: 1.5em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
-                        </a>
-                        {% else %}
-                            <img src="{% static 'images/icon-false.svg' %}">
-                        {% endif %}
-                    </td>
-                    <td> 
-                        {% if i.player.rg %}                      
-                        <a href="{{ i.player.rg.url }}" download="{{ i.player.rg.name }}">
-                            <img style="width: 1.5em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
-                        </a>
-                        {% else %}
-                            <img src="{% static 'images/icon-false.svg' %}">
-                        {% endif %}                      
-                    </td>
-                    {% if allowed and perms.app.change_player_team_sport and perms.app.change_player %}
-                    <td>
-                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id }}','{{ i.player.name }}','{{ i.player.registration }}','{{ i.player.sexo }}','{{ i.player.date_nasc|date:'Y-m-d' }}','{{ i.player.photo.url }}','{{ i.player.bulletin.url }}','{{ i.player.rg.url }}')">
+                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{{ i.player.classroom|default:"" }}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
                     </td>
                     {% endif %}
-                    {% if allowed and perms.app.delete_player_team_sport and perms.app.delete_player %}
+
+                    {% if perms.app.delete_player_team_sport and perms.app.delete_player %}
                     <td>
-                        <form method="POST" action=""z>
+                        <form method="POST">
                             {% csrf_token %}
-                            <button data-confirm="Você realmente deseja excluir este jogador?" name="player_delete" value="{{i.player.id}}" style="background-color: transparent; border: none;">
-                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            <button data-confirm="Você realmente deseja excluir este jogador?" name="player_delete" value="{{i.player.id}}" style="background-color: transparent; border: none; margin: 0;">
+                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
                             </button>
                         </form>
                     </td>
                     {% endif %}
                 </tr>
                 {% empty %}
-                <style>
-                    .hidden {
-                        display: none;
-                    }
-                </style>
-                <section class="alert-page">
-                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
-                    <div class="alert-text">
-                        <p>NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.</p>
-                    </div>
-                </section>
+                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.</td></tr>
                 {% endfor %}
             </table>
         </section>
     </div>
 </div>
 
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEditModal()">&times;</span>
-        <h2>Editar atleta</h2>
-        <form method="post" enctype="multipart/form-data" id="editForm">
-            {% csrf_token %}
-            <input type="hidden" id="editPlayerId" name="edit-player-id">
-
-            <label>Nome Completo</label>
-            <input id="editPlayerName" type="text" name="edit-name" required>
-
-            <label>Matrícula, siape ou CPF</label>
-            <input id="editPlayerRegistration" type="text" name="edit-registration" required>
-            <p style="color: #6d6c6c; font-size: 14px;">
-                *Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.
-            </p>
-
-            <label>Data nasc.</label>
-            <input id="editPlayerDate" type="date" name="edit-date" required>
-
-            <label>Sexo</label>
-            <select name="edit-sexo" id="editPlayerSexo" required>
-                <option disabled>Selecione a função</option>
-                {% for value, name in sexos %}
-                <option value="{{ value }}" id="type_{{ value }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-
-            <label for="photo">Foto de Perfil</label>
-            <input type="file" name="edit-photo" id="edit-photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
-            <p style="color: #6d6c6c; font-size: 15px;">
-                *Anexe uma nova Fotografia apenas se quiser troca-la.
-            </p>
-
-            <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
-            <img id="preview" src="{{ voluntary.photo.url }}" alt="Foto atual"
-                style="max-width: 150px; display: block; margin-top: 5px;" />
-
-            <label for="photo">Boletim</label>
-            <input type="file" name="edit-bulletin" id="editPlayerBulletin" accept=".jpg, .jpeg, .png" />
-            <p style="color: #6d6c6c; font-size: 15px;">
-                *Anexe um novo boletim apenas se quiser trocar.
-            </p>
-
-            <label for="photo">RG</label>
-            <input type="file" name="edit-rg" id="editPlayerRG" accept=".jpg, .jpeg, .png" />
-            <p style="color: #6d6c6c; font-size: 15px;">
-                *Anexe um novo rg apenas se quiser trocar.
-            </p>
-
-            <button class="button-modal" type="submit">Salvar Alterações</button>
-        </form>
-    </div>
-</div>
-
-<div id="newModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Adicionar atleta</h2>
-        <form method="post" enctype="multipart/form-data" id="editForm">
-            {% csrf_token %}
-            <label for="nome">Nome completo do atleta</label>
-            <input type="text" autocomplete="on" autocorrect="on" id="name" name="name" placeholder="Nome*"
-                required>
-            <label for="date" >Data de nascimento</label>
-            <input type="date" autocomplete="on" autocorrect="on" name="date" id="date"
-                    placeholder="Data de nascimento*" required>
-            <label for="registration">Matrícula</label>
-            <input type="text" autocomplete="on" autocorrect="on" id="registration" name="registration"
-                placeholder="Matrícula*" required>
-            <label for="registration">CPF</label>
-            <input type="text" id="cpf" name="cpf"
-                placeholder="CPF*" required maxlength="14">
-            {% if team_sport.sport.sport == 2 %}
-            <label for="sexos">Sexo</label>
-            <select id="sexos" name="sexo">
-                <option selected disabled value="None">Selecione o sexo</option>
-                <option value="0">Masculino</option>
-                <option value="1">Feminino</option>
-            </select>
-            {% endif %}
-            <label for="Boletin">Boletim (PDF)</label>
-            <input type="file" name="bulletin" id="bulletin" accept=".pdf" required>
-            <label for="Fotografia">Fotografia (JPG, JPEG ou PNG)</label>
-            <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
-            <label for="Rg">RG (PDF, JPG, JPEG ou PNG)</label>
-            <input type="file" name="rg" id="general-register" required>
-
-            <button class="button-modal" type="submit">Salvar Alterações</button>
-        </form>
-    </div>
-</div>
+{% if perms.app.add_player_team_sport and perms.app.add_player %}
 
 <div id="chooseModal" class="modal">
     <div class="modal-content">
@@ -287,6 +190,67 @@
     </div>
 </div>
 
+<div id="newModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Adicionar atleta</h2>
+        <form method="post" enctype="multipart/form-data" id="editForm">
+            {% csrf_token %}
+            <label for="nome">Nome completo do atleta</label>
+            <input type="text" autocomplete="on" autocorrect="on" id="name" name="name" placeholder="Nome*"
+                required>
+
+            <label>Turma</label>
+            <input type="text" name="classroom" placeholder="Nº CURSO*" required>
+            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ IEDF/ IAUT/ IELTM.</p>
+            
+            {% if team_sport.team.event.player_need_date_nasc %}
+            <label for="date" >Data de nascimento</label>
+            <input type="date" autocomplete="on" autocorrect="on" name="date" id="date"
+                placeholder="Data de nascimento*" required>
+            {% endif %}
+            
+            {% if team_sport.team.event.player_need_registration %}
+            <label for="registration">Matrícula</label>
+            <input type="text" autocomplete="on" autocorrect="on" id="registration" name="registration"
+                placeholder="Matrícula*" required>
+            {% endif %}
+            
+            {% if team_sport.team.event.player_need_cpf %}
+            <label for="registration">CPF</label>
+            <input type="text" id="cpf" name="cpf"
+                placeholder="CPF*" required maxlength="14">
+            {% endif %}
+
+            {% if team_sport.sport.sport == 2 and team_sport.team.event.player_need_sexo %}
+            <label for="sexos">Sexo</label>
+            <select id="sexos" name="sexo">
+                <option selected disabled value="None">Selecione o sexo</option>
+                <option value="0">Masculino</option>
+                <option value="1">Feminino</option>
+            </select>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_bulletin %}
+            <label for="Boletin">Boletim (PDF)</label>
+            <input type="file" name="bulletin" id="bulletin" accept=".pdf" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_photo %}
+            <label for="Fotografia">Fotografia (JPG, JPEG ou PNG)</label>
+            <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_rg %}
+            <label for="Rg">RG (PDF, JPG, JPEG ou PNG)</label>
+            <input type="file" name="rg" id="general-register" required>
+            {% endif %}
+
+            <button class="button-modal" type="submit">Salvar Alterações</button>
+        </form>
+    </div>
+</div>
+
 <div id="searchModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeSearchModal()">&times;</span>
@@ -297,6 +261,66 @@
             <input name="search" type="search" placeholder="Procure pelo nome">
 
             <button class="button-modal" type="submit">Adicionar</button>
+        </form>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Editar atleta</h2>
+        <form method="post" enctype="multipart/form-data" id="editForm">
+            {% csrf_token %}
+            <input type="hidden" id="editPlayerId" name="edit-player-id">
+            <label>Nome Completo</label>
+            <input id="editPlayerName" type="text" name="edit-name" required>
+
+            <label>Turma</label>
+            <input id="editPlayerClassroom" type="text" name="edit-classroom" required>
+            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 3º IRC.</p>
+
+            {% if team_sport.team.event.player_need_registration %}
+            <label>Matrícula, siape ou CPF</label>
+            <input id="editPlayerRegistration" type="text" name="edit-registration" required>
+            <p style="color: #6d6c6c; font-size: 14px;">*Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.</p>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_date_nasc %}
+            <label>Data nasc.</label>
+            <input id="editPlayerDate" type="date" name="edit-date" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_sexo %}
+            <label>Sexo</label>
+            <select name="edit-sexo" id="editPlayerSexo" required>
+                <option disabled>Selecione a função</option>
+                {% for value, name in sexos %}
+                <option value="{{ value }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_photo %}
+            <label for="edit-photo">Foto de Perfil</label>
+            <input type="file" name="edit-photo" id="edit-photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+            <p style="color: #6d6c6c; font-size: 15px;">*Anexe uma nova Fotografia apenas se quiser trocá-la.</p>
+            <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+            <img id="preview" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_bulletin %}
+            <label for="editPlayerBulletin">Boletim</label>
+            <input type="file" name="edit-bulletin" id="editPlayerBulletin" accept=".jpg, .jpeg, .png" />
+            <p style="color: #6d6c6c; font-size: 15px;">*Anexe um novo boletim apenas se quiser trocar.</p>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_rg %}
+            <label for="editPlayerRG">RG</label>
+            <input type="file" name="edit-rg" id="editPlayerRG" accept=".jpg, .jpeg, .png" />
+            <p style="color: #6d6c6c; font-size: 15px;">*Anexe um novo RG apenas se quiser trocar.</p>
+            {% endif %}
+
+            <button class="button-modal" type="submit">Salvar Alterações</button>
         </form>
     </div>
 </div>
@@ -328,43 +352,35 @@
         document.getElementById("chooseModal").style.display = "none";
     }
 
-    // Variável global para restaurar a foto original ao fechar o modal
-    let originalPhotoUrl = '';
+let originalPhotoUrl = '';
 
-    function openEditModal(id, name, registration, sexo, data_nasc, photoUrl, bulletinUrl, rgUrl) {
-        originalPhotoUrl = photoUrl || '';
+function openEditModal(id, name, classroom, registration, sexo, data_nasc, photoUrl, bulletinUrl, rgUrl) {
+    originalPhotoUrl = photoUrl || '';
+    const form = document.getElementById('editForm');
+    form.reset();
 
-        // Resetar campos de imagem
-        const photoInput = document.getElementById('edit-photo');
-        photoInput.value = '';
+    document.getElementById("editPlayerId").value = id || '';
+    document.getElementById("editPlayerName").value = name || '';
+    if(document.getElementById("editPlayerClassroom")) {
+        document.getElementById("editPlayerClassroom").value = classroom || '';
+    }
+    if(document.getElementById("editPlayerRegistration")) {
+        document.getElementById("editPlayerRegistration").value = registration || '';
+    }
 
-        // Preencher campos de texto
-        document.getElementById("editPlayerId").value = id;
-        document.getElementById("editPlayerName").value = name;
-        document.getElementById("editPlayerRegistration").value = registration;
+    const dateInput = document.getElementById("editPlayerDate");
+    if(dateInput) dateInput.value = data_nasc || '';
 
-        // 📅 Corrigir o valor do input type="date"
-        const dateInput = document.getElementById("editPlayerDate");
-        if (data_nasc && data_nasc.includes('/')) {
-            // Se a data vier como "DD/MM/AAAA"
-            const [dia, mes, ano] = data_nasc.split('/');
-            dateInput.value = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-        } else {
-            // Se já estiver em "YYYY-MM-DD"
-            dateInput.value = data_nasc;
-        }
+    const sexoSelect = document.getElementById("editPlayerSexo");
+    if(sexoSelect) {
+        Array.from(sexoSelect.options).forEach(option => {
+            option.selected = option.value === sexo;
+        });
+    }
 
-        // Selecionar o sexo
-        const sexoSelect = document.getElementById("editPlayerSexo");
-        if (sexoSelect) {
-            Array.from(sexoSelect.options).forEach(option => {
-                option.selected = option.value === sexo;
-            });
-        }
-
-        // 📷 Mostrar a foto atual, se existir
-        const preview = document.getElementById('preview');
-        const previewName = document.getElementById('preview-name');
+    const preview = document.getElementById('preview');
+    const previewName = document.getElementById('preview-name');
+    if (preview) {
         if (originalPhotoUrl) {
             preview.src = originalPhotoUrl;
             preview.style.display = 'block';
@@ -374,71 +390,54 @@
             preview.style.display = 'none';
             previewName.textContent = "Nenhuma fotografia cadastrada";
         }
-
-        // Exibir o modal
-        document.getElementById("editModal").style.display = "block";
     }
 
-    function previewFoto() {
-        const input = document.getElementById('edit-photo');
-        const preview = document.getElementById('preview');
-        const previewName = document.getElementById('preview-name');
+    document.getElementById("editModal").style.display = "block";
+}
 
-        if (input.files && input.files[0]) {
-            // Mostrar nova imagem selecionada
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                previewName.textContent = "Nova fotografia:";
-            };
-            reader.readAsDataURL(input.files[0]);
+function previewFoto() {
+    const input = document.getElementById('edit-photo');
+    const preview = document.getElementById('preview');
+    const previewName = document.getElementById('preview-name');
+
+    if(input && input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            previewName.textContent = "Nova fotografia:";
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        if(originalPhotoUrl) {
+            preview.src = originalPhotoUrl;
+            preview.style.display = 'block';
+            previewName.textContent = "Fotografia atual:";
         } else {
-            if (originalPhotoUrl) {
-                preview.src = originalPhotoUrl;
-                preview.style.display = 'block';
-                previewName.textContent = "Fotografia atual:";
-            } else {
-                preview.style.display = 'none';
-                previewName.textContent = "Nenhuma fotografia cadastrada";
-            }
+            preview.src = '';
+            preview.style.display = 'none';
+            previewName.textContent = "Nenhuma fotografia cadastrada";
         }
     }
+}
 
-    function closeEditModal() {
-        const modal = document.getElementById("editModal");
-        modal.style.display = "none";
+function closeEditModal() {
+    const modal = document.getElementById("editModal");
+    if(modal) modal.style.display = "none";
 
-        // Resetar tudo
-        const form = document.getElementById("editForm");
-        form.reset();
-        
-        const preview = document.getElementById('preview');
-        const previewName = document.getElementById('preview-name');
-        const photoInput = document.getElementById('photo');
-        
-        photoInput.value = '';
-        preview.style.display = 'none';
-        previewName.textContent = "Nenhuma fotografia selecionada";
-        originalPhotoUrl = '';
+    const form = document.getElementById("editForm");
+    if(form) form.reset();
 
-        // Resetar selects
-        ['editTypeVoluntary', 'editUserSelect', 'editEventSelect'].forEach(id => {
-            const select = document.getElementById(id);
-            if (select) select.selectedIndex = 0;
-        });
-    }
+    const preview = document.getElementById('preview');
+    const previewName = document.getElementById('preview-name');
+    const photoInput = document.getElementById('edit-photo');
+    
+    if(photoInput) photoInput.value = '';
+    if(preview) preview.style.display = 'none';
+    if(previewName) previewName.textContent = "Nenhuma fotografia selecionada";
+
+    originalPhotoUrl = '';
+}
 </script>
-
+{% endif %}
 {% endblock content %}
-
-            <div style="display: flex; width: auto; height: auto; justify-content: center; align-items: center; gap: 15px;">
-                {% if allowed and perms.app.add_player_team_sport and perms.app.add_player %}
-                <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-color-green);">
-                    <a href="{% url 'guiate_players_team' team_sport.team.name team_sport.get_sexo_display team_sport.sport.get_sport_display team_sport.team.event.id %}" style="color: #ffffff; font-size: 25px;">ADICIONAR MAIS</a>
-                </button> 
-                {% endif %}      
-                <button class="side-bar-buttons-items2  custom-buttons-sport-nav cursor-block" style="background-color: var(--global-seventh-color);">
-                    <a href="{% url 'team_manage' %}" style="color: #ffffff; font-size: 25px;">VOLTAR</a>
-                </button>
-            </div>

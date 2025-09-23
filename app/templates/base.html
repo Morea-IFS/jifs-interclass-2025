@@ -51,7 +51,7 @@
                                 {% if perms.app.view_team_sport %}
                                 <a href="{% url 'team_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-users"></i>MEUS TIMES</a>
                                 {% endif %}
-                                {% if perms.app.view_player %}
+                                {% if perms.app.view_player and user.is_staff %}
                                 <a href="{% url 'player_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-user"></i>ATLETAS</a>
                                 {% endif %}
                             </div>

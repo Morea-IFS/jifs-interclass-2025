@@ -27,7 +27,6 @@ urlpatterns = [
     path('manage/user', views.user_manage, name = "user_manage"),
     path('manage/voluntary', views.voluntary_manage, name = "voluntary_manage"),
     path('scoreboard', views.scoreboard, name = "scoreboard"),
-    path('scoreboarde', views.scoreboarde, name = "scoreboarde"),
     path('manage/banner', views.banner_manage, name="banner_manage"),
     path('register/banner', views.banner_register, name="banner_register"),
     path('players_match/<int:id>', views.players_match, name = "players_match"),
