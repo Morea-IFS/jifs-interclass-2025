@@ -63,14 +63,14 @@
                     <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
                     <td>
                         {% if not i.type_i == 4 or user.is_staff %}
-                            <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}'),'{{ i.is_active }}'" src="{% static 'images/icon-edit.svg' %}">
+                            <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}','{{ i.is_active }}','{% if i.team %}{{ i.team.id }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">
                         {% endif %}
                     </td>
                     <td>
                         <form method="POST" action="">
                             {% csrf_token %}
-                            <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none;">
-                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            <button data-confirm="Você realmente deseja excluir este gestor da equipe?" name="user_delete" value="{{i.id}}" style="background-color: transparent; border: none; margin: 0;">
+                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
                             </button>
                         </form>
                     </td>
@@ -170,15 +170,13 @@
                 <option value="{{value}}">{{name}}</option>
                 {% endfor %}
             </select>
-            {% if user.type == 0 or user.type == 1 or user.is_staff %}
-            <label for="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="editTeamLabel" {% endif %} style="display: none;" >Time associado</label >
-            <select name="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="editTeamSelect" {% endif %} required style="display: none;">
+            <label for="team" id="editTeamLabel" style="display: none;" >Time associado</label >
+            <select name="team" id="editTeamSelect" required style="display: none;">
                 <option selected disabled>Selecione o time</option required>
                 {% for i in team %}
                 <option value="{{i.id}}">{{i.name}}</option>
                 {% endfor %}
             </select>
-            {% endif %}
             <button type="submit">Salvar Alterações</button>
         </form>
     </div>
@@ -278,18 +276,16 @@
         }
     }
 
-    // Variável para guardar a URL da imagem original
+
     let originalPhotoUrl = '';
 
-    function openEditModal(id, name, eventId, typeVoluntary, email, telephone, photoUrl, active) {
-        // Guarda a URL original
+    function openEditModal(id, name, eventId, typeVoluntary, email, telephone, photoUrl, active, teamId) {
+        console.log("oi")
         originalPhotoUrl = photoUrl || '';
         
-        // Resetar o input de foto
         const photoInput = document.getElementById('editUserPhoto');
         photoInput.value = '';
         
-        // Preencher os campos do formulário
         document.getElementById("editUserId").value = id;
         document.getElementById("editUserName").value = name;
         document.getElementById("editUserEmail").value = email;
@@ -300,13 +296,34 @@
             
         
 
-        // Configurar selects
         const typeSelect = document.getElementById("editTypeSelect");
+        const team = document.getElementById("editTeamSelect");
+        const teamLabel = document.getElementById("editTeamLabel");
+
         if (typeSelect) {
             Array.from(typeSelect.options).forEach(option => {
                 option.selected = option.value === typeVoluntary;
             });
+
+            toggleTeamVisibility(typeSelect, team, teamLabel); 
+            typeSelect.onchange = function () {
+                toggleTeamVisibility(typeSelect, team, teamLabel);
+            };
         }
+
+
+        function toggleTeamVisibility(selectEl, teamEl, teamLabelEl) {
+            if (selectEl.value === "2") {
+                teamEl.style.display = 'flex';
+                teamLabelEl.style.display = 'flex';
+            } else {
+                teamEl.style.display = 'none';
+                teamLabelEl.style.display = 'none';
+            }
+        }
+
+
+
 
         const eventSelect = document.getElementById("editEventSelect");
         if (eventSelect) {

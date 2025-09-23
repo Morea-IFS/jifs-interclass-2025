@@ -49,7 +49,7 @@
     }
     .item {
         height: 4px;
-        background-color: #004FC7;
+        background-color: #ffffff;
         border-radius: 25px;
         margin-top: 12px;
         width: 0;
@@ -348,7 +348,7 @@
                         </a>
                     </td>
                     {% endif %}
-                    <td>{% if team_sport.status %} <span class="table-span-true">COMPLETO</span> {% else %} <span class="table-span-false">INCOMPLETO</span> {% endif %}</td>
+                    <td>{% if team.status %} {% if team_sport.status %} <span class="table-span-true">PERMITIDO</span> {% else %} <span class="table-span-false">INCOMPLETO</span> {% endif %} {% else %} <span class="table-span-false">EM ANÁLISE</span> {% endif %}</td>
                     {% if perms.app.delete_team_sport %}
                     <td>
                         <form method="POST">
