@@ -989,7 +989,19 @@ def games(request):
 
 @login_required
 def manage_session(request):
-    if request.method == "POST":
+    current_get_params = request.GET.urlencode()
+    if request.method == "GET":
+        context = {'users': User.objects.all()}
+        if 'e' in request.GET and request.GET.get('e') != '':
+            print("Né: ",request.GET.get('e'))
+            user_session = User.objects.get(id=request.GET.get('e'))
+            context['user_session'] = user_session
+            context['sessions'] = UserSession.objects.filter(user=user_session)
+        else:
+            context['sessions'] = UserSession.objects.filter(user=request.user).select_related("session")
+
+        return render(request, "manage_sessions.html", context)
+    else:
         session_key = request.POST.get("session_key")
         if session_key and session_key != request.session.session_key:
             try:
@@ -997,10 +1009,10 @@ def manage_session(request):
                 UserSession.objects.filter(session__session_key=session_key).delete()
             except Session.DoesNotExist:
                 pass
-        return redirect("manage_sessions")
-
-    sessions = UserSession.objects.filter(user=request.user).select_related("session")
-    return render(request, "manage_sessions.html", {"sessions": sessions})
+        if current_get_params:
+            return redirect(f"{reverse('manage_sessions')}?{current_get_params}")
+        else:
+            return redirect("manage_sessions")
 
 @login_required(login_url="login")
 @terms_accept_required

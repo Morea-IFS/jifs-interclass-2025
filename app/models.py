@@ -128,6 +128,7 @@ class Event(models.Model):
         return self.name
 
 class Event_sport(models.Model):
+    name = models.CharField(max_length=50 ,null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="sport_set")
     sport = models.IntegerField(choices=Sport_types.choices)
     min_sport = models.PositiveIntegerField(default=1)
