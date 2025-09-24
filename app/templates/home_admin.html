@@ -58,16 +58,18 @@
         </div>
     </section>
     <br><br><br>
+    {% if user.event_user.tutorial %}
     <h1 class="sub-title-about">Como utilizar o sistema?</h1>
     <br>
     <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/z6JGbQpqP80" 
+        <iframe src="{{user.event_user.tutorial}}" 
         title="YouTube video player" frameborder="0" 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
         allowfullscreen>
         </iframe>
     </div>
     <br><br><br>
+    {% endif %}
     <h1 class="sub-title-about">Perguntas frequentes</h1>
     <section class="about-help">
         <details>
