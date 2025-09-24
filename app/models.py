@@ -114,6 +114,7 @@ class Event(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
     age = models.IntegerField(default=99)
+    tutorial = models.CharField(max_length=150, null=True, blank=True)
 
     player_need_instagram = models.BooleanField(default=True) 
     player_need_photo = models.BooleanField(default=True) 
