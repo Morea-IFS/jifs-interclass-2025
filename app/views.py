@@ -65,12 +65,18 @@ def event_manage(request):
             sport = request.POST.get('sport')
             min_sport = request.POST.get('min_sport')
             max_sport = request.POST.get('max_sport')
+            fem = 'fem' in request.POST
+            masc = 'masc' in request.POST
+            mist = 'mist' in request.POST
 
             Event_sport.objects.create(
                 event=Event.objects.get(id=event_id),
                 sport=sport,
                 min_sport=min_sport,
-                max_sport=max_sport
+                max_sport=max_sport,
+                fem=fem,
+                masc=masc,
+                mist=mist,
             )
 
         elif 'name' in request.POST:
@@ -552,8 +558,15 @@ def team_manage(request):
         elif 'add-team-sport' in request.POST:
             team = Team.objects.get(id=request.POST.get("add-team-sport"))
             sport = Event_sport.objects.get(id=request.POST.get("sport_adm_id"))
-            sexo = request.POST.get("sexo_adm_id")
-            Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+            sexo = int(request.POST.get("sexo_adm_id"))
+            if not Team_sport.objects.filter(team=team, sport=sport, sexo=sexo, event=sport.event):
+                if sexo == 0 and not sport.masc or sexo == 1 and not sport.fem or sexo == 2 and not sport.mist:
+                    messages.error(request,"O esporte escolhido não está disponível para este sexo. Em caso de dúvidas, consulte o regulamento.")
+                else:
+                    Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+                    messages.success(request,"Esporte cadastrado com sucesso, adicione atletas.")
+            else:
+                messages.info(request,"O esporte já existe, adicione atletas.")
         elif 'edit-team' in request.POST:
             team = Team.objects.get(id=request.POST.get("edit-team"))
             team.name = request.POST.get("edit-name")

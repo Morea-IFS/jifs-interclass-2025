@@ -39,8 +39,8 @@
     }
 
     .button_team {
-        width: 7.5em;
-        height: 12em;
+        width: 8em;
+        height: 12.5em;
         border-radius: 15px;
     }    
     .button_team button{
@@ -71,13 +71,14 @@
 
     .button_team img {
         width: 7.5em;
+        margin-left: 0px;
         height: 7.5em;
         object-fit: cover;
         border-radius: 15px;
     }
     .button_team p{
         text-align: center;
-        font-size: 20px;
+        font-size: 18.5px;
         color: #ffffff;
         font-weight: 600;
     }
@@ -309,7 +310,7 @@
             <h2>{{team.name}}</h2>
             <div class="subtitle-buttons">
                 <span class="subtitle-button-span" onclick="openTimeModal('{{ team.id }}')" style="background-color: var(--global-header-color);"><p>Novo esporte</p></span>
-                <form method="POST" class="subtitle-button-file" style="background-color: #004ba0;">{% csrf_token %}<button name="team-data" value="{{team.id}}" type="submit"><i class="fa-solid fa-file"></i></button></form>
+                <form method="POST" class="subtitle-button-file" style="background-color: #004ba0;">{% csrf_token %}<button style="margin: 0;" name="team-data" value="{{team.id}}" type="submit"><i class="fa-solid fa-file"></i></button></form>
                 <span class="subtitle-button-gear" onclick="openEditModal('{{ team.id }}','{{ team.name }}','{{ team.description }}','{{ team.photo.url }}','{{ team.status }}')"><i class="fa-solid fa-gear"></i></span>
             </div>
         </div>
@@ -321,7 +322,7 @@
                     <th>ESPORTE</th>
                     <th>SEXO</th>
                     {% if perms.app.view_player_team_sport %}
-                    <th>AÇÕES</th>
+                    <th>ATLETAS</th>
                     {% endif %}
                     {% if perms.app.change_team_sport and perms.app.change_team %}
                     <th>EDITAR</th>
@@ -401,7 +402,7 @@
             <select id="times" name="sport_adm_id">
                 <option selected disabled value="None">Selecione o esporte</option>
                 {% for i in events_sport %}
-                <option value="{{i.id}}">{{i.get_sport_display}}</option>
+                <option value="{{i.id}}">{{i.get_sport_display}} - {% if i.masc %} (masc){% endif %} {% if i.fem %} (fem){% endif %}{% if i.mist %} (mist){% endif %}</option>
                 {% endfor %}
             </select>
             <label for="sexos">Sexo</label>
