@@ -282,7 +282,7 @@
             {% endif %}
         </div>
         <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
-            <input name="q" type="search" placeholder="Procure por esportes, por sexo ou pelo ID">
+            <input name="q" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure por esportes, por sexo ou pelo ID">
         </form>
         {% if user.type != 2 %}
             {% if teams %}
