@@ -30,6 +30,8 @@ class Sport_types(models.IntegerChoices):
     high_jump = 7, "Salto em distância"
     launch_dart = 8, "Lançamento de dardo"
     pitch_weight = 9, "Arremesso de peso"
+    discus_throw = 10, "Arremesso de disco"
+    burned = 11, "Queimado"
 
 class Campus_types(models.IntegerChoices):
     aracaju = 0, "Aracaju"
@@ -128,10 +130,14 @@ class Event(models.Model):
         return self.name
 
 class Event_sport(models.Model):
+    name = models.CharField(max_length=50 ,null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="sport_set")
     sport = models.IntegerField(choices=Sport_types.choices)
     min_sport = models.PositiveIntegerField(default=1)
     max_sport = models.PositiveIntegerField(default=99)
+    fem = models.BooleanField(default=True)
+    masc = models.BooleanField(default=True)
+    mist = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.event.name} | {self.get_sport_display()}"

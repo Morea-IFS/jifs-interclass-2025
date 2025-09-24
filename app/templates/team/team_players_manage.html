@@ -77,7 +77,7 @@
             <h1>ATLETAS DO {{team_sport.team.name|upper}} {{team_sport.sport.get_sport_display|upper}} {{team_sport.get_sexo_display|upper}}</h1>
             {% if perms.app.add_player_team_sport and perms.app.add_player %}
             <div class="title-buttons">
-                <span onclick="openChooseModal()"><p>Novo</p></span>
+                <span onclick="openModal()"><p>Novo</p></span>
                 <span style="background-color: var(--global-seventh-color);">
                     <a {% if user.type == 0 %} href="{% url 'team_manage' %}?e={{team_sport.team.event.id}}&t={{team_sport.team.id}}" {% else %} href="{% url 'team_manage' %}?t={{team_sport.team.id}}" {% endif %}>Voltar</a>
                 </span>
@@ -169,27 +169,6 @@
 
 {% if perms.app.add_player_team_sport and perms.app.add_player %}
 
-<div id="chooseModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeChooseModal()">&times;</span>
-        <h2>Adicionar atleta</h2>
-        <p>Você irá escolher uma opção</p>
-        <br>
-        <p>Para cadastrar um novo atleta, que não está inscrito em <b>nenhum</b> time. Aperte no botão azul.</p>
-        <br>
-        <p>Para adicionar ao time um atleta que já foi cadastrado no sistema em outro time aperte no botão verde.</p>
-        <br>
-        <div class="buttons-options">
-            <span onclick="openModal()" class="button-op-1" style="background-color: blue;">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            </span>
-            <span onclick="openSearchModal()" class="button-op-2" style="background-color: green;">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            </span>
-        </div>
-    </div>
-</div>
-
 <div id="newModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
@@ -247,20 +226,6 @@
             {% endif %}
 
             <button class="button-modal" type="submit">Salvar Alterações</button>
-        </form>
-    </div>
-</div>
-
-<div id="searchModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeSearchModal()">&times;</span>
-        <h2>Adicionar atleta</h2>
-        <p>Procure pelo nome.</p>
-        <form method="post" enctype="multipart/form-data" id="searchForm">
-            {% csrf_token %}
-            <input name="search" type="search" placeholder="Procure pelo nome">
-
-            <button class="button-modal" type="submit">Adicionar</button>
         </form>
     </div>
 </div>
@@ -327,29 +292,11 @@
 
 <script>
     function openModal() {
-        document.getElementById("chooseModal").style.display = "none";
         document.getElementById("newModal").style.display = "block";
     }
 
     function closeModal() {
         document.getElementById("newModal").style.display = "none";
-    }
-
-    function openSearchModal() {
-        document.getElementById("chooseModal").style.display = "none";
-        document.getElementById("searchModal").style.display = "block";
-    }
-
-    function closeSearchModal() {
-        document.getElementById("searchModal").style.display = "none";
-    }
-
-    function openChooseModal() {
-        document.getElementById("chooseModal").style.display = "block";
-    }
-
-    function closeChooseModal() {
-        document.getElementById("chooseModal").style.display = "none";
     }
 
 let originalPhotoUrl = '';

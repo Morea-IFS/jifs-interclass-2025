@@ -65,12 +65,18 @@ def event_manage(request):
             sport = request.POST.get('sport')
             min_sport = request.POST.get('min_sport')
             max_sport = request.POST.get('max_sport')
+            fem = 'fem' in request.POST
+            masc = 'masc' in request.POST
+            mist = 'mist' in request.POST
 
             Event_sport.objects.create(
                 event=Event.objects.get(id=event_id),
                 sport=sport,
                 min_sport=min_sport,
-                max_sport=max_sport
+                max_sport=max_sport,
+                fem=fem,
+                masc=masc,
+                mist=mist,
             )
 
         elif 'name' in request.POST:
@@ -552,8 +558,15 @@ def team_manage(request):
         elif 'add-team-sport' in request.POST:
             team = Team.objects.get(id=request.POST.get("add-team-sport"))
             sport = Event_sport.objects.get(id=request.POST.get("sport_adm_id"))
-            sexo = request.POST.get("sexo_adm_id")
-            Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+            sexo = int(request.POST.get("sexo_adm_id"))
+            if not Team_sport.objects.filter(team=team, sport=sport, sexo=sexo, event=sport.event):
+                if sexo == 0 and not sport.masc or sexo == 1 and not sport.fem or sexo == 2 and not sport.mist:
+                    messages.error(request,"O esporte escolhido não está disponível para este sexo. Em caso de dúvidas, consulte o regulamento.")
+                else:
+                    Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+                    messages.success(request,"Esporte cadastrado com sucesso, adicione atletas.")
+            else:
+                messages.info(request,"O esporte já existe, adicione atletas.")
         elif 'edit-team' in request.POST:
             team = Team.objects.get(id=request.POST.get("edit-team"))
             team.name = request.POST.get("edit-name")
@@ -989,7 +1002,19 @@ def games(request):
 
 @login_required
 def manage_session(request):
-    if request.method == "POST":
+    current_get_params = request.GET.urlencode()
+    if request.method == "GET":
+        context = {'users': User.objects.all()}
+        if 'e' in request.GET and request.GET.get('e') != '':
+            print("Né: ",request.GET.get('e'))
+            user_session = User.objects.get(id=request.GET.get('e'))
+            context['user_session'] = user_session
+            context['sessions'] = UserSession.objects.filter(user=user_session)
+        else:
+            context['sessions'] = UserSession.objects.filter(user=request.user).select_related("session")
+
+        return render(request, "manage_sessions.html", context)
+    else:
         session_key = request.POST.get("session_key")
         if session_key and session_key != request.session.session_key:
             try:
@@ -997,10 +1022,10 @@ def manage_session(request):
                 UserSession.objects.filter(session__session_key=session_key).delete()
             except Session.DoesNotExist:
                 pass
-        return redirect("manage_sessions")
-
-    sessions = UserSession.objects.filter(user=request.user).select_related("session")
-    return render(request, "manage_sessions.html", {"sessions": sessions})
+        if current_get_params:
+            return redirect(f"{reverse('manage_sessions')}?{current_get_params}")
+        else:
+            return redirect("manage_sessions")
 
 @login_required(login_url="login")
 @terms_accept_required

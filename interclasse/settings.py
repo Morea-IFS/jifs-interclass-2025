@@ -58,14 +58,21 @@ JAZZMIN_SETTINGS = {
     "site_brand": "JIFS",
     "welcome_sign": "Bem-vindo ao painel",
     "copyright": "JIFS Interclass 2025",
-    "search_model": ["auth.User", "auth.Group"],
+    "search_model": ["app.CustomUser", "auth.Group"],
 
     "show_sidebar": True,
     "navigation_expanded": True,
-    #"hide_apps": ["auth"],   
+
     "hide_models": [],
 
     "theme": "cerulean",  
+    "topmenu_links": [
+        {"name": "Usuários", "model": "app.CustomUser"},
+    ],
+
+    "usermenu_links": [
+        {"name": "Perfil", "model": "app.CustomUser"},
+    ],
 }
 
 

@@ -18,10 +18,22 @@
                 SESSÕES
             </h1>
             <div class="title-buttons">
-                {% if user.type != 2 %} <span onclick="openModal('{% if user.type == 1 %} {{user.event_user.id}} {% else %} {{ select_event }} {% endif %}')" {% else %} <span onclick="openTimeModal('{{ team.id }}')" {% endif %}><p>Novo</p></span>
                 <h3>
+                    {% if user.event_user %}
                     {{user.event_user.name}}
+                    {% else %}
+                    SEGURANÇA
+                    {% endif %}
                 </h3>
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Usuários</option>
+                        {% for i in users %}
+                            <option value="{{ i.id }}" {% if user_session.id|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.username }}</option>
+                            {{user_session.id}}
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
         </div>
         <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
@@ -29,13 +41,17 @@
                 <tr class="hidden">
                     <th>IP</th>
                     <th>Navegador</th>
+                    <th>SO</th>
+                    <th>Login</th>
                     <th>Última atividade</th>
                     <th>Ação</th>
                 </tr>
                 {% for s in sessions %}
                 <tr>
                     <td>{{ s.ip_address }}</td>
-                    <td>{{ s.user_agent}}</td>
+                    <td>{{ s.browser}}</td>
+                    <td>{{ s.os}}</td>
+                    <td>{{ s.created_at }}</td>
                     <td>{{ s.last_activity }}</td>
                     <td>
                         {% if request.session.session_key == s.session.session_key %}
@@ -44,17 +60,23 @@
                             <form method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="session_key" value="{{ s.session.session_key }}">
-                                <button type="submit">Encerrar</button>
+                                <button style="margin: 0;" type="submit">Encerrar</button>
                             </form>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <style>
-                    .hiddden {
+                    .hidden {
                         display: none;
                     }
                 </style>
+                <section class="alert-page">
+                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-text">
+                        <p>NÃO HÁ REGISTROS DE LOGIN.</p>
+                    </div>
+                </section>
                 {% endfor %}
             </table>
         </section>
