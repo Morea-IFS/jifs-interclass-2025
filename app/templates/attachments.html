@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
 <title>ATUM ADMIN</title>
 {% endblock head %}
 
@@ -11,42 +11,189 @@
 {% endblock navbar %}
 
 {% block content %}
-<div class="all-block center-top">
-    <section>
-        <div class="title">
-            <h1>ANEXOS, ARQUIVOS, DOCUMENTOS E O REGULAMENTO</h1>
+<div class="all-block">
+    <div class="block1" style="justify-content: start;">
+        <div class="title-adm">
+            <h1>
+                ANEXOS E DOCUMENTOS
+            </h1>
+            {% if perms.app.add_attachments %}
+            <div class="title-buttons">
+                {% if user.type == 0 %} <span onclick="openModal()"><p>Novo</p></span> 
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">Evento</option>
+                        {% for i in events %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% else %}
+                <h3>
+                    {{user.event_user.name}}
+                </h3>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
-        <br><br><br>
-        <div class="all-manage">
-            <section class="all-table">
-                <table id="search-table" style="min-width: 40vw;">
-                    <tr class="hidden">
-                        <th>NOME</th>
-                        <th>ARQUIVO</th>
-                    </tr>
-                    {% for i in attachments %}
-                    <tr>
-                        <td>{{ i.name }}</td>
-                        <td>
-                            <a href="{{ i.file.url }}" download="{{ i.file.name }}">
-                                <img style="width: 2em;" src="{% static 'images/download-solid.svg' %}" alt="Download">
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <style>
-                        .hidden {
-                            display: none;
-                        }
-                    </style>
-                    {% endfor %}
-                </table>
-
-                <button class="side-bar-buttons-items2 custom-buttons-sport-nav" style="background-color: var(--global-seventh-color);">
-                    <a href="{% url 'Home' %}">VOLTAR</a>
-                </button>
+        <div class="downloads-container">
+            {% for i in attachments %}
+            <div class="download-card">
+                <div class="file-info">
+                    <p class="file-name">{{ i.name }}</p>
+                </div>
+                <a href="{{ i.file.url }}" download="{{ i.file.name }}">
+                <div class="download-btn">
+                    <i class="fas fa-file-download"></i>
+                </div>
+                </a>
+            </div>
+            {% empty %}
+            <section class="alert-page">
+                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-text">
+                    <p>NÃO HÁ NENHUM ANEXO CADASTRADO NO SISTEMA.</p>
+                </div>
             </section>
+            {% endfor %}
         </div>
-    </section>
+    </div>
 </div>
+
+
+{% if perms.app.add_attachments %}
+
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Cadastrar arquivo</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="name">Nome</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="name" id="name" placeholder="Nome do arquivo" required>
+
+            <div class="toggle-label"><span>Público</span><label class="toggle-switch"><input type="checkbox" name="public"><span class="slider"></span></label></div>
+
+            <label for="file">Arquivo</label>
+            <input type="file" name="file" id="file" required>
+
+            {% if user.type == 0 or user.is_staff %} 
+            <label for="event">Evento</label>  
+            <select name="event" id="event" required>
+                <option value="0">Selecione o evento</option required>
+                {% for i in events %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("eventModal").style.display = "none";
+    }
+</script>
+
+{% endif %}
+
+<style>
+    :root{
+        --white: #fff;
+        --white-rgba: hsla(0, 0%, 100%, 0.7);
+        --gray-background-cards: #4e4e4e;
+        --gray-background: #292929;
+        --green-links-line: #00A3FF;
+    }
+
+    .downloads-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        width: 100%;
+    }
+
+    .download-card {
+        background-color: var(--gray-background-cards);
+        border-radius: 12px;
+        padding: 25px;
+        position: relative;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--green-links-line);
+        min-height: 100px;
+    }
+
+    .file-info {
+        padding-right: 60px;
+    }
+
+    .file-name {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+        color: var(--white);
+    }
+
+    .file-size {
+        color: var(--white-rgba);
+        font-size: 0.9rem;
+    }
+
+    .download-btn {
+        position: absolute;
+        top: 25px;
+        right: 25px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 163, 255, 0.1);
+        color: var(--green-links-line);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    @media (hover: hover) {
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+    }
+
+    /* Versão mobile */
+    @media (max-width: 768px) {
+
+        .downloads-container {
+            grid-template-columns: 1fr;
+        }
+
+        .download-card {
+            padding: 20px;
+        }
+
+        .file-name {
+            font-size: 1.1rem;
+        }
+
+        .download-btn {
+            width: 45px;
+            height: 45px;
+            font-size: 1.3rem;
+            top: 20px;
+            right: 20px;
+        }
+    }
+
+</style>
+
 {% endblock content %}
