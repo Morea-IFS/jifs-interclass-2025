@@ -355,10 +355,25 @@ def sair(request):
 @login_required(login_url="login")
 @terms_accept_required
 def attachments(request):
-    if request.user.type != 0: event = Event.objects.get(id=request.user.event_user.id)
-    else: event = Event.objects.all()
-    attachments = Attachments.objects.all()
-    return render(request, 'attachments.html', {'attachments': attachments,'event': event})
+    if request.method == "GET":
+        context = {}
+        if request.user.type == 0:  context['events'] = Event.objects.all()
+        if request.user.type != 0:
+            context['attachments'] = Attachments.objects.filter(event=request.user.event_user)
+        elif 'e' in request.GET and request.GET.get('e') != '':
+            context['attachments'] = Attachments.objects.filter(event__id=request.GET.get('e'))
+            context['select_event'] = request.GET.get('e')
+
+        return render(request, 'attachments.html', context)
+    else:
+        name = request.POST.get('name')
+        public = 'public' in request.POST
+        file = request.FILES.get('file')
+        if request.user.type == 0:
+            Attachments.objects.create(name=name, file=file, event=Event.objects.get(id=request.POST.get('event')), public=public)
+        else:
+            Attachments.objects.create(name=name, file=file, event=request.user.event_user, public=public)
+        return redirect("attachments")
 
 def erro_403_customizado(request, exception=None):
     messages.info(request, "Você não tem permissão para acessar essa página. Contate o administrador.")
