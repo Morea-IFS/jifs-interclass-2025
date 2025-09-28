@@ -99,9 +99,7 @@
                                 {% if perms.app.view_certificate and perms.app.add_certificate %}
                                 <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>CERTIFICADOS</a>
                                 {% endif %}
-                                {% if not user.type == 3 %}
                                 <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>ANEXOS</a>
-                                {% endif %}
                                 {% if user.is_staff %}
                                 <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>CONFIGURAÇÕES</a>
                                 <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONIFG</a>

@@ -39,9 +39,8 @@
             text-align: center;
         }
         .logo-ifs {
-            width: 8em;
             position: absolute;
-            padding-left: 0.5em;
+            left: 2em;
             padding-top: 0.8em;
         }
         .logo-morea {
@@ -50,42 +49,61 @@
             right: 2em;
             padding-top: 0.8em;
         }
+
     </style>
 </head>
 <body>
     <div class="header-data">
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO DE ATLETAS JIFS</b></p>
+        <p><b>RELATÓRIO DE ATLETAS</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
     </div>
     <br><br>
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
-            <th style="width: 12%;">CPF</th>
+            {% if event.player_need_registration %}
             <th style="width: 11%;">Matrícula</th>
-            <th style="width: 10.5%;">Campus</th>
+            {% endif %}
+            {% if event.player_need_cpf %}
+            <th style="width: 12%;">CPF</th>
+            {% endif %}
+            {% if event.player_need_sexo %}
             <th style="width: 4%;">Sexo</th>
+            {% endif %}
+            <th style="width: 4%;">Turma</th>
+            {% if event.player_need_date_nasc %}
             <th style="width: 9%;">Data Nasc.</th>
+            {% endif %}
         </tr>
         {% for i in players %}
         <tr>
-            <td>{{ i.name|upper }}</td>
-            <td>{{ i.cpf|slice:":3" }}.{{ i.cpf|slice:"3:6" }}.{{ i.cpf|slice:"6:9" }}-{{ i.cpf|slice:"9:" }}</td>
+            <td>{{ i.name }}</td>
+            {% if event.player_need_registration %}
             <td>{{ i.registration|upper }}</td>
-            <td>{{ i.get_campus_display | truncatechars:10 }}</td>
-            <td>{% if i.sexo == 0 %} M {% elif i.sexo == 1 %} F {% else %} - {% endif %}</td>
-            <td>{{ i.date_nasc|date:"d/m/Y" }}</td>
+            {% endif %}
+            {% if event.player_need_cpf %}
+            <td>{{ i.cpf|slice:":3" }}.{{ i.cpf|slice:"3:6" }}.{{ i.cpf|slice:"6:9" }}-{{ i.cpf|slice:"9:" }}</td>
+            {% endif %}
+            {% if event.player_need_sexo %}
+            <td>{{i.get_sexo_display}}</td>
+            {% endif %}
+            <td>{{i.classroom|upper }}</td>
+            {% if event.player_need_date_nasc %}
+            <td>{{i.date_nasc|date:"d/m/Y"}}</td>
+            {% endif %}
         </tr>
         {% endfor %}
 
-        <!-- Exemplo de dados fictícios -->
-
     </table>
-
-    <!-- Forçando uma nova página -->
+    
     <div class="page-break"></div>
 </body>
 </html>

@@ -6,7 +6,8 @@
         body { font-family: Arial, sans-serif; page-break-before: avoid; }
         h1, h2 { text-align: center; }
         .title-campi{
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: 800;
         }
         table { 
             width: 80vw; 
@@ -42,9 +43,8 @@
             text-align: center;
         }
         .logo-ifs {
-            width: 8em;
             position: absolute;
-            padding-left: 0.5em;
+            left: 2em;
             padding-top: 0.8em;
         }
         .logo-morea {
@@ -58,38 +58,59 @@
 </head>
 <body>
     <div class="header-data">
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO DE TIMES</b></p>
+        <p><b>RELATÓRIO DE TIMES {{team.name|upper}}</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
     </div>
     <br>
     <div style="display: flex; width: 100vw;">
-    <p class="title-campi">{{team.name}}</p>
     </div>
+    {{teams}}a
     {% for i in teams %}    
     <div style="display: flex; width: 100vw;">
-    <p class="title-campi">{{ i.sport.get_sport_display|upper }} {{ i.get_sexo_display|upper }}</p>
+    <p class="title-campi">{{ i.sport.get_sport_display|upper }} {{ i.get_sexo_display|upper }}a</p>
     </div>
     {% if i.players.all %}
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
+            {% if team.event.player_need_registration %}
             <th style="width: 11%;">Matrícula</th>
-            <th style="width: 10.5%;">Campus</th>
+            {% endif %}
+            {% if team.event.player_need_cpf %}
             <th style="width: 12%;">CPF</th>
+            {% endif %}
+            {% if team.event.player_need_sexo %}
             <th style="width: 4%;">Sexo</th>
+            {% endif %}
+            <th style="width: 4%;">Turma</th>
+            {% if team.event.player_need_date_nasc %}
             <th style="width: 9%;">Data Nasc.</th>
+            {% endif %}
         </tr>
         {% for j in i.players.all %}
         <tr>
             <td>{{ j.player.name|upper }}</td>
+            {% if team.event.player_need_registration %}
             <td>{{ j.player.registration|upper }}</td>
-            <td>{{ j.player.get_campus_display | truncatechars:10 }}</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
+            {% endif %}
+            {% if team.event.player_need_cpf %}
+            <td>{{ j.player.cpf|slice:":3" }}.{{ j.player.cpf|slice:"3:6" }}.{{ j.player.cpf|slice:"6:9" }}-{{ j.player.cpf|slice:"9:" }}</td>
+            {% endif %}
+            {% if team.event.player_need_sexo %}
+            <td>{{j.player.get_sexo_display}}</td>
+            {% endif %}
+            <td>{{j.player.classroom}}</td>
+            {% if team.event.player_need_date_nasc %}
+            <td>{{j.player.date_nasc|date:"d/m/Y"}}</td>
+            {% endif %}
         </tr>
         {% endfor %}
 

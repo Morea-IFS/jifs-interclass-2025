@@ -39,9 +39,8 @@
             text-align: center;
         }
         .logo-ifs {
-            width: 8em;
             position: absolute;
-            padding-left: 0.5em;
+            left: 2em;
             padding-top: 0.8em;
         }
         .logo-morea {
@@ -50,15 +49,21 @@
             right: 2em;
             padding-top: 0.8em;
         }
+
     </style>
 </head>
 <body>
     <div class="header-data">
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO COMISSÃO TÉCNICA JIFS</b></p>
+        <p><b>RELATÓRIO DA C. TÉCNICA</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
     </div>
     <br><br>
     <table>
@@ -66,14 +71,12 @@
             <th style="width: 46%;">Nome</th>
             <th style="width: 12.5%;">Matrícula/siape/CPF</th>
             <th style="width: 12%;">Função</th>
-            <th style="width: 10%;">Campus</th>
         </tr>
         {% for i in team %}
         <tr>
             <td>{{ i.name|upper }}</td>
             <td>{{ i.registration }}</td>
             {% if i.type_voluntary == 4 %} <td>Chefe de del.</td> {% else %} <td>{{ i.get_type_voluntary_display}}</td> {% endif %}
-            <td>{{ i.get_campus_display }}</td>
         </tr>
         {% endfor %}
 

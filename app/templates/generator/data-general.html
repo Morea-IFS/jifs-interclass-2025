@@ -45,9 +45,8 @@
             text-align: center;
         }
         .logo-ifs {
-            width: 8em;
             position: absolute;
-            padding-left: 0.5em;
+            left: 2em;
             padding-top: 0.8em;
         }
         .logo-morea {
@@ -56,16 +55,21 @@
             right: 2em;
             padding-top: 0.8em;
         }
+
     </style>
 </head>
 <body>
-
     <div class="header-data">
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO DADOS GERAIS JIFS</b></p>
+        <p><b>RELATÓRIO GERAL</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
     </div>
     <br><br>
     <table>
@@ -116,41 +120,6 @@
                 <td>QUANTIDADE DE CHEFES DE DELEGAÇÃO: </td>
                 <td style="text-align: center;">{{ qnt_voluntary_4}}</td>
             </tr>
-
-            {% for campus, players_total, players_fem, players_masc, qnt_v_0, qnt_v_1, qnt_v_2, qnt_v_3, qnt_v_4 in campi %}
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>ATLETAS DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ players_total }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>ATLETAS DO SEXO FEMININO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ players_fem }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>ATLETAS DO SEXO MASCULINO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ players_masc }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>VOLUNTÁRIOS DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ qnt_v_0 }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>TÉCNICOS DE MODALIDADE ESPORTIVA DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ qnt_v_1 }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>MEMBROS DO APOIO DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ qnt_v_2 }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>ESTAGIÁRIOS DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ qnt_v_3 }}</td>
-            </tr>
-            <tr {% if forloop.counter|divisibleby:2 %}style="background-color: var(--teste_a);"{% else %}style="background-color: var(--teste_b);"{% endif %}>
-                <td>CHEFE DE DELEGAÇÃO DO CAMPUS {{campus | upper}}: </td>
-                <td style="text-align: center;">{{ qnt_v_4 }}</td>
-            </tr>
-            {% endfor %}
 
         </tbody>
     </table>
