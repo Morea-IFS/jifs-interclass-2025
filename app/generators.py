@@ -75,71 +75,132 @@ def draw_circular_image(c, image_path, center_x, center_y, diameter):
     )
     c.restoreState()
     
-def generate_badges(players, user_l, t, namebadge):
-    buffer = BytesIO()
-    w, h = A4
-    nametag_width = (w - 3 * 20) / 2
-    nametag_height = (h - 3 * 20) / 2
-    positions = [
-        (20, h - 20 - nametag_height),
-        (20 * 2 + nametag_width, h - 20 - nametag_height),
-        (20, 20),
-        (20 * 2 + nametag_width, 20),
-    ]
-    c = canvas.Canvas(buffer, pagesize=A4)
+def generate_badges(players, t, namebadge):
+    print('gerar crachá')
+    if t == '2':
+        buffer = BytesIO()
+        w, h = A4
+        nametag_width = (w - 3 * 20) / 2
+        nametag_height = (h - 3 * 20) / 2
+        positions = [
+            (20, h - 20 - nametag_height),
+            (20 * 2 + nametag_width, h - 20 - nametag_height),
+            (20, 20),
+            (20 * 2 + nametag_width, 20),
+        ]
+        c = canvas.Canvas(buffer, pagesize=A4)
 
-    for j, user in enumerate(players):
-        if j % 4 == 0 and j > 0:
-            c.showPage()
-        x, y = positions[j % 4]
+        for j, user in enumerate(players):
+            print(j, user, " - a")
+            if j % 4 == 0 and j > 0:
+                c.showPage()
+            x, y = positions[j % 4]
 
-        c.rect(x, y, nametag_width, nametag_height)
-        base_nametag_path = os.path.join(
-            settings.BASE_DIR,
-            f'static/images/generators/base_nametag__{t}.png'
-        )
-        base_nametag = ImageReader(base_nametag_path)
-        c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+            c.rect(x, y, nametag_width, nametag_height)
+            base_nametag_path = os.path.join(
+                settings.BASE_DIR,
+                f'static/images/generators/base_nametag__{t}.png'
+            )
+            base_nametag = ImageReader(base_nametag_path)
+            c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
 
-        if hasattr(user, 'player'):
-            photo = user.player.photo
-            name = user.player.name
-            registration = user.player.registration
-            campus_display = user.player.get_campus_display()
-        else:
-            photo = user.photo
-            name = user.name
-            registration = user.registration
-            campus_display = user.get_campus_display()
+            if hasattr(user, 'player'):
+                photo = user.player.photo
+                name = user.player.name
+                registration = user.player.registration
+                description = f"TIME: {user.team_sport.team.name}"
+            else:
+                photo = user.photo
+                name = user.name
+                registration = user.registration
+                description = f"TIME: {user.team_sport.team.name}"
 
-        if photo:
-            try:
-                photo_diameter = nametag_width / 2 + 20
-                center_x = x + nametag_width / 2
-                center_y = y + nametag_height - photo_diameter + 43
-                draw_circular_image(c, photo, center_x, center_y, photo_diameter)
-            except Exception as e:
-                print("Erro ao carregar foto:", e)
+            if photo:
+                try:
+                    photo_diameter = nametag_width / 2 + 20
+                    center_x = x + nametag_width / 2
+                    center_y = y + nametag_height - photo_diameter + 43
+                    draw_circular_image(c, photo, center_x, center_y, photo_diameter)
+                except Exception as e:
+                    print("Erro ao carregar foto:", e)
 
-        c.setFont("Helvetica-Bold", 28)
-        short_name = (
-            name.upper()
-            if len(name) < 15
-            else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de', 'da', 'dos', 'das', 'do']), '')}"
-        )
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
+            c.setFont("Helvetica-Bold", 28)
+            short_name = (
+                name.upper()
+                if len(name) < 15
+                else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de', 'da', 'dos', 'das', 'do']), '')}"
+            )
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
 
-        c.setFont("Helvetica", 18)
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
+            c.setFont("Helvetica", 18)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
 
-        c.setFont("Helvetica-Bold", 18)
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, "CAMPUS: " + campus_display)
+            c.setFont("Helvetica-Bold", 18)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, description)
+    else:
+        buffer = BytesIO()
+        w, h = A4
+        nametag_width = (w - 3 * 20) / 2
+        nametag_height = (h - 3 * 20) / 2
+        positions = [
+            (20, h - 20 - nametag_height),
+            (20 * 2 + nametag_width, h - 20 - nametag_height),
+            (20, 20),
+            (20 * 2 + nametag_width, 20),
+        ]
+        c = canvas.Canvas(buffer, pagesize=A4)
 
+        for j, user in enumerate(players):
+            print(j, user, " - a")
+            if j % 4 == 0 and j > 0:
+                c.showPage()
+            x, y = positions[j % 4]
+
+            c.rect(x, y, nametag_width, nametag_height)
+            base_nametag_path = os.path.join(
+                settings.BASE_DIR,
+                f'static/images/generators/base_nametag__{t}.png'
+            )
+            base_nametag = ImageReader(base_nametag_path)
+            c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+
+            if hasattr(user, 'player'):
+                photo = user.player.photo
+                name = user.player.name
+                registration = user.player.registration
+            else:
+                photo = user.photo
+                name = user.name
+                registration = user.registration
+
+            if photo:
+                try:
+                    photo_diameter = nametag_width / 2 + 20
+                    center_x = x + nametag_width / 2
+                    center_y = y + nametag_height - photo_diameter + 43
+                    draw_circular_image(c, photo, center_x, center_y, photo_diameter)
+                except Exception as e:
+                    print("Erro ao carregar foto:", e)
+
+            c.setFont("Helvetica-Bold", 28)
+            short_name = (
+                name.upper()
+                if len(name) < 15
+                else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de', 'da', 'dos', 'das', 'do']), '')}"
+            )
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
+
+            c.setFont("Helvetica", 18)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
+
+    print('criar c')
     c.save()
     buffer.seek(0)
 
-    response = HttpResponse(buffer.read(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="CRACHA_{unidecode(namebadge)}.pdf"'
+    # response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
+    print('ir baixar peste')
     return response
 
 def generate_events(name, details):

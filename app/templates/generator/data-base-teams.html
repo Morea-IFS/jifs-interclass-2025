@@ -65,17 +65,16 @@
         {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO DE TIMES {{team.name|upper}}</b></p>
+        <p><b>{% if team.name %} RELATÓRIO DO {{team.name|upper}} {% else %} RELATÓRIO DE TIMES {% endif %}</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
 
     </div>
     <br>
     <div style="display: flex; width: 100vw;">
     </div>
-    {{teams}}a
     {% for i in teams %}    
     <div style="display: flex; width: 100vw;">
-    <p class="title-campi">{{ i.sport.get_sport_display|upper }} {{ i.get_sexo_display|upper }}a</p>
+    <p class="title-campi">{{ i.sport.get_sport_display|upper }} {{ i.get_sexo_display|upper }}</p>
     </div>
     {% if i.players.all %}
     <table>
@@ -107,7 +106,7 @@
             {% if team.event.player_need_sexo %}
             <td>{{j.player.get_sexo_display}}</td>
             {% endif %}
-            <td>{{j.player.classroom}}</td>
+            <td>{{j.player.classroom|upper}}</td>
             {% if team.event.player_need_date_nasc %}
             <td>{{j.player.date_nasc|date:"d/m/Y"}}</td>
             {% endif %}
