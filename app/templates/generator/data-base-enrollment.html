@@ -42,9 +42,8 @@
             text-align: center;
         }
         .logo-ifs {
-            width: 8em;
             position: absolute;
-            padding-left: 0.5em;
+            left: 2em;
             padding-top: 0.8em;
         }
         .logo-morea {
@@ -58,35 +57,38 @@
 </head>
 <body>
     <div class="header-data">
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
         <img class="logo-morea" src="{{logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
-        <p><b>RELATÓRIO DE INSCRIÇÕES JIFS</b></p>
+        <p><b>RELATÓRIO DE INSCRIÇÕES</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
     </div>
     <br>
     {% for i in teams %}    
     <div style="display: flex; width: 100vw; justify-content: center;">
-    <p class="title-campi">CAMPUS <b>{{i.team.get_campus_display|upper}}</b> {{ i.get_sport_display|upper }} {{ i.get_sexo_display|upper }}</p>
+    <p class="title-campi"><b>{{i.team.name|upper}}</b> {{ i.sport.get_sport_display|upper }} {{ i.get_sexo_display|upper }}</p>
     </div>
     {% if i.players.all %}
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
+            {% if i.event.player_need_registration %}
             <th style="width: 11%;">Matrícula</th>
-            <th style="width: 10.5%;">Campus</th>
-            <th style="width: 12%;">CPF</th>
-            <th style="width: 4%;">Sexo</th>
-            <th style="width: 9%;">Data Nasc.</th>
+            {% endif %}
+            <th style="width: 4%;">Turma</th>
         </tr>
         {% for j in i.players.all %}
         <tr>
             <td>{{ j.player.name|upper }}</td>
+            {% if i.event.player_need_registration %}
             <td>{{ j.player.registration|upper }}</td>
-            <td>{{ j.player.get_campus_display | truncatechars:10 }}</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
+            {% endif %}
+            <td>{{j.player.classroom|upper}}</td>
         </tr>
         {% endfor %}
 

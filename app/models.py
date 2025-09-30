@@ -81,9 +81,10 @@ class Type_Banner(models.IntegerChoices):
 class Type_service(models.IntegerChoices):
     voluntary = 0, "Voluntário"
     technician = 1, "Técnico de modalidade esportiva"
-    organization = 2, "Apoio"
+    support = 2, "Apoio"
     trainee = 3, "Estagiário"
     head_delegation = 4,"Chefe de delegação"
+    organization = 5,"Organização"
 
 class Sexo_types(models.IntegerChoices):
     masculine = 0, "Masculino"

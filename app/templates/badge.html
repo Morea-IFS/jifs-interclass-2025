@@ -2,49 +2,95 @@
 {% load static %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
-<title>ATUM ADMIN</title>
+    <title>ATUM ADMIN</title>
+    <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modal.css' %}">
 {% endblock head %}
 
 {% block navbar %}
-
+<!-- NAVBAR já vem de base.html -->
 {% endblock navbar %}
 
 {% block content %}
-<div class="all-block center-top">
-    <section>
-        <div class="title">
-            <h1>GERAR CRACHÁ</h1>
-        </div>
-        <form id="function_validate_form" class="block-inputs" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="block-inputs-form">
-                <div>
-                    <select id="team-badges" name="team-badge" required style="min-width: 40vw;">
-                        <option selected disabled>Selecione o tipo de crachá</option required>
-                            <optgroup label="Gerais">
-                                {% if user.is_staff %}
-                                <option value="all_player">Todos os atletas</option>
-                                {% endif %}
-                                <option value="all_technician">Todos os técnicos de modalidade esportiva</option>
-                                <option value="all_organization">Todos do apoio</option>
-                                <option value="all_voluntary">Todos os voluntários</option>
-                                <option value="all_trainee">Todos os estagiários</option>
-                                <option value="all_head">Chefe de delegação</option>
-                            </optgroup>
-                            <optgroup label="Times">
-                            {% for i in team_sport %}
-                            <option value="{{i.id}}">{{i.team.name}} - {{i.get_sport_display}} - {{i.get_sexo_display}}</option>
+<div class="all-block">
+    <div class="block1">
+        <div class="relatorios-wrapper">
+            <div class="title-adm">
+                <h1>
+                {% if event %} CRACHÁS DO {{event.name}}{% else %} CRACHÁ {% endif %}
+                </h1>
+                {% if perms.app.add_attachments %}
+                <div class="title-buttons">
+                    {% if user.type == 0 %} 
+                    <form method="get">
+                        <select name="e" onchange="this.form.submit();">
+                            <option value="">Evento</option>
+                            {% for i in events %}
+                                <option value="{{ i.id }}" {% if event.id|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
                             {% endfor %}
-                            </optgroup>
-                    </select>
+                        </select>
+                    </form>
+                    <h3>{% if event %} {{event.name}} {% else %} ATUM ADMIN {% endif %}</h3>
+                    {% else %}
+                    <h3>
+                        {{user.event_user.name}}
+                    </h3>
+                    {% endif %}
                 </div>
-                <div>
-                    <input class="custom-buttons-sport-nav" type="submit" value="Confirmar"></input>
-                </div>
+                {% endif %}
             </div>
-        </form>
-        <br><br>
-    </section>
+            
+            {% if event %}
+            <form method="post" class="relatorios-grid">
+                {% csrf_token %}
+                <input type="hidden" name="event_data" {% if event %} value="{{event.id}}" {% else %} value="0" {% endif %}>
+
+                <button name="all_voluntary" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>Voluntários</p>
+                </button>
+
+                <button name="all_technician" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>Técnicos</p>
+                </button>
+
+                <button name="all_support" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>Apoio</p>
+                </button>
+
+                <button name="all_trainee" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>Estagiários</p>
+                </button>
+
+                <button name="all_head" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>C. delegação</p>
+                </button>
+
+                <button name="all_organization" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>C. técnica</p>
+                </button>
+
+                {% for i in teams %}
+                    <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                        <i class="fas fa-university"></i>
+                        <p> {{ i.team.name }} <br> {{ i.sport.get_sport_display }} <br> {{ i.get_sexo_display  }} </p>
+                    </button>
+                {% endfor %}
+            </form>
+            {% else %}
+            <section class="alert-page">
+                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-text">
+                    <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock content %}
