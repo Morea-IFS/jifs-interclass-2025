@@ -16,46 +16,50 @@
         }
     </style>
     <div>
-        <img id="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; {% if banner_bol == False %}display: none;{% else %}display: none;{% endif %}">
+        <img class="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; display: none;">
     </div>
-    <section id="section-project" style="{% if banner_bol %}display: none;{% endif %}" class="scoreboard">
+    <section class="section-project scoreboard score-ban" id="scoreboard" style="display: flex;">
         <div class="teams">
-            <div id="team_a_color" style=" background-color: {% if team_match_a.team.hexcolor %} {{team_match_a.team.hexcolor}} {% else %} #02007a {% endif %}" class="team-a">
-                <div class="title-team">
+            <div class="team-color team-a" style=" background-color: #02007a">
+                <div class="title-team" >
                     <img
-                        id="photo-team-a" {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" 
+                        class="team-photo" 
+                        {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/logoifs.png' %}" {% endif %} 
+                        style="border-radius: 50%;" 
                         alt="Team A"
+                        id="team-photo-a"
                     />
-                    <h2 id="team-a">{% if team_match_a.team.name %} {{team_match_a.team.name}} {% else %} TEAM A {% endif %}</h2>
+                    <h2 class="team-name" id="team-name-a">{{team_match_a.team.name|default:'TEAM A'}}</h2>
                 </div>
                 <div class="score-team">
                     <div class="scout">
                         <ul>
-                            <li class="cards"><img src="{% static 'images/cards.svg'%}" alt="" aria-hidden="true"><p id="card-a" class="card-count">{% if card_a %} {{card_a}} {% else %} 0 {% endif %}</p></li>
-                            <li class="whistle"><img src="{% static 'images/whistle.svg'%}" alt="" aria-hidden="true"><p id="lack-a" class="whistle-count">{% if lack_a %} {{lack_a}} {% else %} 0 {% endif %}</p></li>
-                            <li class="aces"><img id="aces-img-a" style="{% if match.sport == 1 %}display: flex;{% else %}display: none;{% endif %}" src="{% static 'images/ball-ace.svg'%}" alt="" aria-hidden="true"><p id="aces-a" style="{% if match.sport == 1 %}display: flex;{% else %}display: none;{% endif %}" class="ace-count">{{aces_a}}</p></li>
-
+                            <li class="cards"><img src="{% static 'images/cards.svg'%}" alt="" aria-hidden="true"><p id="card-a" class="card-count">{{card_a|default:'0'}}</p></li>
+                            <li class="whistle"><img src="{% static 'images/whistle.svg'%}" alt="" aria-hidden="true"><p id="lack-a" class="whistle-count">{{lack_a|default:'0'}}</p></li>
+                            <li  {% if match.sport != 1 and match.sport != 2 %} style="display: none;" {% endif %} class="aces"><img class="aces-img" src="{% static 'images/ball-ace.svg'%}" alt="" aria-hidden="true"><p id="aces-a" class="ace-count">{{aces_a}}</p></li>
                         </ul>
                     </div>
-                    <p class="score" id="points-a">{% if point_a %} {{point_a}} {% else %} 0 {% endif %}</p>
+                    <p class="score points" id="point-a">{{point_a|default:'0'}}</p>
                 </div>
             </div>
-            <div id="team_b_color" style=" background-color: {% if team_match_b.team.hexcolor %} {{team_match_b.team.hexcolor}} {% else %} #d10000 {% endif %}" class="team-b">
+            <div class="team-color team-b" style=" background-color: #d10000">
                 <div class="title-team">
-                    <h2 id="team-b">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %}</h2>
+                    <h2 class="team-name" id="team-name-b">{{team_match_b.team.name|default:'TEAM B'}}</h2>
                     <img
-                    id="photo-team-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" 
+                        class="team-photo" 
+                        {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}"{% else %} src="{% static 'images/morea-sports-white.svg' %}" {% endif %}
+                        style="border-radius: 50%;" 
                         alt="Team B"
+                        id="team-photo-b"
                     />
                 </div>
                 <div class="score-team">
-                    <p class="score" id="points-b">{% if point_b %} {{point_b}} {% else %} 0 {% endif %}</p>
+                    <p class="score points" id="point-b">{{point_b|default:'0'}}</p>
                     <div class="scout">
                         <ul>
-                            <li class="cards"><img src="{% static 'images/cards.svg'%}" alt="" aria-hidden="true"><p id="card-b" class="card-count">{% if card_a %} {{card_a}} {% else %} 0 {% endif %}</p></li>
-                            <li class="whistle"><img src="{% static 'images/whistle.svg'%}" alt="" aria-hidden="true"><p id="lack-b" class="whistle-count">{% if lack_b %} {{lack_b}} {% else %} 0 {% endif %}</p></li>
-                            <li class="aces"><img id="aces-img-b" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}" src="{% static 'images/ball-ace.svg'%}" alt="" aria-hidden="true"><p id="aces-b" style="{% if match.sport == 1 %} display: flex; {% else %} display: none; {% endif %}" class="ace-count">{{aces_b}}</p></li>
-
+                            <li class="cards"><img src="{% static 'images/cards.svg'%}" alt="" aria-hidden="true"><p id="card-b" class="card-count">{{card_b|default:'0'}}</p></li>
+                            <li class="whistle"><img src="{% static 'images/whistle.svg'%}" alt="" aria-hidden="true"><p id="lack-b" class="whistle-count">{{lack_b|default:'0'}}</p></li>
+                            <li class="aces" {% if match.sport != 1 and match.sport != 2 %} style="display: none;" {% endif %}><img class="aces-img" src="{% static 'images/ball-ace.svg'%}" alt="" aria-hidden="true"><p id="aces-b" class="ace-count">{{aces_b}}</p></li>
                         </ul>
                     </div>
                    
@@ -67,17 +71,17 @@
         </div>
         <div class="sets-or-time">
             <div class="title-set">
-                <p style="color: black;" id="name-scoreboard">{% if name_scoreboard %} {{name_scoreboard}} {% else %} Placar {% endif %}</p>
+                <p style="color: black;" id="name-scoreboard">{% if match.volley_match %} Sets {% else %} Placar {% endif %}</p>
             </div>
             <p class="time">
-                <span id="timer" class="sets">{% if match %} {{time_sets_a}} {% else %} 00:00 {% endif %}</span> <span id="sets-team-b"  style="{% if match.sport == 1 %}display: flex;{% else %}display: none;{% endif %}" class="sets">{% if match %} {{sets_b}} {% else %} 0 {% endif %}</span>
+                <span class="sets" id="sets-a" {% if match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% endif %}</span> <span class="sets" id="sets-b" {% if match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% endif %}</span> <span class="timer" id="timer" {% if not match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if not match.volley_match %} 00:00 {% endif %}</span>
             </p>
         </div>
         <div class="ball-sport">
-            <img id="ball-sport" src="{{ball_sport}}" alt="" />
+            <img class="ball-sport-img" id="ball-sport" src="{{ball_sport}}" alt="" />
         </div>
     </section>
-    <footer id="footer-project" style="{% if banner_bol %}display: none;{% endif %}">
+    <footer class="footer-project score-ban" style="display: flex;">
         <div class="footer-content">
             <img class="logo-ifs" src="{% static 'images/logo-ifs.svg'%}" alt="Logo IFS - LAG">
             <img class="qr-code" src="data:image/png;base64,{{ qrcode }}"alt="" aria-hidden="true">
@@ -88,7 +92,7 @@
             </ul>
         </div>
     </footer>
-    <script src="{% static 'js/timer.js' %}"></script>
+    <script src="{% static 'js/scoreboard.js' %}"></script>
     <script>
         {% if seconds %}
         stopwatch({{seconds}}, {{status}})

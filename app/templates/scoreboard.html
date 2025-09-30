@@ -246,6 +246,8 @@
         <li data-target="replacement" id="replacement"><span class="label">SUBSTITUIÇÃO</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
         <li data-target="athlete-a" id="athlete-a"><span class="label">ATLETAS {{team_match_a.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
         <li data-target="athlete-b" id="athlete-b"><span class="label">ATLETAS {{team_match_b.team.name}}</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        <li data-target="settings" id="settings"><span class="label">CONFIGURAÇÕES</span> <span class="arrow"><i class="fa-solid fa-angle-right"></i></span></li>
+        
       </ul>
     </div>
 
@@ -273,6 +275,8 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-a-point" value="+1" class="points-btn" data-team="A" data-delta="1">+1</button>
                 <button name="team-a-point" value="-1" class="points-btn" data-team="A" data-delta="-1">-1</button>
+                <button name="team-a-aces" value="+1" class="points-btn" style="background-color: #008000;" data-team="A" data-delta="1">+1</button>
+                <button name="team-a-aces" value="-1" class="points-btn" style="background-color: #008000;" data-team="A" data-delta="-1">-1</button>
                 <select name="player-a-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_a %}
@@ -287,6 +291,8 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-b-point" value="+1" class="points-btn" data-team="B" data-delta="1">+1</button>
                 <button name="team-b-point" value="-1" class="points-btn" data-team="B" data-delta="-1">-1</button>
+                <button name="team-b-aces" value="+1" class="points-btn" data-team="B" style="background-color: #008000;" data-delta="1">+1</button>
+                <button name="team-b-aces" value="-1" class="points-btn" data-team="B" style="background-color: #008000;" data-delta="-1">-1</button>
                 <select name="player-b-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_b %}
@@ -327,7 +333,7 @@
       {% csrf_token %}
       <h2>PENALIDADES</h2>
       <label for="">Tipo</label>
-      <select name="" id="">
+      <select name="penalties" id="">
         <option value="">Selecione o tipo</option>
         {% for value, name in penalities_types %}
         <option value="{{value}}">{{name}}</option>
@@ -335,16 +341,16 @@
       </select>
       <br><br>
       <label for="">Atleta</label>
-      <select name="" id="">
+      <select name="player_penalties" id="">
         <option value="">Selecione o atleta</option>
         <optgroup label="Jogadores do time: {{team_match_a.team.name}}">
           {% for i in players_match_a %}
-          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
           {% endfor %}
         </optgroup>
         <optgroup label="Jogadores do time: {{team_match_b.team.name}}">
           {% for i in players_match_b %}
-          <option value="{{i.player.id}}">{{i.player.name}} - {{i.player_number}}</option>
+          <option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>
           {% endfor %}
         </optgroup>
       </select>
@@ -382,7 +388,13 @@
     <form method="post" class="conteudo-lo" id="banner-content">
       {% csrf_token %}
       <h2>BANNER</h2>
-      <p>Conteúdo relacionado a banner aparece aqui.</p>
+      <select name="banner" id="">
+        <option selected value="">Banner</option>
+        {% for i in banners %}
+        <option value="{{i.id}}">{{i.name}} {% if i.status == 0 %} (Em uso) {% endif %}</option>
+        {% endfor %}
+      </select>
+      <button class="button-modal" type="submit">Salvar Alterações</button>
     </form>
 
     <form method="post" class="conteudo-lo" id="addition-content">
@@ -478,6 +490,33 @@
       </section>
       <button class="button-modal" type="submit">Salvar Alterações</button>
     </form>
+
+    <div class="conteudo-lo" id="settings-content">
+      {% csrf_token %}
+      <h2>CONFIGURAÇÕES</h2>
+      <p>Iniciar um novo set.</p>
+      <form method="post">{% csrf_token %}
+        <button class="button-modal" name="volley_new" type="submit">Novo set</button>
+      </form>
+      <hr>
+      <p>Finalizar partida.</p>
+      <form method="post">{% csrf_token %}
+        <button class="button-modal" name="finally" type="submit">Finalizar</button>
+      </form>
+      <hr>
+      <p>Finalizar e ir a próxima partida</p>
+      <form method="post">{% csrf_token %}
+        <select name="match_new" id="">
+          <option value="None">Selecione a próxima partida.</option>
+          {% for i in matches %}
+          <option value="{{i.id}}">Partida de {{i.get_sport_display}} {{i.get_sexo_display}}: {% for j in team_match_all %} {% if i.id == j.match.id %} {{j.team.name}}; {% endif %} {% endfor %}</option>
+          {% endfor %}
+        </select>
+        <button class="button-modal" type="submit">Confirmar</button>
+      </form>
+
+    </div>
+
     <br><br>
   </div>
 </div>
@@ -495,6 +534,7 @@
     'replacement': document.getElementById('replacement-content'),
     'athlete-a': document.getElementById('athlete-a-content'),
     'athlete-b': document.getElementById('athlete-b-content'),
+    'settings': document.getElementById('settings-content'),
   };
   const menuList = document.getElementById('menu-list');
   const voltarWrapper = document.getElementById('voltar-wrapper');
