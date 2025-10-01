@@ -252,9 +252,12 @@ def generate_timer(match):
         else:
             status = 1
             seconds = (rel.tm_hour * 60 * 60 + rel.tm_min * 60 + rel.tm_sec) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
+
     else:
         seconds = 0
-        status = 0
+        status = 3
+    if seconds > 3:
+        seconds -= 2
     print("Tempo: ",seconds, " status: ",status)
     return seconds, status
 

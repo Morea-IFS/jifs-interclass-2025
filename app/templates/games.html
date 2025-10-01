@@ -61,11 +61,11 @@
                                 alt="Timer Icon" />
                         </div>
                     </a>
-                    <a class="games-config-link" href="">
-                        <div class="games-config-item">
-                            <img class="games-config-item-img" src="{% static 'images/icon-config.png' %}"
-                                alt="Gear Icon" />
-                        </div>
+                    <a class="games-config-link">
+                        <form method="post" class="games-config-item">{% csrf_token %}
+                            <button name="change_match" value="{{i.match.id}}" type="submit" style="margin: 0; background-color: transparent;"><img class="games-config-item-img" src="{% static 'images/icon-config.png' %}"
+                                alt="Gear Icon" /></button>
+                        </form>
                     </a>
                     <a class="games-config-link" href="">
                         <div class="games-config-item games-config-item-player">
