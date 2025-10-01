@@ -264,10 +264,20 @@ def send_score_update():
         }
     )
 
+@receiver([post_save, post_delete], sender=Team)
+def team_updated(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nos times :)")
+    send_score_update()
+
+
+@receiver([post_save, post_delete], sender=Volley_match)
+def volley_updated(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nas partidas de vôlei :)")
+    send_score_update()
 
 @receiver([post_save, post_delete], sender=Point)
 def point_changed(sender, instance, using, **kwargs):
-    print("hmm, mudanças nos pontos :)")
+    if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_point()
     async_to_sync(channel_layer.group_send)(
@@ -279,6 +289,7 @@ def point_changed(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_point():
+    if settings.DEBUG: print("eita, mudanças (pontos) sendo preparadas. :)")
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
         team_matchs = Team_match.objects.filter(match=match)
@@ -310,22 +321,14 @@ def send_scoreboard_point():
             'point_a': 0,
             'point_b': 0,
         }   
-    print(match_data)
+    if settings.DEBUG: print("eita, saindo signals (pontos) sendo preparadas. :)")
+    if settings.DEBUG: print(match_data)
     return match_data
 
-@receiver([post_save, post_delete], sender=Team)
-def team_updated(sender, instance, using, **kwargs):
-    print("hmm, mudanças nos times :)")
-    send_score_update()
-
-
-@receiver([post_save, post_delete], sender=Volley_match)
-def volley_updated(sender, instance, using, **kwargs):
-    print("hmm, mudanças nas partidas de vôlei :)")
-    send_score_update()
 
 @receiver([post_save, post_delete], sender=Time_pause)
 def point_changed(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças no (tempo) :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_time()
     async_to_sync(channel_layer.group_send)(
@@ -337,6 +340,7 @@ def point_changed(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_time():
+    if settings.DEBUG: print("eita, mudanças (tempo) sendo preparadas. :)")
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
         seconds, status = generate_timer(match)
@@ -345,11 +349,13 @@ def send_scoreboard_time():
             'seconds': seconds,
             'status': status,
         }
-    print(match_data)
+    if settings.DEBUG: print("eita, saindo signals (tempo) sendo preparadas. :)")
+    if settings.DEBUG: print(match_data)
     return match_data
 
 @receiver([post_save, post_delete], sender=Banner)
 def point_changed(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nas banner :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_banner()
     async_to_sync(channel_layer.group_send)(
@@ -361,19 +367,20 @@ def point_changed(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_banner():
+    if settings.DEBUG: print("eita, mudanças (banner) sendo preparadas. :)")
     match_data = {}
     if Banner.objects.filter(status=0).exists(): 
         match_data['status'] = 1
         match_data['banner'] = Banner.objects.filter(status=0)[0].image.url
     else:
         match_data['status'] = 0
-
-    print(match_data)
+    if settings.DEBUG: print("eita, saindo signals (banner) sendo preparadas. :)")
+    if settings.DEBUG: print(match_data)
     return match_data
 
 @receiver([post_save, post_delete], sender=Penalties)
 def penalties_updated(sender, instance, using, **kwargs):
-    print("hmm, mudanças nas penalidades :)")
+    if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_penalties()
     async_to_sync(channel_layer.group_send)(
@@ -385,6 +392,7 @@ def penalties_updated(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_penalties():
+    if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
         team_matchs = Team_match.objects.filter(match=match)
@@ -419,12 +427,13 @@ def send_scoreboard_penalties():
             'card_a': 0,
             'card_b': 0,
         }   
-    print(match_data)
+    if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
+    if settings.DEBUG: print(match_data)
     return match_data
 
 @receiver([post_save, post_delete], sender=Match)
 def match_updated(sender, instance, using, **kwargs):
-    print("hmm, mudanças nas partidas :)")
+    if settings.DEBUG: print("hmm, mudanças nas partidas :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_match()
     async_to_sync(channel_layer.group_send)(
@@ -436,6 +445,7 @@ def match_updated(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_match():
+    if settings.DEBUG: print("eita, mudanças (partidas) sendo preparadas. :)")
     match = None
     if Volley_match.objects.filter(status=1).exists():
         volley_match = Volley_match.objects.get(status=1)
@@ -510,12 +520,13 @@ def send_scoreboard_match():
             'photoA': default_photo_url,
             'photoB': default_photo_url,
         }   
-    print(match_data)
+    if settings.DEBUG: print("eita, saindo signals (partidas) sendo preparadas. :)")
+    if settings.DEBUG: print(match_data)
     return match_data
 
 @receiver(post_save, sender=User)
 def set_type_for_staff(sender, instance, created, **kwargs):
-    print("chegouuu")
+    if settings.DEBUG: print("chegouuu")
     if created and instance.is_staff:
         instance.type = 0
         instance.save()
@@ -532,7 +543,7 @@ def set_type_for_staff(sender, instance, created, **kwargs):
         group, _ = Group.objects.get_or_create(name=group_name)
         instance.groups.add(group)
     else:
-        print(instance.type, " - ", type(instance.type), " - ", type(int(instance.type)))
+        if settings.DEBUG: print(instance.type, " - ", type(instance.type), " - ", type(int(instance.type)))
 
 @receiver(post_migrate)
 def create_user_common_group(sender, **kwargs):
@@ -586,9 +597,9 @@ def create_user_common_group(sender, **kwargs):
 
     if permissions.exists():
         group.permissions.set(permissions)
-        print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
+        if settings.DEBUG: print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
     else:
-        print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
+        if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
 
     group_name = "user common"
@@ -622,9 +633,9 @@ def create_user_common_group(sender, **kwargs):
 
     if permissions.exists():
         group.permissions.set(permissions)
-        print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
+        if settings.DEBUG: print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
     else:
-        print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
+        if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
 
     group_name = "score marker"
@@ -644,9 +655,9 @@ def create_user_common_group(sender, **kwargs):
 
     if permissions.exists():
         group.permissions.set(permissions)
-        print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
+        if settings.DEBUG: print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
     else:
-        print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
+        if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")

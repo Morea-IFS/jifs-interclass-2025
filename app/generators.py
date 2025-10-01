@@ -221,14 +221,12 @@ def generate_timer(match):
             seconds -= somatorio
             print(seconds)
     elif match.time_start:
-        print("kk: ",seconds)
         if Time_pause.objects.filter(match=match):
             seconds = (rel.tm_hour * 60 * 60 + rel.tm_min * 60 + rel.tm_sec) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
             pause = Time_pause.objects.filter(match=match).last()
             pausas_totais = Time_pause.objects.filter(match=match)
             somatorio = 0
             if pause.start_pause and pause.end_pause:
-                print("Entrou no pausa finalizada jogo continua")
                 status = 1
                 for i in pausas_totais:
                     print(i.end_pause,i.start_pause)
@@ -237,8 +235,6 @@ def generate_timer(match):
                 seconds -= somatorio
             elif pause.start_pause and not pause.end_pause and Time_pause.objects.filter(match=match).count() > 1:
                 seconds = (pause.start_pause.hour * 60 * 60 + pause.start_pause.minute * 60 + pause.start_pause.second) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)        
-                print("Entrou no pausa iniciada não é a primeira")
-                print("g:",seconds)
                 status = 2
                 for i in pausas_totais:
                     if i == pausas_totais.last():
@@ -246,7 +242,6 @@ def generate_timer(match):
                     somatorio += (i.end_pause.hour * 60 * 60 + i.end_pause.minute * 60 + i.end_pause.second) - (i.start_pause.hour * 60 * 60 + i.start_pause.minute * 60 + i.start_pause.second)
                 seconds -= somatorio
             elif pause.start_pause and not pause.end_pause:
-                print("Entrou no pausa iniciada, a primeira")
                 status = 2
                 seconds = (pause.start_pause.hour * 60 * 60 + pause.start_pause.minute * 60 + pause.start_pause.second) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
         else:
@@ -258,7 +253,6 @@ def generate_timer(match):
         status = 3
     if seconds > 3:
         seconds -= 2
-    print("Tempo: ",seconds, " status: ",status)
     return seconds, status
 
 def prinet(message):

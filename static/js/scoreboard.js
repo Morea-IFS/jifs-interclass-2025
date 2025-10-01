@@ -2,6 +2,11 @@ const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
 const socket = new WebSocket(protocol + window.location.host + "/ws/scoreboard/");
 console.log(protocol + window.location.host + "/ws/scoreboard/");
 
+socket.addEventListener('open', (event) => {
+    console.log('WebSocket connection opened:', event);
+    socket.send('Hello from client!'); // Send data after connection is open
+});
+
 const timer = document.getElementById('timer');
 
 socket.onmessage = function(e) {
