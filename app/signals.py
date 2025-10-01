@@ -390,8 +390,16 @@ def send_scoreboard_penalties():
         team_matchs = Team_match.objects.filter(match=match)
         if len(team_matchs) < 2:
             return None
-        team_match_a = team_matchs[0]
-        team_match_b = team_matchs[1]
+        if match.volley_match:
+            if (match.volley_match.sets_team_a + match.volley_match.sets_team_b) % 2 == 0:
+                team_match_a = team_matchs[0]
+                team_match_b = team_matchs[1]
+            else:
+                team_match_a = team_matchs[1]
+                team_match_b = team_matchs[0]
+        else:
+            team_match_a = team_matchs[0]
+            team_match_b = team_matchs[1]
 
         lack_a = Penalties.objects.filter(type_penalties=2, team_match=team_match_a).count()
         lack_b = Penalties.objects.filter(type_penalties=2, team_match=team_match_b).count()

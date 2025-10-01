@@ -59,7 +59,7 @@ socket.onmessage = function(e) {
             if(match.aces_a && match.aces_b){
                 if (aces_a_match) aces_a_match.textContent = match.aces_a;
                 if (aces_b_match) aces_b_match.textContent = match.aces_b;
-                
+
             }
 
             const aces = document.querySelectorAll(".aces");

@@ -1,6 +1,6 @@
 const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-console.log(protocol + window.location.host + "/ws/placar/");
-const socket = new WebSocket(protocol + window.location.host + "/ws/placar/");
+console.log(protocol + window.location.host + "/ws/scoreboard/");
+const socket = new WebSocket(protocol + window.location.host + "/ws/scoreboard/");
 
 const timer = document.getElementById('timer'),
  titleset = document.getElementById("title-set");
