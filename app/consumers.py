@@ -62,10 +62,13 @@ class PublicConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("public", self.channel_name)
 
-    async def match_update(self, event):
-        if settings.DEBUG: print("Canal de comunicação: public.")
+    async def match_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do public: match")
         match_data = event['match']
-        await self.send(text_data=json.dumps(match_data))
+        await self.send(text_data=json.dumps({
+            "type": "match",
+            "data": match_data
+        }))
 
 class AdminConsumer(AsyncWebsocketConsumer):
     async def connect(self):

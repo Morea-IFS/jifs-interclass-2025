@@ -14,11 +14,55 @@
         .hidden{
             display: none;
         }
+        .info-overlay {
+            position: fixed;    
+            min-width: 1200px;
+            width: 70vw;
+            min-height: 300px;
+            height: 40vh;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* centraliza em X e Y */
+            background: #e9e9e9fa;
+            color: black;
+            padding: 5em;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+            z-index: 500;
+            display: none;
+            align-items: center;
+            flex-direction: column;
+        }
+        .info-image{
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        .info-image p{
+            font-size: 4em;
+            font-weight: 700;
+            color: rgb(0, 0, 0);
+
+        }
+        .info-image img{
+            width: 250px;
+        }
+
+
     </style>
     <div>
         <img class="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; display: none;">
     </div>
     <section class="section-project scoreboard score-ban" id="scoreboard" style="display: flex;">
+        <div class="info-overlay" id="info-overlay">
+            <div class="info-image">
+                <img id="alert-penalties-img"  src="{% static 'images/logo-morea-sports.svg' %}" alt="">
+                <p id="alert-penalties"></p>
+            </div>
+        </div>
         <div class="teams">
             <div class="team-color team-a" style=" background-color: #02007a">
                 <div class="title-team" >
