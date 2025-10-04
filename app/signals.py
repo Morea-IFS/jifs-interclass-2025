@@ -24,7 +24,6 @@ def serialize_players(players_qs):
             "name": player.name,
             "photo_url": player.photo.url if player.photo else default_photo_url,
             "number": getattr(pm, 'player_number', None),
-            "instagram": player.instagram,
         })
     return result
 
@@ -279,12 +278,19 @@ def volley_updated(sender, instance, using, **kwargs):
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_point()
+    match_data, match_public = send_scoreboard_point()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'point_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'point_new',
+            'match': match_public,
         }
     )
 
@@ -321,21 +327,29 @@ def send_scoreboard_point():
             'point_a': 0,
             'point_b': 0,
         }   
+    match_public = match_data
     if settings.DEBUG: print("eita, saindo signals (pontos) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 
 @receiver([post_save, post_delete], sender=Time_pause)
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças no (tempo) :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_time()
+    match_data, match_public = send_scoreboard_time()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'time_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'time_new',
+            'match': match_public,
         }
     )
 
@@ -349,12 +363,15 @@ def send_scoreboard_time():
             'seconds': seconds,
             'status': status,
         }
+
+    match_public = match_data
+
     if settings.DEBUG: print("eita, saindo signals (tempo) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Banner)
-def point_changed(sender, instance, using, **kwargs):
+def banner_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas banner :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_banner()
@@ -382,7 +399,7 @@ def send_scoreboard_banner():
 def penalties_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_penalties()
+    match_data, match_public = send_scoreboard_penalties(instance)
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
@@ -390,8 +407,15 @@ def penalties_updated(sender, instance, using, **kwargs):
             'match': match_data,
         }
     )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'penalties_new',
+            'match': match_public,
+        }
+    )
 
-def send_scoreboard_penalties():
+def send_scoreboard_penalties(instance):
     if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
@@ -420,6 +444,12 @@ def send_scoreboard_penalties():
             'card_a': card_a,
             'card_b': card_b,
         }
+        if instance.player:
+            print(instance.type_penalties)
+            match_data['penalties_player'] = instance.player.name
+            if instance.type_penalties == '0': match_data['penalties_url'] = static('images/card-red.png')
+            elif instance.type_penalties == '1': match_data['penalties_url'] = static('images/card-yellow.png')
+            else: match_data['penalties_url'] = static('images/whistle.png')
     else:
         match_data = {
             'lack_a': 0,
@@ -427,20 +457,30 @@ def send_scoreboard_penalties():
             'card_a': 0,
             'card_b': 0,
         }   
+    
+    match_public = match_data
+    
     if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Match)
 def match_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas partidas :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_match()
+    match_data, match_public = send_scoreboard_match()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'match_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'match_new',
+            'match': match_public,
         }
     )
 
@@ -470,9 +510,12 @@ def send_scoreboard_match():
                 team_match_b = team_matchs[0]
                 sets_b = match.volley_match.sets_team_a
                 sets_a = match.volley_match.sets_team_b
+            ball_sport = static('images/ball-of-volley.png')
         else:
             team_match_a = team_matchs[0]
             team_match_b = team_matchs[1]
+            if match.sport == 3: ball_sport = static('images/ball-of-handball.png')
+            else: ball_sport = static('images/ball-of-futsal.png')
 
         point_a = Point.objects.filter(team_match=team_match_a).count()
         point_b = Point.objects.filter(team_match=team_match_b).count()
@@ -487,6 +530,7 @@ def send_scoreboard_match():
             'match_sexo': match.get_sexo_display(),
             'match_sport': match.get_sport_display(),
             'point_a': point_a,
+            'ball_sport': ball_sport,
             'point_b': point_b,
             'lack_a': lack_a,
             'lack_b': lack_b,
@@ -504,6 +548,14 @@ def send_scoreboard_match():
         else:
             match_data['seconds'] = seconds
             match_data['status'] = status
+
+        players_a_qs = Player_match.objects.filter(team_match=team_match_a)
+        players_b_qs = Player_match.objects.filter(team_match=team_match_b)
+
+        match_public = match_data
+        
+        match_public['players_a'] = serialize_players(players_a_qs)
+        match_public['players_b'] = serialize_players(players_b_qs)
         
     else:
         match_data = {
@@ -520,9 +572,12 @@ def send_scoreboard_match():
             'photoA': default_photo_url,
             'photoB': default_photo_url,
         }   
+
+        match_public = match_data
+
     if settings.DEBUG: print("eita, saindo signals (partidas) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver(post_save, sender=User)
 def set_type_for_staff(sender, instance, created, **kwargs):

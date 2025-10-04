@@ -251,8 +251,6 @@ def generate_timer(match):
     else:
         seconds = 0
         status = 3
-    if seconds > 3:
-        seconds -= 2
     return seconds, status
 
 def prinet(message):
