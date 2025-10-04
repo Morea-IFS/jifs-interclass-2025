@@ -17,6 +17,20 @@
             .hidden{
                 display: none;
             }
+            .events{
+                color: white;
+                font-size: 20px;
+            }
+            .ff{
+                color: #0F0F0F;
+            }
+            .icon-list {
+                mix-blend-mode: lighten;
+                width: 1em;
+            }
+            .icon{
+                list-style-type: none;
+            }
         </style>
         <div class="modal-mobile mobile"></div>
         <header>
@@ -81,16 +95,17 @@
                 </div>
                 <div class="sets-or-time">
                     <div class="title-set">
-                        <p id="name-scoreboard">{% if name_scoreboard %} {{name_scoreboard}} {% else %} Placar {% endif %}</p>
+                        <p id="name-scoreboard">{% if match.volley_match %} Sets {% else %} Tempo {% endif %}</p>
                     </div>
                     <p class="time-and-sets-counter">
-                        <span id="timer">{% if match %} {{time_sets_a}} {% else %} 00:00 {% endif %}</span>
-                        <span id="sets-team-b" style="{% if match.sport == 1 %}display: flex;{% else %}display: none;{% endif %}">{% if match %} {{sets_b}} {% else %} 0 {% endif %}</span>
+                        <span class="timer" id="timer" style="{% if not match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if not match.volley_match %} 00:00 {% endif %}</span>
+                        <span class="sets" id="sets-a" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% else %} 0 {% endif %}</span>
+                        <span class="sets" id="sets-b" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% else %} 0 {% endif %}</span>
                 </div>
                 <div class="ball-sport">
                     <img id="ball-sport" src="{{ball_sport}}" alt="" />
                 </div>
-                <div class="gender-of-game feminine">
+                <div class="gender-of-game">
                     <p style="color: #0000ff;">ATUM PLACAR</p>
                 </div>
             </section>
@@ -100,11 +115,12 @@
                         <li class="stats">Estatísticas</li>
                         <li class="players active">Jogadores</li>
                         <li class="events">Eventos</li>
+                        <li class="lineup">Escalação</li>
                     </ul>
                 </nav>
                 <div class="information-container">
                     <div class="stats-content">
-                        <div class="aces">
+                        <div class="aces" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">
                             <span id="aces-a"
                                 style="background-color: #0000ff"
                                 class="aces-team-a"
@@ -131,7 +147,7 @@
                             >
                         </div>
 
-                        <div class="aces">
+                        <div class="card">
                             <span id="card-a"
                                 style="background-color: #0000ff"
                                 class="aces-team-a"
@@ -208,19 +224,8 @@
                                 </li>
                                 {% endfor %}
                             </ul>
-                            
-                            
                         </div>
                     </div>
-                    <style>
-                        .events{
-                            color: white;
-                            font-size: 20px;
-                        }
-                        .ff{
-                            color: #0F0F0F;
-                        }
-                    </style>
                     <div class="events-content">
                         <ul class="icon">
                             {% for i in events %}
@@ -228,15 +233,11 @@
                             {% endfor %}
                         </ul>
                     </div>
-                    <style>
-                        .icon-list {
-                            mix-blend-mode: lighten;
-                            width: 1em;
-                        }
-                        .icon{
-                            list-style-type: none;
-                        }
-                    </style>
+                    <div class="lineup-content">
+                        <div class="lineup-info">
+                            <img src="{% static 'images/lineup.png' %}" alt="Ag">
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

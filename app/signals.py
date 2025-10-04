@@ -278,12 +278,19 @@ def volley_updated(sender, instance, using, **kwargs):
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_point()
+    match_data, match_public = send_scoreboard_point()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'point_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'point_new',
+            'match': match_public,
         }
     )
 
@@ -320,21 +327,29 @@ def send_scoreboard_point():
             'point_a': 0,
             'point_b': 0,
         }   
+    match_public = match_data
     if settings.DEBUG: print("eita, saindo signals (pontos) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 
 @receiver([post_save, post_delete], sender=Time_pause)
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças no (tempo) :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_time()
+    match_data, match_public = send_scoreboard_time()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'time_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'time_new',
+            'match': match_public,
         }
     )
 
@@ -348,9 +363,12 @@ def send_scoreboard_time():
             'seconds': seconds,
             'status': status,
         }
+
+    match_public = match_data
+
     if settings.DEBUG: print("eita, saindo signals (tempo) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Banner)
 def banner_changed(sender, instance, using, **kwargs):
@@ -381,12 +399,19 @@ def send_scoreboard_banner():
 def penalties_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_penalties(instance)
+    match_data, match_public = send_scoreboard_penalties(instance)
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'penalties_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'penalties_new',
+            'match': match_public,
         }
     )
 
@@ -432,9 +457,12 @@ def send_scoreboard_penalties(instance):
             'card_a': 0,
             'card_b': 0,
         }   
+    
+    match_public = match_data
+    
     if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Match)
 def match_updated(sender, instance, using, **kwargs):
@@ -525,7 +553,7 @@ def send_scoreboard_match():
         players_b_qs = Player_match.objects.filter(team_match=team_match_b)
 
         match_public = match_data
-
+        
         match_public['players_a'] = serialize_players(players_a_qs)
         match_public['players_b'] = serialize_players(players_b_qs)
         

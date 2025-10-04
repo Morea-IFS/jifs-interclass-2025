@@ -62,12 +62,36 @@ class PublicConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("public", self.channel_name)
 
+    async def time_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do scoreboard: time.")
+        match_public = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "time",
+            "data": match_public
+        }))
+
+    async def penalties_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do scoreboard: penalidades.")
+        match_public = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "penalties",
+            "data": match_public
+        }))
+
+    async def point_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do public: point.")
+        match_public = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "point",
+            "data": match_public
+        }))
+
     async def match_new(self, event):
         if settings.DEBUG: print("Canal de comunicação do public: match")
-        match_data = event['match']
+        match_public = event['match']
         await self.send(text_data=json.dumps({
             "type": "match",
-            "data": match_data
+            "data": match_public
         }))
 
 class AdminConsumer(AsyncWebsocketConsumer):

@@ -1051,6 +1051,27 @@ def games(request):
                     match = Match.objects.get(sport=sport_id, sexo=sexo, time_match=datetime, event=event)  
                     messages.info(request, f"Essa partida já foi cadastrada! aidentificação dela é #{match.id}")
             match.save()
+            team_matchs = Team_match.objects.filter(match=match)
+            team_match_a = team_matchs[0]
+            team_match_b = team_matchs[1]
+            players_match_a = Player_match.objects.filter(team_match=team_match_a)
+            players_match_b = Player_match.objects.filter(team_match=team_match_b)  
+            team_sport_a = Team_sport.objects.get(team=team_match_a.team, sport__sport=team_match_a.match.sport, sexo=match.sexo)
+            team_sport_b = Team_sport.objects.get(team=team_match_b.team, sport__sport=team_match_b.match.sport, sexo=match.sexo)
+            player_team_sport_a = Player_team_sport.objects.filter(team_sport=team_sport_a)
+            player_team_sport_b = Player_team_sport.objects.filter(team_sport=team_sport_b)
+            for i in player_team_sport_a:
+                if not Player_match.objects.filter(player=i.player, match=match, team_match=team_match_a).exists():
+                    Player_match.objects.create(player=i.player, match=match, team_match=team_match_a)
+            for i in player_team_sport_b:
+                if not Player_match.objects.filter(player=i.player, match=match, team_match=team_match_b).exists():
+                    Player_match.objects.create(player=i.player, match=match, team_match=team_match_b)
+            for i in players_match_a:
+                if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_a).exists():
+                    i.delete()
+            for i in players_match_b:
+                if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_b).exists():
+                    i.delete()
             return redirect('games')
 
 @login_required
@@ -2030,131 +2051,74 @@ def scoreboard(request):
 def scoreboard_public(request, event_id):
     try:
         event = Event.objects.get(id=event_id)
-        if Volley_match.objects.filter(status=1):
-            print("PARTIDA DE VOLEI")
+        match = None
+        if Volley_match.objects.filter(status=1).exists():
             volley_match = Volley_match.objects.get(status=1)
-            print(volley_match)
-            match = Match.objects.filter(volley_match=volley_match.id).last()
-            print(match)
-            team_matchs = Team_match.objects.filter(match=match)
-            print(team_matchs)
-            team_match_a = team_matchs[0]
-            team_match_b = team_matchs[1]
-            if (match.volley_match.sets_team_a + match.volley_match.sets_team_b) % 2 == 0:
-                print("par")
-                teammatch1 = team_match_a
-                teammatch2 = team_match_b
-                sets_1 = match.volley_match.sets_team_a
-                sets_2 = match.volley_match.sets_team_b
-            else:
-                print("impar")
-                teammatch1 = team_match_b
-                teammatch2 = team_match_a
-                sets_1 = match.volley_match.sets_team_b
-                sets_2 = match.volley_match.sets_team_a
-            players_match_a = Player_match.objects.filter(team_match=teammatch1)
-            players_match_b = Player_match.objects.filter(team_match=teammatch2)
-            point_a = Point.objects.filter(team_match=teammatch1).count()
-            point_b = Point.objects.filter(team_match=teammatch2).count()
-            aces_a = Point.objects.filter(point_types=2,team_match=teammatch1).count()
-            aces_b = Point.objects.filter(point_types=2,team_match=teammatch2).count()
-            lack_a = Penalties.objects.filter(type_penalties=2,team_match=teammatch1).count()
-            lack_b = Penalties.objects.filter(type_penalties=2,team_match=teammatch2).count()
-            occurrence = Occurrence.objects.filter(match=match)
-            name_scoreboard = 'Sets'
-            ball_sport = static('images/ball-of-volley.png')
-            if match.sexo == 1: 
-                img_sexo = static('images/icon-female.svg')
-                sexo_color = '#ff32aa' 
-            else: 
-                img_sexo = static('images/icon-male.svg')
-                sexo_color = '#3a7bd5'
-            context = {
-                'match': match,
-                'team_match_a':teammatch1,
-                'team_match_b':teammatch2,
-                'time_sets_a': sets_1,
-                'sets_b': sets_2,
-                'players_match_a':players_match_a,
-                'players_match_b':players_match_b,
-                'point_a':point_a,
-                'point_b':point_b,
-                'lack_a':lack_a,
-                'lack_b':lack_b,
-                'img_sexo':img_sexo,
-                'sexo_color': sexo_color,
-                'ball_sport': ball_sport,
-                'aces_or_card': "Aces",
-                'aces_or_card_a': aces_a,
-                'aces_or_card_b': aces_b,
-                'events': occurrence,
-                'sexo_text':match.get_sexo_display(),
-                'name_scoreboard': name_scoreboard,
-                'event':event,
-                
-
-                
-            }
-            print(context)
-            return render(request, 'public/scoreboard_public.html', context)
-            
+            if Match.objects.filter(volley_match=volley_match, status=1).exists():
+                match = Match.objects.get(volley_match=volley_match, status=1)
         elif Match.objects.filter(status=1):
-            print("sport aleatorio")
             match = Match.objects.get(status=1)
-            occurrence = Occurrence.objects.filter()
+        if match:
+            print("match sim")
+            seconds, status = generate_timer(match)
             team_matchs = Team_match.objects.filter(match=match)
-            team_match_a = team_matchs[0]
-            team_match_b = team_matchs[1]
+
+            if match.volley_match:
+                if (match.volley_match.sets_team_a + match.volley_match.sets_team_b) % 2 == 0:
+                    team_match_a = team_matchs[0]
+                    team_match_b = team_matchs[1]
+                    sets_a = match.volley_match.sets_team_a
+                    sets_b = match.volley_match.sets_team_b
+                else:
+                    team_match_a = team_matchs[1]
+                    team_match_b = team_matchs[0]
+                    sets_b = match.volley_match.sets_team_a
+                    sets_a = match.volley_match.sets_team_b
+                ball_sport = static('images/ball-of-volley.png')
+            else:
+                team_match_a = team_matchs[0]
+                team_match_b = team_matchs[1]
+                if match.sport == 3: ball_sport = static('images/ball-of-handball.png')
+                else: ball_sport = static('images/ball-of-futsal.png')
+
             players_match_a = Player_match.objects.filter(team_match=team_match_a)
             players_match_b = Player_match.objects.filter(team_match=team_match_b)
             point_a = Point.objects.filter(team_match=team_match_a).count()
             point_b = Point.objects.filter(team_match=team_match_b).count()
+            card_a = Penalties.objects.filter(type_penalties=0, team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_a).count()
+            card_b = Penalties.objects.filter(type_penalties=0, team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_b).count()
             lack_a = Penalties.objects.filter(type_penalties=2,team_match=team_match_a).count()
             lack_b = Penalties.objects.filter(type_penalties=2,team_match=team_match_b).count()
-            card_a = Penalties.objects.filter(type_penalties=0,team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_a).count()
-            card_b = Penalties.objects.filter(type_penalties=0,team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_b).count()
-            seconds, status = generate_timer(match)
-            if match.sexo == 1: 
-                img_sexo = static('images/icon-female.svg')
-                sexo_color = '#ff32aa' 
-            else: 
-                img_sexo = static('images/icon-male.svg')
-                sexo_color = '#3a7bd5'
-            name_scoreboard = 'Tempo'
-            if match.sport == 3:
-                ball_sport = static('images/ball-of-handball.png')
-            else:
-                ball_sport = static('images/ball-of-futsal.png')
+            
+            occurrence = Occurrence.objects.filter(match=match)
             context = {
                 'match': match,
-                'events': occurrence,
-                'status': status,
-                'seconds': seconds,
                 'team_match_a':team_match_a,
                 'team_match_b':team_match_b,
                 'players_match_a':players_match_a,
                 'players_match_b':players_match_b,
                 'point_a':point_a,
                 'point_b':point_b,
-                'time_sets_a': "00:00",
                 'lack_a':lack_a,
                 'lack_b':lack_b,
-                'img_sexo':img_sexo,
-                'sexo_color': sexo_color,
                 'ball_sport': ball_sport,
-                'aces_or_card': "Cartões",
-                'aces_or_card_a': card_a,
-                'aces_or_card_b': card_b,
-                'sexo_text':match.get_sexo_display(),
-                'name_scoreboard': name_scoreboard,
+                'card_a': card_a,
+                'card_b': card_b,
+                'events': occurrence,
                 'event':event,
-                
-                
             }
-            print(occurrence)
             print(context)
+            if match.volley_match:
+                context['aces_a'] = Point.objects.filter(point_types=2,team_match=team_match_a).count()
+                context['aces_b'] = Point.objects.filter(point_types=2,team_match=team_match_b).count()
+                context['sets_a'] = sets_a
+                context['sets_b'] = sets_b
+            else:
+                context['seconds'] = seconds
+                context['status'] = status
             return render(request, 'public/scoreboard_public.html', context)
         else:
+            print("match não")
             return render(request, 'public/scoreboard_public.html',{'event':event})
     except Exception as e:
         messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')

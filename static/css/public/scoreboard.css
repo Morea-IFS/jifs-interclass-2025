@@ -498,6 +498,16 @@ main {
     gap: 134px;
 }
 
+.lineup-content {
+    display: none;
+    gap: 134px;
+}
+
+.lineup-info{
+    display: flex;
+    justify-content: center;
+}
+
 footer {
     display: flex;
     justify-content: space-between;
