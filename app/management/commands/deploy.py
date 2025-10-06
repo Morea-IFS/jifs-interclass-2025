@@ -53,12 +53,11 @@ def configure_service():
     
     # Coletar informações do usuário
     print("1. Configuração de usuário e grupo:")
-    user = get_input("Usuário para executar o serviço", default=current_user)
-    group = get_input("Grupo para executar o serviço", default=current_group)
+    user = current_user
+    group = current_group
     
     print("\n2. Configuração de diretórios:")
-    working_dir = get_input("Diretório de trabalho (WorkingDirectory)", 
-                           default=current_dir)
+    working_dir = current_dir
     
     # Validar se o diretório existe
     if not os.path.isdir(working_dir):
@@ -66,20 +65,18 @@ def configure_service():
         create = get_input("Deseja continuar mesmo assim? (s/n)", default="s")
         if create.lower() != 's':
             print("Configuração cancelada.")
-            sys.exit(1)
+            sys.exit(1),
     
     # Caminho do virtualenv
     default_venv = os.path.join(working_dir, "env", "bin", "gunicorn")
-    gunicorn_path = get_input("Caminho completo do gunicorn", 
-                              default=default_venv)
+    gunicorn_path = default_venv
     
     # Caminho do socket
     default_socket = os.path.join(os.path.dirname(working_dir), 
                                   "jifs-interclass", "sockets", "jifs.sock")
-    socket_path = get_input("Caminho do socket Unix", 
-                           default=default_socket)
+    socket_path = default_socket
     
-    print("\n3. Configuração do Gunicorn:")
+    print("\nConfiguração do Gunicorn:")
     workers = get_input("Número de workers", default="3")
     log_level = get_input("Nível de log (debug/info/warning/error/critical)", 
                          default="info")
