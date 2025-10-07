@@ -7,62 +7,249 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/scoreboard_projector.css' %}">
+    <link rel="stylesheet" href="{% static 'css/public/goal.css' %}">
     <title>ATUM PLACAR</title>
 </head>
 <body>
-    <style>
-        .hidden{
-            display: none;
-        }
-        .info-overlay {
-            position: fixed;    
-            min-width: 1200px;
-            width: 70vw;
-            min-height: 300px;
-            height: 40vh;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%); /* centraliza em X e Y */
-            background: #e9e9e9fa;
-            color: black;
-            padding: 5em;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-            z-index: 500;
-            display: none;
-            align-items: center;
-            flex-direction: column;
-        }
-        .info-image{
-            width: 100%;
-            height: 100%;
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 50px;
-        }
-        .info-image p{
-            font-size: 4em;
-            font-weight: 700;
-            color: rgb(0, 0, 0);
-
-        }
-        .info-image img{
-            width: 250px;
-        }
-
-
-    </style>
     <div>
         <img class="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; display: none;">
     </div>
+    
+    <!-- VÔLEI - Estrutura Corrigida -->
+    <div class="container-quadra" id="container-volleyball" style="display: none;">
+        <div class="quadra-volei">
+            <div class="linha-central"></div>
+            
+            <!-- Time Casa (A) -->
+            <div class="lado-quadra casa">
+                <div class="zona defesa">
+                    <!-- 3 jogadores na defesa -->
+                    <div class="jogador-container" id="casa-defesa-1">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="casa-defesa-2">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="casa-defesa-3">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                </div>
+                <div class="zona ataque">
+                    <!-- 3 jogadores no ataque -->
+                    <div class="jogador-container" id="casa-ataque-1">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="casa-ataque-2">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="casa-ataque-3">
+                        <div class="jogador-foto casa">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Time Fora (B) -->
+            <div class="lado-quadra fora">
+                <div class="zona ataque">
+                    <!-- 3 jogadores no ataque -->
+                    <div class="jogador-container" id="fora-ataque-1">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="fora-ataque-2">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="fora-ataque-3">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                </div>
+                <div class="zona defesa">
+                    <!-- 3 jogadores na defesa -->
+                    <div class="jogador-container" id="fora-defesa-1">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="fora-defesa-2">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                    <div class="jogador-container" id="fora-defesa-3">
+                        <div class="jogador-foto fora">
+                            <img src="" alt="">
+                        </div>
+                        <div class="jogador-nome"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FUTSAL - Estrutura Corrigida -->
+    <div class="quadra-futsal" id="container-futsal" style="display: none;">
+        <div class="field-lines"></div>
+        <div class="half-line"></div>
+        <div class="center-circle"></div>
+        <div class="center-dot"></div>
+        <div class="goal-area-left"></div>
+        <div class="goal-area-right"></div>
+        <div class="goal-left"></div>
+        <div class="goal-right"></div>
+        <div class="penalty-dot-left"></div>
+        <div class="penalty-dot-right"></div>
+
+        <!-- Jogadores Time A (Casa) -->
+        <div class="jogador time-a" id="goleiro-a">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-a" id="fixo-a">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-a" id="ala1-a">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-a" id="ala2-a">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-a" id="pivo-a">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <!-- Jogadores Time B (Fora) -->
+        <div class="jogador time-b" id="goleiro-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-b" id="fixo-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-b" id="ala1-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-b" id="ala2-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-b" id="pivo-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+    </div>
+
     <section class="section-project scoreboard score-ban" id="scoreboard" style="display: flex;">
+        <!-- ... (restante do código do placar permanece igual) ... -->
+        <div class="card-container" id="card-goal">
+            <!-- Elementos decorativos nos cantos -->
+            <div class="corner-decoration corner-top-left"></div>
+            <div class="corner-decoration corner-top-right"></div>
+            <div class="corner-decoration corner-bottom-left"></div>
+            <div class="corner-decoration corner-bottom-right"></div>
+
+            <div class="corner-inner corner-inner-top-left"></div>
+            <div class="corner-inner corner-inner-top-right"></div>
+            <div class="corner-inner corner-inner-bottom-left"></div>
+            <div class="corner-inner corner-inner-bottom-right"></div>
+
+            <header class="card-header">
+                <span class="line"></span>
+                <h1>
+                    <div class="gol-text">
+                        <span>G</span><span>O</span><span>O</span><span>O</span><span>O</span><span>O</span><span>O</span><span>L</span><span>!</span>
+                    </div>
+                </h1>
+                <span class="line"></span>
+            </header>
+
+            <main class="card-main">
+                <div class="player-image" id="card-player-img">
+                    <div class="image-decoration decoration-1"></div>
+                    <div class="image-decoration decoration-2"></div>
+                </div>
+                
+                <img id="card-team-img" alt="Logo do Clube" class="club-logo">
+            </main>
+
+            <div class="card-footer">
+                <h2 id="card-player-name">Griezmann</h2>
+                <div class="line-container">
+                    <span class="line"></span>
+                    <p id="card-team-name">França</p>
+                    <span class="line"></span>
+                </div>
+            </div>
+        </div>
+
         <div class="info-overlay" id="info-overlay">
             <div class="info-image">
                 <img id="alert-penalties-img"  src="{% static 'images/logo-morea-sports.svg' %}" alt="">
                 <p id="alert-penalties"></p>
             </div>
         </div>
+
         <div class="teams">
             <div class="team-color team-a" style=" background-color: #02007a">
                 <div class="title-team" >
@@ -111,7 +298,7 @@
             </div>
         </div>
         <div class="bordao_redes">
-            <p>Tinha que ser de redes</p>
+            <p>Tinha que ser de redes :)</p>
         </div>
         <div class="sets-or-time">
             <div class="title-set">
@@ -132,11 +319,45 @@
             <ul>
                 <p>Veja também pelo site<br>
                 <strong>{{url}}</strong></p>
-                <li><img src="{% static 'images/logo-morea-colorful.svg'%}" alt="Logo MOREA"></li>
+                <li><img src="{% static 'images/morea-sports.png'%}" alt="Logo MOREA"></li>
             </ul>
         </div>
     </footer>
     <script src="{% static 'js/scoreboard.js' %}"></script>
+    <script>
+        function isLightColor(color) {
+            // Remove o # se presente
+            color = color.replace('#', '');
+            
+            // Converte hex para RGB
+            const r = parseInt(color.substr(0, 2), 16);
+            const g = parseInt(color.substr(2, 2), 16);
+            const b = parseInt(color.substr(4, 2), 16);
+            
+            // Fórmula para calcular luminosidade (percepção humana)
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Retorna true se for clara, false se for escura
+            return luminance > 0.5;
+        }
+
+        // Função para aplicar a cor do texto baseada na cor de fundo
+        function applyTextColorBasedOnBackground() {
+            const root = document.documentElement;
+            const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
+            
+            // Define a cor do texto baseada na luminosidade da cor primária
+            const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
+            
+            // Aplica a cor do texto
+            root.style.setProperty('--text-color', textColor);
+        }
+
+        // Executa quando a página carrega
+        document.addEventListener('DOMContentLoaded', function() {
+            applyTextColorBasedOnBackground();
+        });
+    </script>
     <script>
         {% if seconds %}
         stopwatch({{seconds}}, {{status}})

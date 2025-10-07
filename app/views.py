@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Campus_types, Help, Type_penalties, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -1815,13 +1815,19 @@ def scoreboard(request):
             'banners': banners,
             'matches': matches,
             'team_match_all': team_match_all,
+            'detailed': Detailed.choices,
 
         }
         print("context")
         return render(request, 'scoreboard.html', context)
     else:
         print(request.POST)
-        if 'team-a' in request.POST:
+        if 'detailed' in request.POST:
+            print("det")
+            detailed = int(request.POST.get('detailed'))
+            match.detailed = detailed
+            match.save()
+        elif 'team-a' in request.POST:
             for i in players_match_a:
                 number = request.POST.get(f'number_a_{i.id}') 
                 activity = request.POST.get(f'activity_a_{i.id}')        
@@ -1967,6 +1973,7 @@ def scoreboard(request):
                 print("volley: ",volley_match)
                 print("mudando estatus da partida")
                 match.status = 2
+                match.detailed = 3
                 match.save()
                 print("mUdeii:")
                 print(volley_match.status)
@@ -1976,6 +1983,7 @@ def scoreboard(request):
             else:
                 print("A partida anterios é qualquer uma")
                 match.status = 2
+                match.detailed = 3
                 match.save()
                 print("Foi finalizada!", match.get_status_display())
             if next_match.volley_match:
@@ -2014,19 +2022,27 @@ def scoreboard(request):
                     if pause.start_pause and not pause.end_pause:
                         pause.end_pause = time_now
                         pause.save()
+                        match.detailed = 1
+                        match.save()
                         return redirect('scoreboard')                
                     else:
                         pause_time = Time_pause.objects.create(start_pause=time_now,match=match)
                         pause_time.save()
+                        match.detailed = 2
+                        match.save()
                         return redirect('scoreboard')
                 else:
                     pause_time = Time_pause.objects.create(start_pause=time_now,match=match)
                     pause_time.save()
+                    match.detailed = 2
+                    match.save()
                     print(pause_time)
                     return redirect('scoreboard')
             
             else:
                 match.time_start = time_now
+                match.save()
+                match.detailed = 1
                 match.save()
                 return redirect('scoreboard')
                 
