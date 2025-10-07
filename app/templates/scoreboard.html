@@ -260,6 +260,14 @@
       <hr>
       <p><strong>Time A:</strong> {{team_match_a.team.name}}</p>
       <p><strong>Time B:</strong> {{team_match_b.team.name}}</p>
+      <hr>
+      <form method="post">{% csrf_token %}
+        <select name="detailed" onchange="this.form.submit();">
+          {% for i, j in detailed %}
+          <option {% if match.detailed == i %} selected {% endif %} value="{{ i }}">{{ j }}</option>
+          {% endfor %}
+        </select>
+      </form>
     </div>
 
     <!-- cronômetro e placar -->

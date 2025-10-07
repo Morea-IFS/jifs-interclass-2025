@@ -15,9 +15,14 @@ class Status(models.IntegerChoices):
     shortly = 0, "Em breve"
     happening = 1, "Acontecendo"
     finished = 2, "Finalizada"
-    cancelado = 3, "Cancelada"
-    paused = 4, "Pausada"
-    empty = 5, "Nenhum"
+
+class Detailed(models.IntegerChoices):
+    In_a_moment = 0, "Em instantes"
+    live = 1, "Ao vivo"
+    Paused = 2, "Pausada"
+    finished = 3, "Finalizada"
+    penalties = 4, "Penaltis"
+    Escalation = 5, "Escalação"
 
 class Sport_types(models.IntegerChoices):
     futsal = 0, "Futsal"
@@ -59,9 +64,20 @@ class Point_types(models.IntegerChoices):
     empty = 3, "Nenhum"
 
 class Activity(models.IntegerChoices):
-    holder = 0, "Titular"
+    empty = 0, "Nenhum"
     reserve = 1, "Reserva"
-    empty = 2, "Nenhum"
+    goalkeeper = 2, "Goleiro"
+    defender = 3, "Fixo"
+    winger = 4, "Ala 1"
+    winger_two = 5, "Ala 2"
+    forward = 6, "Pivô"
+    setter = 7, "Levantador"
+    opposite = 8, "Oposto"
+    outside_hitter_one = 9, "Ponteiro 1"
+    outside_hitter_two = 10, "Ponteiro 2"
+    middle_blocker = 11, "Central"
+    libero = 12, "Líbero"
+    
 
 class Type_penalties(models.IntegerChoices):
     card_red = 0, "Cartão Vermelho"
@@ -117,7 +133,6 @@ class Event(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
     age = models.IntegerField(default=99)
-    tutorial = models.CharField(max_length=150, null=True, blank=True)
 
     player_need_instagram = models.BooleanField(default=True) 
     player_need_photo = models.BooleanField(default=True) 
@@ -255,7 +270,7 @@ class Team_match(models.Model):
         return f"{self.team} | {self.match}"
 
 class Volley_match(models.Model):
-    status = models.IntegerField(choices=Status.choices, default=Status.empty)
+    status = models.IntegerField(choices=Status.choices, default=Status.shortly)
     sets_team_a = models.IntegerField(default=0)
     sets_team_b = models.IntegerField(default=0)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -266,6 +281,7 @@ class Volley_match(models.Model):
 class Match(models.Model):
     sport = models.IntegerField(choices=Sport_types.choices)
     status = models.IntegerField(choices=Status.choices, default=Status.shortly)
+    detailed = models.IntegerField(choices=Detailed.choices, default=Detailed.In_a_moment)
     time_start = models.TimeField(blank=True, null=True)
     time_end = models.TimeField(blank=True, null=True)
     sexo = models.IntegerField(choices=Sexo_types.choices, default=Sexo_types.mixed, blank=True)
