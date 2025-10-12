@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import Group, Permission
 from .generators import generate_timer
 from django.contrib.auth import get_user_model
-from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Player_team_sport, UserSession
+from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.sessions.models import Session
 from django.utils import timezone
@@ -34,6 +34,22 @@ def serialize_players_match(players_qs):
             "name": i.player.name,
             "photo_url": i.player.photo.url if i.player.photo else default_photo_url,
             "funcao": i.get_activity_display(),
+        })
+    return result
+
+def serialize_occurrence(occurrence):
+    result = []
+    for i in occurrence:
+        match i.name:
+            case "Cartão Vermelho": img = 'icon-red-card.png'
+            case "Cartão Amarelo": img = 'icon-yellow-card.png'
+            case "Assistência": img = 'icon-assis-to.png'
+            case "Falta": img = 'icon-whistle.png'
+            case _: img = 'icon-ball.png'
+        result.append({
+            "name": i.name,
+            "details": i.details,
+            "img": f'/static/images/{img}',
         })
     return result
 
@@ -243,6 +259,35 @@ def send_scoreboard_penalties(instance):
     if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
     return match_data, match_public
+
+@receiver([post_save, post_delete], sender=Occurrence)
+def occurrence_updated(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
+    channel_layer = get_channel_layer()
+    match_public = send_scoreboard_occurrence(instance)
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'occurrence_new',
+            'match': match_public,
+        }
+    )
+
+def send_scoreboard_occurrence(instance):
+    if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
+    if Match.objects.filter(status=1):
+        match = Match.objects.get(status=1)
+        occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
+    else:
+        match = Match.objects.all().last()
+        occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
+    match_public = {
+        'occurrence': serialize_occurrence(occurrence),
+    }
+    
+    if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
+    if settings.DEBUG: print(match_public)
+    return match_public
 
 @receiver([post_save, post_delete], sender=Volley_match)
 def volley_updated(sender, instance, using, **kwargs):

@@ -123,6 +123,7 @@ socket.onmessage = function(e) {
             const scorematch = document.querySelectorAll('.score-ban');
             const cvolleyball = document.getElementById('container-volleyball')
             const cfutsal = document.getElementById('container-futsal')
+            const moments = document.getElementById('moments')
             
             if(match.detailed == "Escalação" && match.match_sport === "Voleibol"){
                 scorematch.forEach((k) => {
@@ -130,6 +131,27 @@ socket.onmessage = function(e) {
                 });
                 if(cvolleyball) cvolleyball.style.display = "flex";
                 if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "none";
+                
+                // Preencher escalação do vôlei
+                preencherEscalacaoVolei(match.players_a, match.players_b);
+
+            }else if(match.detailed == "Em instantes"){
+                scorematch.forEach((k) => {
+                    k.style.display = 'none';
+                });
+                if(cvolleyball) cvolleyball.style.display = "none";
+                if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "flex";
+
+                const team_name_a_mat = document.getElementById('moments-team-name-a');
+                const team_photo_a_mat = document.getElementById('moments-team-photo-a');
+                const team_name_b_mat = document.getElementById('moments-team-name-b');
+                const team_photo_b_mat = document.getElementById('moments-team-photo-b');
+                if (team_name_a_mat) team_name_a_mat.textContent = match.team_name_a;
+                if (team_photo_a_mat) team_photo_a_mat.src = match.photoA;
+                if (team_name_b_mat) team_name_b_mat.textContent = match.team_name_b;
+                if (team_photo_b_mat) team_photo_b_mat.src = match.photoB;
                 
                 // Preencher escalação do vôlei
                 preencherEscalacaoVolei(match.players_a, match.players_b);
@@ -140,42 +162,25 @@ socket.onmessage = function(e) {
                 });
                 if(cvolleyball) cvolleyball.style.display = "none";
                 if(cfutsal) cfutsal.style.display = "flex";
+                if(moments) moments.style.display = "none";
 
                 // Parar qualquer ciclo anterior
                 if (futsalCycleInterval) {
                     clearInterval(futsalCycleInterval);
                 }
 
-                // === TIME A (CASA) ===
-                const players_a = [
-                    { name: 'João Alberto Lucas', photo_url: '/media/photo_player/Group_2_imh8cyN.png', funcao: 'Ala 1' },
-                    { name: 'Luiz Alves Filho', photo_url: '/media/photo_player/logo-morea_JtWiGTd.png', funcao: 'Ala 2' },
-                    { name: 'Jonas Emanuel da Costa', photo_url: '/media/photo_player/Antoine_Griezmann_-_FootyRenders_8hjZZPt.png', funcao: 'Pivô' },
-                    { name: 'Alex da Rocha Vieira', photo_url: '/media/photo_player/Group_2_eMxPoIe.png', funcao: 'Goleiro' },
-                    { name: 'Ctfghjkl', photo_url: '/media/photo_player/Antoine_Griezmann_-_FootyRenders.png', funcao: 'Fixo' }
-                ];
-
-                // === TIME B (VISITANTE) ===
-                const players_b = [
-                    { name: 'Marcos Paulo Silva', photo_url: '/media/photo_player/Group_2_imh8cyN.png', funcao: 'Ala 1' },
-                    { name: 'Fernando Alves', photo_url: '/media/photo_player/logo-morea_JtWiGTd.png', funcao: 'Ala 2' },
-                    { name: 'Carlos Emanuel Santos', photo_url: '/media/photo_player/Antoine_Griezmann_-_FootyRenders_8hjZZPt.png', funcao: 'Pivô' },
-                    { name: 'Rafael da Rocha Lima', photo_url: '/media/photo_player/Group_2_eMxPoIe.png', funcao: 'Goleiro' },
-                    { name: 'Thiago Oliveira', photo_url: '/media/photo_player/Antoine_Griezmann_-_FootyRenders.png', funcao: 'Fixo' }
-                ];
-
                 // Salvar os jogadores
-                futsalPlayersA = players_a;
-                futsalPlayersB = players_b;
+                futsalPlayersA = match.players_a;
+                futsalPlayersB = match.players_b;
 
                 teamA = match.team_name_a
                 teamB = match.team_name_b
 
                 // Começar mostrando o time A (casa)
                 currentFutsalTeam = 'a';
-                mostrarTimeFutsal(currentFutsalTeam);
+                mostrarTimeFutsal(currentFutsalTeam, futsalPlayersA, futsalPlayersB);
                 futsalCycleInterval = setInterval(() => {
-                    alternarTimeFutsal();
+                    alternarTimeFutsal(futsalPlayersA, futsalPlayersB);
                 }, 7000); 
 
             }else{
@@ -184,6 +189,7 @@ socket.onmessage = function(e) {
                 });
                 if(cvolleyball) cvolleyball.style.display = "none";
                 if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "none";
                 
                 // Parar o ciclo do futsal se estiver ativo
                 if (futsalCycleInterval) {
@@ -353,6 +359,8 @@ function formatTime(seconds) {
 // Funções para preencher escalações
 function preencherEscalacaoVolei(playersA, playersB) {
     // Time A (Casa)
+    console.log(playersA);
+    console.log(playersB);
     if (playersA && playersA.length >= 6) {
         for (let i = 0; i < 3; i++) {
             const defesaElem = document.getElementById(`casa-defesa-${i+1}`);
@@ -364,6 +372,8 @@ function preencherEscalacaoVolei(playersA, playersB) {
                 img.src = playersA[i].photo_url || '';
                 img.alt = playersA[i].name || '';
                 nome.textContent = playersA[i].name || '';
+                console.log(playersA[i]);
+                console.log(playersA[i].photo_url);
             }
             
             if (ataqueElem && playersA[i+3]) {
@@ -385,6 +395,7 @@ function preencherEscalacaoVolei(playersA, playersB) {
             if (ataqueElem && playersB[i]) {
                 const img = ataqueElem.querySelector('img');
                 const nome = ataqueElem.querySelector('.jogador-nome');
+                console.log(playersB[i].photo_url)
                 img.src = playersB[i].photo_url || '';
                 img.alt = playersB[i].name || '';
                 nome.textContent = playersB[i].name || '';
@@ -402,8 +413,10 @@ function preencherEscalacaoVolei(playersA, playersB) {
 }
 
 // Funções para o ciclo do futsal
-function mostrarTimeFutsal(team) {
+function mostrarTimeFutsal(team, futsalPlayersA, futsalPlayersB) {
     console.log(`Mostrando time: ${team}`);
+    console.log("eita: 1",futsalPlayersA);
+    console.log("eita: 2",futsalPlayersB);
     
     // Primeiro, esconder todos os jogadores
     const todosJogadores = document.querySelectorAll('.quadra-futsal .jogador');
@@ -419,6 +432,7 @@ function mostrarTimeFutsal(team) {
         });
         
         // Preencher dados do time A
+        console.log("team a player sformando", futsalPlayersA);
         preencherTimeFutsal('a', futsalPlayersA);
     } else {
         const jogadoresTimeB = document.querySelectorAll('.quadra-futsal .time-b');
@@ -427,6 +441,7 @@ function mostrarTimeFutsal(team) {
         });
         
         // Preencher dados do time B
+        console.log("team b player sformando", futsalPlayersB);
         preencherTimeFutsal('b', futsalPlayersB);
     }
 }
@@ -439,14 +454,15 @@ function preencherTimeFutsal(team, players) {
         "Ala 2": "ala2",
         "Pivô": "pivo"
     };
-
+    console.log("preencherTimeFutsal",players);
     if (players) {
         players.forEach(player => {
             const idSuffix = funcaoToId[player.funcao];
             if (!idSuffix) return;
-
+            console.log("monatndo uu pô")
             const container = document.getElementById(`${idSuffix}-${team}`);
             if (!container) return;
+            console.log("monatndo players pô")
 
             const img = container.querySelector('img');
             const nome = container.querySelector('.nome');
@@ -458,10 +474,10 @@ function preencherTimeFutsal(team, players) {
     }
 }
 
-function alternarTimeFutsal() {
+function alternarTimeFutsal(futsalPlayersA, futsalPlayersB) {
     // Alternar entre time A e B
     currentFutsalTeam = currentFutsalTeam === 'a' ? 'b' : 'a';
-    mostrarTimeFutsal(currentFutsalTeam);
+    mostrarTimeFutsal(currentFutsalTeam, futsalPlayersA, futsalPlayersB);
     console.log(`Alternando para time: ${currentFutsalTeam === 'a' ? 'Casa' : 'Visitante'}`);
 }
 

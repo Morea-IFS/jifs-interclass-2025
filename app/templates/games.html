@@ -67,7 +67,7 @@
                                 alt="Gear Icon" /></button>
                         </form>
                     </a>
-                    <a class="games-config-link" href="">
+                    <a class="games-config-link" href="{% url 'match_settings' i.match.sport i.match.id %}">
                         <div class="games-config-item games-config-item-player">
                             <img class="games-config-item-img" src="{% static 'images/icon-player.png' %}"
                                 alt="Player Icon" />

@@ -200,6 +200,27 @@
         </div>
     </div>
 
+    <div class="in-moments" id="moments">
+        <div class="moments-left">
+            <div style="width: 100%; height: auto; display: flex; align-items: center;">
+                <img class="img-morea" src="{% static 'images/morea-sports-white.svg'%}" alt="Logo MOREA">
+                <img class="img-atum" src="{% static 'images/logo_atum_white.png'%}" alt="Logo ATUM">
+            </div>
+            <p>EM INSTANTES</p>
+        </div>
+        <div class="moments-right">
+            <div style="width: auto; display: flex; flex-direction: column; align-items: center;">
+                <img id="moments-team-photo-a" src="{{ team_match_a.team.photo.url }}" alt="Logo MOREA">
+                <p id="moments-team-name-a">{{ team_match_a.team.name }}</p>
+            </div>
+            <p>X</p>
+            <div style="width: auto; display: flex; flex-direction: column; align-items: center;">
+                <img id="moments-team-photo-b" src="{{ team_match_b.team.photo.url }}" alt="Logo MOREA">
+                <p id="moments-team-name-b">{{ team_match_b.team.name }}</p>
+            </div>
+        </div>
+    </div>
+
     <section class="section-project scoreboard score-ban" id="scoreboard" style="display: flex;">
         <!-- ... (restante do código do placar permanece igual) ... -->
         <div class="card-container" id="card-goal">

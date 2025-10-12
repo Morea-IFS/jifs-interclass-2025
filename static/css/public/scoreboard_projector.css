@@ -81,6 +81,55 @@ body {
     display: flex;
 }
 
+.in-moments {
+    width: 1920px;
+    height: 1080px;
+    display: none;
+    background-color: red;
+}
+.moments-left{
+    width: 1420px;
+    height: 100%;
+    background-color: #003f47; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-inline: 8em;
+}
+.moments-left p{
+    font-size: 7em;
+    font-weight: 700;
+    color: #ffffff;  
+    padding-left: 0.35em; 
+    padding-top: 0.5em;
+}
+.img-atum{
+    height: 14em;
+}
+.img-morea{
+    padding: 0;
+    padding-right: 75px;
+    height: 18em;
+}
+.moments-right{
+    width: 700px;
+    height: 100%;
+    background-color: #ffffff; 
+    display: flex;  
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5em;
+}
+.moments-right img{
+    width: 18em;
+}
+.moments-right p{
+    font-size: 3em;
+    
+    font-weight: 500;
+}
+
 .teams {
     display: flex;
     width: 100%;
@@ -208,17 +257,17 @@ body {
     align-items: center;
     justify-content: center;
     background-color: var(--white);
-    width: 284px;
+    width: 300px;
     height: 50px;
     position: absolute;
     top: 0;
-    right: calc(50% - 142px);
+    right: calc(50% - 150px);
     border-radius: 0 0 8px 8px;
 }
 
 .bordao_redes p {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .ball-sport {

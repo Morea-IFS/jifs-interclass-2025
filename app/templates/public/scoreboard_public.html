@@ -91,7 +91,7 @@
                         alt=""
                         aria-hidden="true"
                     />
-                    <p>Live</p>
+                    <p id="status-game">{{match.get_detailed_display}}</p>
                 </div>
                 <div class="sets-or-time">
                     <div class="title-set">
@@ -227,9 +227,9 @@
                         </div>
                     </div>
                     <div class="events-content">
-                        <ul class="icon">
+                        <ul class="icon" id="occurrences">
                             {% for i in events %}
-                                <li><p class="events"><strong><img class="icon-list" src="{% if i.name == "Cartão vermelho" %}{% static 'images/icon-red-card.png' %}{% elif i.name == "Cartão amarelo" %}{% static 'images/icon-yellow-card.png' %}{% elif i.name == "Assistência" %}{% static 'images/icon-assis-to.png' %}{% elif i.name == "Falta" %}{% static 'images/icon-whistle.png' %}{% endif %}"> {{i.name}}</strong>: {{i.details}}</p><br></li>
+                                <li><p class="events"><strong><img class="icon-list" {% if i.name == "Cartão Vermelho" %}src="{% static 'images/icon-red-card.png' %}"{% elif i.name == "Cartão Amarelo" %}src="{% static 'images/icon-yellow-card.png' %}"{% elif i.name == "Assistência" %}src="{% static 'images/icon-assis-to.png' %}"{% elif i.name == "Falta" %}src="{% static 'images/icon-whistle.png' %}"{% else %}src="{% static 'images/icon-ball.png' %}"{% endif %}> {{i.name}}</strong>: {{i.details}}</p></li>
                             {% endfor %}
                         </ul>
                     </div>

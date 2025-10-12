@@ -340,12 +340,16 @@ def login(request):
                         messages.success(request, f"Seja bem-vindo time {user.team.name}! para navegar, acesse o menu.")
                     else:
                         messages.success(request, f"Seja bem-vindo ao sistema {user.username}!")
-                    return redirect('Home')
+                    next_url = request.GET.get('next') or '/morea-admin'
+                    print(next_url)
+                    return redirect(next_url)
                 else:
                     messages.error(request,"Poxa! algo está errado, pode ser o usuário ou a senha.")
                     return redirect('login')
         else:
-            return redirect('Home')
+            next_url = request.GET.get('next') or '/morea-admin'
+            print(next_url)
+            return redirect(next_url)
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -989,7 +993,6 @@ def games(request):
                 
             }
             for match in matchs
-
         ]
         contex['context'] = context
         contex['events'] = Event.objects.all()
@@ -1073,6 +1076,58 @@ def games(request):
                 if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_b).exists():
                     i.delete()
             return redirect('games')
+
+@login_required(login_url="login")
+@permission_required('app.view_match', raise_exception=True)
+def match_settings(request, id_sport, id_match):
+    match = Match.objects.get(id=id_match)
+    current_get_params = request.GET.urlencode()
+    if request.method == "GET":
+        match=match
+        time_pauses = Time_pause.objects.filter(match=match)
+        assistance = Assistance.objects.filter(assis_to__team_match__match=match)
+
+        team_match_a = Team_match.objects.filter(match=match)[0]
+        team_match_b = Team_match.objects.filter(match=match)[1]
+        player_a = Player_match.objects.filter(team_match=team_match_a)
+        player_b = Player_match.objects.filter(team_match=team_match_b)
+        points_a = Point.objects.filter(team_match=team_match_a)
+        points_b = Point.objects.filter(team_match=team_match_b)
+        penalties_a = Penalties.objects.filter(team_match=team_match_a)
+        penalties_b = Penalties.objects.filter(team_match=team_match_b)
+        context = {
+            'match': match,
+            'player_a': player_a,
+            'player_b': player_b,
+            'points_a': points_a,
+            'points_b': points_b,
+            'penalties_a': penalties_a,
+            'penalties_b': penalties_b,
+            'team_match_a': team_match_a,
+            'team_match_b': team_match_b,
+            'time_pauses': time_pauses,
+            'assistance': assistance,
+        }
+        return render(request, 'match_settings.html', context)
+    else:
+        if 'pauses_delete' in request.POST:
+            pause = Time_pause.objects.get(id=request.POST.get('pauses_delete'))
+            pause.delete()
+        elif 'penalties_delete' in request.POST:
+            penalties = Penalties.objects.get(id=request.POST.get('penalties_delete'))
+            penalties.delete()
+        elif 'point_delete' in request.POST:
+            point = Point.objects.get(id=request.POST.get('point_delete'))
+            point.delete()
+        elif 'assistance_delete' in request.POST:
+            assistance = Assistance.objects.get(id=request.POST.get('assistance_delete'))
+            assistance.delete()
+        if current_get_params:
+            return redirect(f"{reverse('match_settings', args=[id_sport, id_match])}?{current_get_params}")
+        else:
+            return redirect('match_settings', match.sport, match.id)
+    
+
 
 @login_required
 def manage_session(request):
@@ -1873,40 +1928,60 @@ def scoreboard(request):
             player_end.activity = 1
             player_init.save(), player_end.save()
         elif 'penalties' in request.POST:
-            penalties = request.POST.get('penalties')
+            penalties_type = request.POST.get('penalties')
             player_match = Player_match.objects.get(id=request.POST.get('player_penalties'))
-            Penalties.objects.create(player=player_match.player, type_penalties=penalties, team_match=player_match.team_match)
+            penalties = Penalties.objects.create(player=player_match.player, type_penalties=int(penalties_type), team_match=player_match.team_match)
+            penalties.save()
+            
+            details = f"{player_match.player.name} recebeu {penalties.get_type_penalties_display().lower()}"
+            Occurrence.objects.create(name=penalties.get_type_penalties_display(), details=details, match=match)
         elif 'team-a-point' in request.POST:
-            if request.POST.get("team-a-point") == "+1" and request.POST.get("player-a-point"): 
-                player = Player.objects.get(id=request.POST.get("player-a-point"))
-                Point.objects.create(team_match=team_match_a, player=player, point_types=1)
-            elif request.POST.get("team-a-point") == "+1": 
-                Point.objects.create(team_match=team_match_a, point_types=1)
-            elif request.POST.get("team-a-point") == "-1": 
-                Point.objects.filter(team_match=team_match_a, point_types=1).last().delete()
+            if request.POST.get("team-a-point") == "+1":
+                if request.POST.get("player-a-point"):
+                    player = Player.objects.get(id=request.POST.get("player-a-point"))
+                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=1)
+                    details = f"{player.name} fez um {point.get_point_types_display().lower()}"
+                    Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
+                else: 
+                    point = Point.objects.create(team_match=team_match_a, point_types=1)
+                point.save()
+            else: 
+                point = Point.objects.filter(team_match=team_match_a, point_types=1).last().delete()
         elif 'team-b-point' in request.POST:
-            if request.POST.get("team-b-point") == "+1" and request.POST.get("player-b-point"):
-                player = Player.objects.get(id=request.POST.get("player-b-point"))
-                Point.objects.create(team_match=team_match_b, player=player, point_types=1)
-            elif request.POST.get("team-b-point") == "+1": 
-                Point.objects.create(team_match=team_match_b, point_types=1)
-            elif request.POST.get("team-b-point") == "-1": 
-                Point.objects.filter(team_match=team_match_b, point_types=1).last().delete()
+            if request.POST.get("team-b-point") == "+1":
+                if request.POST.get("player-b-point"):
+                    player = Player.objects.get(id=request.POST.get("player-b-point"))
+                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=1)
+                    details = f"{player.name} fez um {point.get_point_types_display().lower()}"
+                    Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
+                else: 
+                    point = Point.objects.create(team_match=team_match_b, point_types=1)
+                point.save()
+            else: 
+                point = Point.objects.filter(team_match=team_match_b, point_types=1).last().delete()
         elif 'team-a-aces' in request.POST:
-            if request.POST.get("team-a-aces") == "+1" and request.POST.get("player-a-point"): 
-                player = Player.objects.get(id=request.POST.get("player-a-aces"))
-                Point.objects.create(team_match=team_match_a, player=player, point_types=2)
-            elif request.POST.get("team-a-aces") == "+1": 
-                Point.objects.create(team_match=team_match_a, point_types=2)
-            elif request.POST.get("team-a-aces") == "-1": 
+            if request.POST.get("team-a-aces") == "+1":
+                if request.POST.get("player-a-point"):
+                    player = Player.objects.get(id=request.POST.get("player-a-point"))
+                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=2)
+                    details = f"{player.name} fez um {point.get_point_types_display().lower()}"
+                    Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
+                else: 
+                    point = Point.objects.create(team_match=team_match_a, point_types=2)
+                point.save()
+            else: 
                 Point.objects.filter(team_match=team_match_a, point_types=2).last().delete()
         elif 'team-b-aces' in request.POST:
-            if request.POST.get("team-b-aces") == "+1" and request.POST.get("player-b-point"):
-                player = Player.objects.get(id=request.POST.get("player-b-aces"))
-                Point.objects.create(team_match=team_match_b, player=player, point_types=2)
-            elif request.POST.get("team-b-aces") == "+1": 
-                Point.objects.create(team_match=team_match_b, point_types=2)
-            elif request.POST.get("team-b-aces") == "-1": 
+            if request.POST.get("team-b-aces") == "+1":
+                if request.POST.get("player-b-point"):
+                    player = Player.objects.get(id=request.POST.get("player-b-point"))
+                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=2)
+                    details = f"{player.name} fez um {point.get_point_types_display().lower()}"
+                    Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
+                else: 
+                    point = Point.objects.create(team_match=team_match_b, point_types=2)
+                point.save()
+            else: 
                 Point.objects.filter(team_match=team_match_b, point_types=2).last().delete()
         elif 'volley_new' in request.POST:
             print("Bora pro vô léi")
@@ -1933,10 +2008,10 @@ def scoreboard(request):
                 new_match.status = 1
                 new_match.save()
                 for i in players_match_a:
-                    player_match = Player_match.objects.create(match=new_match, team_match=team_a_match ,player=i.player, player_number=i.player_number)
+                    player_match = Player_match.objects.create(match=new_match, team_match=team_a_match ,player=i.player, player_number=i.player_number, activity=i.activity)
                     player_match.save()
                 for i in players_match_b:
-                    player_match = Player_match.objects.create(match=new_match, team_match=team_b_match ,player=i.player, player_number=i.player_number)
+                    player_match = Player_match.objects.create(match=new_match, team_match=team_b_match ,player=i.player, player_number=i.player_number, activity=i.activity)
                     player_match.save()
                 print("criado com sucesso")
                 return redirect('scoreboard')
@@ -1953,6 +2028,7 @@ def scoreboard(request):
             if Volley_match.objects.filter(status=1) or match.sport in [1,2]:
                 volley_match = get_object_or_404(Volley_match, status=1)
                 match.status = 2
+                match.detailed = 3
                 match.save()
                 volley_match.status= 2 
                 volley_match.save()
@@ -1967,7 +2043,7 @@ def scoreboard(request):
             print("chegou na primeira parte")
             next_match_id = request.POST.get('match_new')
             next_match = Match.objects.get(id=next_match_id)
-            if Volley_match.objects.filter(status=1) or match.sport in [1,2]:
+            if match.sport in [1,2]:
                 print("A partida anterios é de vollei")
                 volley_match = get_object_or_404(Volley_match, status=1)
                 print("volley: ",volley_match)
@@ -1977,7 +2053,7 @@ def scoreboard(request):
                 match.save()
                 print("mUdeii:")
                 print(volley_match.status)
-                volley_match.status= 2 
+                volley_match.status = 2 
                 volley_match.save()
                 print("Foi finalizada de vez!")
             else:
@@ -2001,12 +2077,9 @@ def scoreboard(request):
                 if team_matchs[0].team.photo and team_matchs[1].team.photo:
                     next_match.status = 1
                     next_match.save()
-                    print(next_match)
                     return redirect('scoreboard')
-                else:
-                    messages.error(request, "Os dados referentes a proxima partida estão incompletos, considere adicionar uma logo ao time(s)")
             else:
-                messages.error(request, "Os dados referentes a proxima partida estão incompletos, algum time está com os dados irregulares!")
+                messages.error(request, "É necessário que tenha 2 times!")
                 next_match.status = 3
                 next_match.save()
                 print(next_match)
@@ -2057,6 +2130,7 @@ def scoreboard(request):
                         pause.end_pause = time_now
                         pause.save()
                 match.time_end = time_now
+                match.detailed = 3
                 match.save()
                 return redirect('scoreboard')
             else:
@@ -2106,7 +2180,7 @@ def scoreboard_public(request, event_id):
             lack_a = Penalties.objects.filter(type_penalties=2,team_match=team_match_a).count()
             lack_b = Penalties.objects.filter(type_penalties=2,team_match=team_match_b).count()
             
-            occurrence = Occurrence.objects.filter(match=match)
+            occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
             context = {
                 'match': match,
                 'team_match_a':team_match_a,

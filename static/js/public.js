@@ -36,6 +36,7 @@ socket.onmessage = function(e) {
             const point_b = document.getElementById('points-b');
 
             const ball_sport = document.getElementById('ball-sport');
+            const status_game = document.getElementById('status-game');
 
             if(team_a) team_a.textContent = match.team_name_a;
             if(team_b) team_b.textContent = match.team_name_b;
@@ -52,6 +53,7 @@ socket.onmessage = function(e) {
             photo_b.forEach((i) => {
                 i.src = match.photoB;
             });
+            if(status_game) status_game.textContent = match.detailed;
             updatePlayerList("teamAList", match.players_a); 
             updatePlayerList("teamBList", match.players_b); 
 
@@ -149,6 +151,13 @@ socket.onmessage = function(e) {
 
             break;
 
+        case "occurrence":
+            console.log("occurrence", data.data);
+            const occurrence = data.data;
+            updateOccurrenceList(occurrence.occurrence)
+            
+            break;
+
         default:
             console.warn("Tipo de mensagem não reconhecido:", data.type);
     }
@@ -197,6 +206,34 @@ function updatePlayerList(containerId, players) {
         `;
 
         container.appendChild(li);
+    });
+
+}
+
+function updateOccurrenceList(occurrences) {
+
+    const container_o = document.getElementById("occurrences");
+    if (!container_o) {
+        console.warn("[occurrences] container_o não encontrado:", container_o);
+        return;
+    }
+
+    container_o.innerHTML = "";
+    console.log("lista: ",occurrences);
+
+    if (!occurrences || !Array.isArray(occurrences) || occurrences.length === 0) {
+        console.warn("[occurrences] container_o zerado :");
+        return;
+    }
+
+    occurrences.forEach(occurrence => {
+        console.log("rodando");
+        const li = document.createElement("li");
+        li.dataset.name = occurrence.name;
+        console.log(occurrence.name,occurrence.details,occurrence.img);
+        li.innerHTML = `<p class="events"><strong><img class="icon-list" src="${occurrence.img}" > ${occurrence.name}</strong>: ${occurrence.details}</p>`;
+
+        container_o.appendChild(li);
     });
 
 }
