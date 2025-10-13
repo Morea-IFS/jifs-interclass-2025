@@ -4,10 +4,16 @@ console.log(protocol + window.location.host + "/ws/scoreboard/");
 
 socket.addEventListener('open', (event) => {
     console.log('WebSocket connection opened:', event);
-    socket.send('Hello from client!'); // Send data after connection is open
+    socket.send('Hello from client!');
 });
 
 const timer = document.getElementById('timer');
+
+// Variáveis globais para controle do ciclo
+let futsalCycleInterval;
+let currentFutsalTeam = 'a'; // 'a' para casa, 'b' para visitante
+let futsalPlayersA = [];
+let futsalPlayersB = [];
 
 socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
@@ -64,7 +70,6 @@ socket.onmessage = function(e) {
             if(match.aces_a && match.aces_b){
                 if (aces_a_match) aces_a_match.textContent = match.aces_a;
                 if (aces_b_match) aces_b_match.textContent = match.aces_b;
-
             }
 
             const aces = document.querySelectorAll(".aces");
@@ -91,13 +96,12 @@ socket.onmessage = function(e) {
                 if (sets_a_match) sets_a_match.textContent = match.sets_a;
                 if (sets_b_match) sets_b_match.textContent = match.sets_b;
 
-
-                console.log("VOlei");
+                console.log("Vôlei");
                 if (namescore) namescore.textContent = "Sets";
                 if(ball_sport) ball_sport.src = '/static/images/ball-of-volley.png';
 
             }else{
-                console.log("utro spor");
+                console.log("Outro esporte");
                 aces.forEach((t) => {
                     t.style.display = 'none';
                 });
@@ -116,6 +120,84 @@ socket.onmessage = function(e) {
                 if(ball_sport) ball_sport.src = '/static/images/ball-of-handball.png';
             }
 
+            const scorematch = document.querySelectorAll('.score-ban');
+            const cvolleyball = document.getElementById('container-volleyball')
+            const cfutsal = document.getElementById('container-futsal')
+            const moments = document.getElementById('moments')
+            
+            if(match.detailed == "Escalação" && match.match_sport === "Voleibol"){
+                scorematch.forEach((k) => {
+                    k.style.display = 'none';
+                });
+                if(cvolleyball) cvolleyball.style.display = "flex";
+                if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "none";
+                
+                // Preencher escalação do vôlei
+                preencherEscalacaoVolei(match.players_a, match.players_b);
+
+            }else if(match.detailed == "Em instantes"){
+                scorematch.forEach((k) => {
+                    k.style.display = 'none';
+                });
+                if(cvolleyball) cvolleyball.style.display = "none";
+                if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "flex";
+
+                const team_name_a_mat = document.getElementById('moments-team-name-a');
+                const team_photo_a_mat = document.getElementById('moments-team-photo-a');
+                const team_name_b_mat = document.getElementById('moments-team-name-b');
+                const team_photo_b_mat = document.getElementById('moments-team-photo-b');
+                if (team_name_a_mat) team_name_a_mat.textContent = match.team_name_a;
+                if (team_photo_a_mat) team_photo_a_mat.src = match.photoA;
+                if (team_name_b_mat) team_name_b_mat.textContent = match.team_name_b;
+                if (team_photo_b_mat) team_photo_b_mat.src = match.photoB;
+                
+                // Preencher escalação do vôlei
+                preencherEscalacaoVolei(match.players_a, match.players_b);
+
+            }else if(match.detailed == "Escalação" && match.match_sport === "Futsal"){
+                scorematch.forEach((k) => {
+                    k.style.display = 'none';
+                });
+                if(cvolleyball) cvolleyball.style.display = "none";
+                if(cfutsal) cfutsal.style.display = "flex";
+                if(moments) moments.style.display = "none";
+
+                // Parar qualquer ciclo anterior
+                if (futsalCycleInterval) {
+                    clearInterval(futsalCycleInterval);
+                }
+
+                // Salvar os jogadores
+                futsalPlayersA = match.players_a;
+                futsalPlayersB = match.players_b;
+
+                teamA = match.team_name_a
+                teamB = match.team_name_b
+
+                // Começar mostrando o time A (casa)
+                currentFutsalTeam = 'a';
+                mostrarTimeFutsal(currentFutsalTeam, futsalPlayersA, futsalPlayersB);
+                futsalCycleInterval = setInterval(() => {
+                    alternarTimeFutsal(futsalPlayersA, futsalPlayersB);
+                }, 7000); 
+
+            }else{
+                scorematch.forEach((k) => {
+                    k.style.display = 'flex';
+                });
+                if(cvolleyball) cvolleyball.style.display = "none";
+                if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "none";
+                
+                // Parar o ciclo do futsal se estiver ativo
+                if (futsalCycleInterval) {
+                    clearInterval(futsalCycleInterval);
+                    futsalCycleInterval = null;
+                }
+            }
+
             stopwatch(match.seconds, match.status)
             break;
 
@@ -129,6 +211,12 @@ socket.onmessage = function(e) {
             const aces_a_point = document.getElementById('aces-a');
             const aces_b_point = document.getElementById('aces-b');
 
+            const card_goal = document.getElementById('card-goal');
+            const player_name = document.getElementById('card-player-name');
+            const player = document.getElementById('card-player-img')
+            const team_name = document.getElementById('card-team-name');
+            const team = document.getElementById('card-team-img')
+
             if (point_a_point) point_a_point.textContent = point.point_a;
             if (point_b_point) point_b_point.textContent = point.point_b;
 
@@ -136,23 +224,51 @@ socket.onmessage = function(e) {
                 if (aces_a_point) aces_a_point.textContent = point.aces_a;
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
             }
+
+            if (point.player_name && point.team_name){
+                if(card_goal) card_goal.style.display = "flex";
+
+                setTimeout(() => {
+                if (card_goal) card_goal.style.display = "none";
+                }, 8000);
+
+                if (player_name) player_name.textContent = point.player_name;
+                if (player) player.style.backgroundImage = `url(${point.player_img})`;
+                if (team_name) team_name.textContent = point.team_name;
+                if (team) team.src = point.team_img;
+            }
+
             break;
 
         case "penalties":
             console.log("penalties");
             const penalties = data.data;
 
+            
             const card_a_penalties = document.getElementById('card-a');
             const lack_a_penalties = document.getElementById('lack-a');
-
+            
             const card_b_penalties = document.getElementById('card-b');
             const lack_b_penalties = document.getElementById('lack-b');
+            
+            const alert_penalties = document.getElementById('alert-penalties');
+            const alert_img = document.getElementById('alert-penalties-img');
+            const infor_over = document.getElementById('info-overlay');
 
             if (card_a_penalties) card_a_penalties.textContent = penalties.card_a;
             if (lack_a_penalties) lack_a_penalties.textContent = penalties.lack_a;
 
             if (card_b_penalties) card_b_penalties.textContent = penalties.card_b;
             if (lack_b_penalties) lack_b_penalties.textContent = penalties.lack_b;
+
+            if (alert_penalties) alert_penalties.textContent = penalties.penalties_player;
+            if (alert_img) alert_img.src = penalties.penalties_url;
+            if (infor_over) infor_over.style.display = "flex";
+
+            setTimeout(() => {
+            if (infor_over) infor_over.style.display = "none";
+            }, 8000);
+
             break;
 
         case "time":
@@ -169,7 +285,6 @@ socket.onmessage = function(e) {
 
             const banner = document.querySelectorAll(".banner-scoreboard");
             const score = document.querySelectorAll('.score-ban');
-
 
             if (image.status === 1){
                 banner.forEach((i) => {
@@ -193,12 +308,15 @@ socket.onmessage = function(e) {
         default:
             console.warn("Tipo de mensagem não reconhecido:", data.type);
     }
-
-
 }
 
 socket.onclose = function(e) {
     console.error('WebSocket fechado com código: ' + e.code);
+    
+    // Limpar intervalos ao fechar conexão
+    if (futsalCycleInterval) {
+        clearInterval(futsalCycleInterval);
+    }
 };
 
 let timeoutId;
@@ -237,3 +355,135 @@ function formatTime(seconds) {
         .toString()
         .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
+
+// Funções para preencher escalações
+function preencherEscalacaoVolei(playersA, playersB) {
+    // Time A (Casa)
+    console.log(playersA);
+    console.log(playersB);
+    if (playersA && playersA.length >= 6) {
+        for (let i = 0; i < 3; i++) {
+            const defesaElem = document.getElementById(`casa-defesa-${i+1}`);
+            const ataqueElem = document.getElementById(`casa-ataque-${i+1}`);
+            
+            if (defesaElem && playersA[i]) {
+                const img = defesaElem.querySelector('img');
+                const nome = defesaElem.querySelector('.jogador-nome');
+                img.src = playersA[i].photo_url || '';
+                img.alt = playersA[i].name || '';
+                nome.textContent = playersA[i].name || '';
+                console.log(playersA[i]);
+                console.log(playersA[i].photo_url);
+            }
+            
+            if (ataqueElem && playersA[i+3]) {
+                const img = ataqueElem.querySelector('img');
+                const nome = ataqueElem.querySelector('.jogador-nome');
+                img.src = playersA[i+3].photo_url || '';
+                img.alt = playersA[i+3].name || '';
+                nome.textContent = playersA[i+3].name || '';
+            }
+        }
+    }
+
+    // Time B (Fora)
+    if (playersB && playersB.length >= 6) {
+        for (let i = 0; i < 3; i++) {
+            const ataqueElem = document.getElementById(`fora-ataque-${i+1}`);
+            const defesaElem = document.getElementById(`fora-defesa-${i+1}`);
+            
+            if (ataqueElem && playersB[i]) {
+                const img = ataqueElem.querySelector('img');
+                const nome = ataqueElem.querySelector('.jogador-nome');
+                console.log(playersB[i].photo_url)
+                img.src = playersB[i].photo_url || '';
+                img.alt = playersB[i].name || '';
+                nome.textContent = playersB[i].name || '';
+            }
+            
+            if (defesaElem && playersB[i+3]) {
+                const img = defesaElem.querySelector('img');
+                const nome = defesaElem.querySelector('.jogador-nome');
+                img.src = playersB[i+3].photo_url || '';
+                img.alt = playersB[i+3].name || '';
+                nome.textContent = playersB[i+3].name || '';
+            }
+        }
+    }
+}
+
+// Funções para o ciclo do futsal
+function mostrarTimeFutsal(team, futsalPlayersA, futsalPlayersB) {
+    console.log(`Mostrando time: ${team}`);
+    console.log("eita: 1",futsalPlayersA);
+    console.log("eita: 2",futsalPlayersB);
+    
+    // Primeiro, esconder todos os jogadores
+    const todosJogadores = document.querySelectorAll('.quadra-futsal .jogador');
+    todosJogadores.forEach(jogador => {
+        jogador.style.display = 'none';
+    });
+
+    // Mostrar apenas os jogadores do time especificado
+    if (team === 'a') {
+        const jogadoresTimeA = document.querySelectorAll('.quadra-futsal .time-a');
+        jogadoresTimeA.forEach(jogador => {
+            jogador.style.display = 'block';
+        });
+        
+        // Preencher dados do time A
+        console.log("team a player sformando", futsalPlayersA);
+        preencherTimeFutsal('a', futsalPlayersA);
+    } else {
+        const jogadoresTimeB = document.querySelectorAll('.quadra-futsal .time-b');
+        jogadoresTimeB.forEach(jogador => {
+            jogador.style.display = 'block';
+        });
+        
+        // Preencher dados do time B
+        console.log("team b player sformando", futsalPlayersB);
+        preencherTimeFutsal('b', futsalPlayersB);
+    }
+}
+
+function preencherTimeFutsal(team, players) {
+    const funcaoToId = {
+        "Goleiro": "goleiro",
+        "Fixo": "fixo",
+        "Ala 1": "ala1",
+        "Ala 2": "ala2",
+        "Pivô": "pivo"
+    };
+    console.log("preencherTimeFutsal",players);
+    if (players) {
+        players.forEach(player => {
+            const idSuffix = funcaoToId[player.funcao];
+            if (!idSuffix) return;
+            console.log("monatndo uu pô")
+            const container = document.getElementById(`${idSuffix}-${team}`);
+            if (!container) return;
+            console.log("monatndo players pô")
+
+            const img = container.querySelector('img');
+            const nome = container.querySelector('.nome');
+
+            img.src = player.photo_url || '';
+            img.alt = player.name || '';
+            nome.textContent = player.name || '';
+        });
+    }
+}
+
+function alternarTimeFutsal(futsalPlayersA, futsalPlayersB) {
+    // Alternar entre time A e B
+    currentFutsalTeam = currentFutsalTeam === 'a' ? 'b' : 'a';
+    mostrarTimeFutsal(currentFutsalTeam, futsalPlayersA, futsalPlayersB);
+    console.log(`Alternando para time: ${currentFutsalTeam === 'a' ? 'Casa' : 'Visitante'}`);
+}
+
+// Limpar intervalo quando a página for fechada
+window.addEventListener('beforeunload', function() {
+    if (futsalCycleInterval) {
+        clearInterval(futsalCycleInterval);
+    }
+});

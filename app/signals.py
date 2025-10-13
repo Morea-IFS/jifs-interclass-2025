@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import Group, Permission
 from .generators import generate_timer
 from django.contrib.auth import get_user_model
-from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Player_team_sport, UserSession
+from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.sessions.models import Session
 from django.utils import timezone
@@ -18,273 +18,64 @@ default_photo_url = f"{settings.MEDIA_URL}defaults/team.png"
 
 def serialize_players(players_qs):
     result = []
-    for pm in players_qs:
-        player = pm.player
+    for i in players_qs:
         result.append({
-            "name": player.name,
-            "photo_url": player.photo.url if player.photo else default_photo_url,
-            "number": getattr(pm, 'player_number', None),
-            "instagram": player.instagram,
+            "name": i.player.name,
+            "photo_url": i.player.photo.url if i.player.photo else default_photo_url,
+            "funcao": i.get_activity_display(),
+            "number": getattr(i, 'player_number', None),
         })
     return result
 
-def generate_score_data():
-    if Volley_match.objects.filter(status=1).exists():
-        volley_match = Volley_match.objects.get(status=1)
-        if Match.objects.filter(volley_match=volley_match, status=1).exists():
-            volley_match = Volley_match.objects.get(status=1)
-            if Match.objects.filter(volley_match=volley_match).count() > 1:
-                match = Match.objects.filter(volley_match=volley_match, status=1).last()
-            else:
-                match = Match.objects.get(volley_match=volley_match, status=1)
+def serialize_players_match(players_qs):
+    result = []
+    for i in players_qs:
+        result.append({
+            "name": i.player.name,
+            "photo_url": i.player.photo.url if i.player.photo else default_photo_url,
+            "funcao": i.get_activity_display(),
+        })
+    return result
 
-            team_matchs = Team_match.objects.filter(match=match)
-            if len(team_matchs) < 2:
-                match.status = 3
-                match.save()
-                return None
-
-            team_match_a = team_matchs[0]
-            team_match_b = team_matchs[1]
-
-            if (match.volley_match.sets_team_a + match.volley_match.sets_team_b) % 2 == 0:
-                # par
-                sets_1 = match.volley_match.sets_team_a
-                sets_2 = match.volley_match.sets_team_b
-                team_1 = team_match_a
-                team_2 = team_match_b
-                point_1 = Point.objects.filter(team_match=team_match_a).count()
-                point_2 = Point.objects.filter(team_match=team_match_b).count()
-                aces_1 = Point.objects.filter(point_types=2, team_match=team_match_a).count()
-                aces_2 = Point.objects.filter(point_types=2, team_match=team_match_b).count()
-                lack_1 = Penalties.objects.filter(type_penalties=2, team_match=team_match_a).count()
-                lack_2 = Penalties.objects.filter(type_penalties=2, team_match=team_match_b).count()
-                card_1 = Penalties.objects.filter(type_penalties=0,team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_a).count()
-                card_2 = Penalties.objects.filter(type_penalties=0,team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_b).count()
-            else:
-                # impar
-                sets_1 = match.volley_match.sets_team_b
-                sets_2 = match.volley_match.sets_team_a
-                team_1 = team_match_b
-                team_2 = team_match_a
-                point_1 = Point.objects.filter(team_match=team_match_b).count()
-                point_2 = Point.objects.filter(team_match=team_match_a).count()
-                aces_1 = Point.objects.filter(point_types=2, team_match=team_match_b).count()
-                aces_2 = Point.objects.filter(point_types=2, team_match=team_match_a).count()
-                lack_1 = Penalties.objects.filter(type_penalties=2, team_match=team_match_b).count()
-                lack_2 = Penalties.objects.filter(type_penalties=2, team_match=team_match_a).count()
-                card_1 = Penalties.objects.filter(type_penalties=0,team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_a).count()
-                card_2 = Penalties.objects.filter(type_penalties=0,team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_b).count()
-
-            point_a = Point.objects.filter(point_types=1, team_match=team_match_a).count()
-            point_b = Point.objects.filter(point_types=1, team_match=team_match_b).count()
-            aces_a = Point.objects.filter(point_types=2, team_match=team_match_a).count()
-            aces_b = Point.objects.filter(point_types=2, team_match=team_match_b).count()
-
-            players_a_qs = Player_match.objects.filter(team_match=team_1)
-            players_b_qs = Player_match.objects.filter(team_match=team_2)
-            players_a = serialize_players(players_a_qs)
-            players_b = serialize_players(players_b_qs)
-
-            if Banner.objects.filter(status=0).exists(): 
-                banner_score = Banner.objects.get(status=0).image.url
-                banner_status_score = True
-            else: 
-                banner_score = static('images/logo-jifs-intercampi.svg')
-                banner_status_score = False
-
-            name_scoreboard = 'Sets'
-            ball_sport = static('images/ball-of-volley.png')
-
-            if match.sexo == 1: 
-                img_sexo = static('images/icon-female.svg')
-                sexo_color = '#ff32aa' 
-            else: 
-                img_sexo = static('images/icon-male.svg')
-                sexo_color = '#3a7bd5'
-
-            match_data = {
-                'agua': "agua",
-                'team_a': team_1.team.name,
-                'team_b': team_2.team.name,
-                'team_a_score': team_match_a.team.name,
-                'team_b_score': team_match_b.team.name,
-                'sets_a': sets_1,
-                'sets_b': sets_2,
-                'players_a': players_a,
-                'players_b': players_b,
-                'teamAcolor': '#02007a',
-                'teamBcolor': '#d10000',
-                'points_a_score': point_a,
-                'points_b_score': point_b,
-                'banner_score': banner_score,
-                'banner_status_score': banner_status_score,
-                'points_a': point_1,
-                'points_b': point_2,
-                'lack_a': lack_1,
-                'lack_b': lack_2,
-                'img_sexo': img_sexo,
-                'sexo_color': sexo_color,
-                'ball_sport': ball_sport,
-                'aces_or_card': "Aces",
-                'aces_or_card_a': aces_1,
-                'aces_or_card_b': aces_2,
-                'card_a': card_1,
-                'card_b': card_2,
-                'aces_a_score': aces_a,
-                'aces_b_score': aces_b,
-                'sexo_text': match.get_sexo_display(),
-                'name_scoreboard': name_scoreboard,
-                'photoA': team_1.team.photo.url if team_1.team.photo else default_photo_url,
-                'photoB': team_2.team.photo.url if team_2.team.photo else default_photo_url,
-                'sets_time_auto': False,
-            }
-            print("sets on: ", match_data)
-            return match_data
-
-    elif Match.objects.filter(status=1).exists():
-        match = Match.objects.get(status=1)
-        team_matchs = Team_match.objects.filter(match=match)
-        if len(team_matchs) < 2:
-            return None
-        team_match_a = team_matchs[0]
-        team_match_b = team_matchs[1]
-
-        point_a = Point.objects.filter(team_match=team_match_a).count()
-        point_b = Point.objects.filter(team_match=team_match_b).count()
-        lack_a = Penalties.objects.filter(type_penalties=2, team_match=team_match_a).count()
-        lack_b = Penalties.objects.filter(type_penalties=2, team_match=team_match_b).count()
-        card_a = Penalties.objects.filter(type_penalties=0, team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_a).count()
-        card_b = Penalties.objects.filter(type_penalties=0, team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_b).count()
-
-        players_a_qs = Player_match.objects.filter(team_match=team_match_a)
-        players_b_qs = Player_match.objects.filter(team_match=team_match_b)
-        players_a = serialize_players(players_a_qs)
-        players_b = serialize_players(players_b_qs)
-
-        seconds, status = generate_timer(match)
-
-        if Banner.objects.filter(status=0).exists(): 
-            banner_score = Banner.objects.get(status=0).image.url
-            banner_status_score = True
-        else: 
-            banner_score = static('images/logo-jifs-intercampi.svg')
-            banner_status_score = False
-
-        if match.sexo == 1: 
-            img_sexo = static('images/icon-female.svg')
-            sexo_color = '#ff32aa' 
-        else: 
-            img_sexo = static('images/icon-male.svg')
-            sexo_color = '#3a7bd5'
-
-        if match.sport == 3:
-            ball_sport = static('images/ball-of-handball.png')
-        else:
-            ball_sport = static('images/ball-of-futsal.png')
-
-        name_scoreboard = 'Tempo'
-
-        match_data = {
-            'team_a': team_match_a.team.name,
-            'team_b': team_match_b.team.name,
-            'team_a_score': team_match_a.team.name,
-            'team_b_score': team_match_b.team.name,
-            'teamAcolor': '#02007a',
-            'teamBcolor': '#d10000',
-            'points_a': point_a,
-            'points_b': point_b,
-            'lack_a': lack_a,
-            'lack_b': lack_b,
-            'sets_a': "00:00",
-            'sets_b': 0,
-            'card_a': card_a,
-            'card_b': card_b,
-            'players_a': players_a,
-            'players_b': players_b,
-            'banner_score': banner_score,
-            'banner_status_score': banner_status_score,
-            'points_a_score': point_a,
-            'points_b_score': point_b,
-            'aces_or_card': "Cartões",
-            'aces_or_card_a': card_a,
-            'aces_or_card_b': card_b,
-            'img_sexo': img_sexo,
-            'sexo_color': sexo_color,
-            'sexo_text': match.get_sexo_display(),
-            'ball_sport': ball_sport,
-            'name_scoreboard': name_scoreboard,
-            'photoA': team_match_a.team.photo.url if team_match_a.team.photo else default_photo_url,
-            'photoB': team_match_b.team.photo.url if team_match_b.team.photo else default_photo_url,
-            'seconds': seconds,
-            'status': status,
-            'sets_time_auto': True,
-        }
-        print(match_data)
-        return match_data
-    else:
-        if Banner.objects.filter(status=0).exists(): 
-            banner_score = Banner.objects.get(status=0).image.url
-            banner_status_score = True
-        else: 
-            banner_score = static('images/logo-jifs-intercampi.svg')
-            banner_status_score = False
-        match_data = {
-            'team_a': "TIME A",
-            'team_b': "TIME B",
-            'points_a': 0,
-            'points_b': 0,
-            'aces_or_card': "Cartões",
-            'aces_or_card_a': 0,
-            'aces_or_card_b': 0,
-            'teamAcolor': '#02007a',
-            'teamBcolor': '#d10000',
-            'lack_a': 0,
-            'lack_b': 0,
-            'sets_a': "00:00",
-            'sets_b': 0,
-            'card_a': 0,
-            'card_b': 0,
-            'name_scoreboard': "PLACAR",
-            'photoA': default_photo_url,
-            'photoB': default_photo_url,
-            'banner_score': banner_score,
-            'banner_status_score': banner_status_score,
-        }
-        return match_data
-    
-def send_score_update():
-    channel_layer = get_channel_layer()
-    match_data = generate_score_data()
-    async_to_sync(channel_layer.group_send)(
-        'placar',
-        {
-            'type': 'match_update',
-            'match': match_data,
-        }
-    )
+def serialize_occurrence(occurrence):
+    result = []
+    for i in occurrence:
+        match i.name:
+            case "Cartão Vermelho": img = 'icon-red-card.png'
+            case "Cartão Amarelo": img = 'icon-yellow-card.png'
+            case "Assistência": img = 'icon-assis-to.png'
+            case "Falta": img = 'icon-whistle.png'
+            case _: img = 'icon-ball.png'
+        result.append({
+            "name": i.name,
+            "details": i.details,
+            "img": f'/static/images/{img}',
+        })
+    return result
 
 @receiver([post_save, post_delete], sender=Team)
 def team_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos times :)")
-    send_score_update()
+    pass
 
-
-@receiver([post_save, post_delete], sender=Volley_match)
-def volley_updated(sender, instance, using, **kwargs):
-    if settings.DEBUG: print("hmm, mudanças nas partidas de vôlei :)")
-    send_score_update()
 
 @receiver([post_save, post_delete], sender=Point)
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_point()
+    match_data, match_public = send_scoreboard_point()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'point_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'point_new',
+            'match': match_public,
         }
     )
 
@@ -309,6 +100,8 @@ def send_scoreboard_point():
         point_a = Point.objects.filter(team_match=team_match_a).count()
         point_b = Point.objects.filter(team_match=team_match_b).count()
 
+        point = Point.objects.all().last()
+
         match_data = {
             'point_a': point_a,
             'point_b': point_b,
@@ -316,26 +109,43 @@ def send_scoreboard_point():
         if match.volley_match:
             match_data['aces_a'] = Point.objects.filter(point_types=2, team_match=team_match_a).count()
             match_data['aces_b'] = Point.objects.filter(point_types=2, team_match=team_match_b).count()
+
+        #if point.player and point.team_match and point.point_types == 0:
+        if point:
+            if point.player and point.team_match:
+                match_data['team_name'] = point.team_match.team.name if point.team_match.team.name else "TEAM",
+                match_data['team_img'] = point.team_match.team.photo.url if point.team_match.team.photo.url else default_photo_url,
+                match_data['player_name'] = point.player.name if point.player.name else "PLAYER",
+                match_data['player_img'] = point.player.photo.url if point.player.photo.url else default_photo_url,
+    
     else:
         match_data = {
             'point_a': 0,
             'point_b': 0,
         }   
+    match_public = match_data
     if settings.DEBUG: print("eita, saindo signals (pontos) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 
 @receiver([post_save, post_delete], sender=Time_pause)
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças no (tempo) :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_time()
+    match_data, match_public = send_scoreboard_time()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'time_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'time_new',
+            'match': match_public,
         }
     )
 
@@ -349,12 +159,15 @@ def send_scoreboard_time():
             'seconds': seconds,
             'status': status,
         }
+
+    match_public = match_data
+
     if settings.DEBUG: print("eita, saindo signals (tempo) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Banner)
-def point_changed(sender, instance, using, **kwargs):
+def banner_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas banner :)")
     channel_layer = get_channel_layer()
     match_data = send_scoreboard_banner()
@@ -382,7 +195,7 @@ def send_scoreboard_banner():
 def penalties_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_penalties()
+    match_data, match_public = send_scoreboard_penalties(instance)
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
@@ -390,8 +203,15 @@ def penalties_updated(sender, instance, using, **kwargs):
             'match': match_data,
         }
     )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'penalties_new',
+            'match': match_public,
+        }
+    )
 
-def send_scoreboard_penalties():
+def send_scoreboard_penalties(instance):
     if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
     if Match.objects.filter(status=1):
         match = Match.objects.get(status=1)
@@ -420,6 +240,12 @@ def send_scoreboard_penalties():
             'card_a': card_a,
             'card_b': card_b,
         }
+        if instance.player:
+            print(instance.type_penalties)
+            match_data['penalties_player'] = instance.player.name
+            if instance.type_penalties == '0': match_data['penalties_url'] = static('images/card-red.png')
+            elif instance.type_penalties == '1': match_data['penalties_url'] = static('images/card-yellow.png')
+            else: match_data['penalties_url'] = static('images/whistle.png')
     else:
         match_data = {
             'lack_a': 0,
@@ -427,20 +253,69 @@ def send_scoreboard_penalties():
             'card_a': 0,
             'card_b': 0,
         }   
+    
+    match_public = match_data
+    
     if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
+
+@receiver([post_save, post_delete], sender=Occurrence)
+def occurrence_updated(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nas penalidades :)")
+    channel_layer = get_channel_layer()
+    match_public = send_scoreboard_occurrence(instance)
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'occurrence_new',
+            'match': match_public,
+        }
+    )
+
+def send_scoreboard_occurrence(instance):
+    if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
+    if Match.objects.filter(status=1):
+        match = Match.objects.get(status=1)
+        occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
+    else:
+        match = Match.objects.all().last()
+        occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
+    match_public = {
+        'occurrence': serialize_occurrence(occurrence),
+    }
+    
+    if settings.DEBUG: print("eita, saindo signals (penalidades) sendo preparadas. :)")
+    if settings.DEBUG: print(match_public)
+    return match_public
+
+@receiver([post_save, post_delete], sender=Volley_match)
+def volley_updated(sender, instance, using, **kwargs):
+    if settings.DEBUG: print("hmm, mudanças nas partidas de vôlei :)")
+    if instance.status == 1:
+        channel_match()
 
 @receiver([post_save, post_delete], sender=Match)
 def match_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas partidas :)")
+    if instance.status == 1:
+        channel_match()
+
+def channel_match():
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_match()
+    match_data, match_public = send_scoreboard_match()
     async_to_sync(channel_layer.group_send)(
         'scoreboard',
         {
             'type': 'match_new',
             'match': match_data,
+        }
+    )
+    async_to_sync(channel_layer.group_send)(
+        'public',
+        {
+            'type': 'match_new',
+            'match': match_public,
         }
     )
 
@@ -470,9 +345,12 @@ def send_scoreboard_match():
                 team_match_b = team_matchs[0]
                 sets_b = match.volley_match.sets_team_a
                 sets_a = match.volley_match.sets_team_b
+            ball_sport = static('images/ball-of-volley.png')
         else:
             team_match_a = team_matchs[0]
             team_match_b = team_matchs[1]
+            if match.sport == 3: ball_sport = static('images/ball-of-handball.png')
+            else: ball_sport = static('images/ball-of-futsal.png')
 
         point_a = Point.objects.filter(team_match=team_match_a).count()
         point_b = Point.objects.filter(team_match=team_match_b).count()
@@ -487,11 +365,13 @@ def send_scoreboard_match():
             'match_sexo': match.get_sexo_display(),
             'match_sport': match.get_sport_display(),
             'point_a': point_a,
+            'ball_sport': ball_sport,
             'point_b': point_b,
             'lack_a': lack_a,
             'lack_b': lack_b,
             'card_a': card_a,
             'card_b': card_b,
+            'detailed': match.get_detailed_display(),
             'photoA': team_match_a.team.photo.url if team_match_a.team.photo else default_photo_url,
             'photoB': team_match_b.team.photo.url if team_match_b.team.photo else default_photo_url,
         }
@@ -504,6 +384,24 @@ def send_scoreboard_match():
         else:
             match_data['seconds'] = seconds
             match_data['status'] = status
+
+        if match.detailed == 5: 
+            players_a = Player_match.objects.filter(team_match=team_match_a)
+            players_b = Player_match.objects.filter(team_match=team_match_b)
+            
+            lineup = {
+                'players_a': serialize_players_match(players_a),
+                'players_b': serialize_players_match(players_b),
+            }
+            match_data['lineup'] = lineup
+
+        players_a_qs = Player_match.objects.filter(team_match=team_match_a)
+        players_b_qs = Player_match.objects.filter(team_match=team_match_b)
+
+        match_public = match_data
+        
+        match_public['players_a'] = serialize_players(players_a_qs)
+        match_public['players_b'] = serialize_players(players_b_qs)
         
     else:
         match_data = {
@@ -520,9 +418,12 @@ def send_scoreboard_match():
             'photoA': default_photo_url,
             'photoB': default_photo_url,
         }   
+
+        match_public = match_data
+
     if settings.DEBUG: print("eita, saindo signals (partidas) sendo preparadas. :)")
     if settings.DEBUG: print(match_data)
-    return match_data
+    return match_data, match_public
 
 @receiver(post_save, sender=User)
 def set_type_for_staff(sender, instance, created, **kwargs):

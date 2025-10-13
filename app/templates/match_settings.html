@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/match_settings.css' %}">
+<title>ATUM ADMIN</title>
+{% endblock head %}
+
+{% block navbar %}
+
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1" style="justify-content: start;">
+        <div class="title-adm">
+            <h1>
+                PARTIDA #{{match.id}}
+            </h1>
+            {% if perms.app.add_attachments %}
+            <div class="title-buttons">
+                {% if match.sport == 1 or match.sport == 2 %} 
+                <h3>{{match.volley_match.id}}</h3>
+                <form method="get">
+                    <select name="e" onchange="this.form.submit();">
+                        <option value="">SETS</option>
+                        <option selected>1º Set - ID 01</option>
+                        <option >2º Set - ID 02</option>
+                        {% for i in sets %}
+                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% else %}
+                <h3>{{match.get_detailed_display|upper}}</h3>
+                <h3>
+                    {{match.get_status_display|upper}}
+                </h3>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="accordion">
+            <div class="accordion-header accordion-header-show" onclick="minhaFuncao('accordion-header-1','accordion-content-1')" id="accordion-header-1">
+                <p>Dados gerais</p><i class="fa-solid fa-angle-down"></i>
+            </div>
+            <div class="accordion-content accordion-show" id="accordion-content-1">
+                <div class="data-info">
+                    <h3>{{team_match_a.team.name}} x {{team_match_b.team.name}}</h3>
+                    <br>
+                    <p>PARTIDA DE {{match.get_sport_display|upper}} {{match.get_sexo_display|upper}}</p>
+                    <p><i class="fa-regular fa-clock"></i> INICIO: {{match.time_start|default:'-'}}</p>
+                    <p><i class="fa-regular fa-clock"></i> FIM: {{match.time_end|default:'-'}}</p>
+                    <br>
+                    <p><i class="fa-regular fa-clock"></i> ACRÉSCIMO: {{match.add|default:'-'}}</p>
+                </div>
+            </div>
+        </div>
+        <ul class="nav-list">
+            {% with active_tab=request.GET.tab|default:"atletas" %}
+            <li class="{% if active_tab == 'tempo' %}nav-item-show{% endif %}">
+                <a href="?tab=tempo">Tempo</a>
+            </li>
+            <li class="{% if active_tab == 'penalidades' %}nav-item-show{% endif %}">
+                <a href="?tab=penalidades">Penalidades</a>
+            </li>
+            <li class="{% if active_tab == 'pontuacao' %}nav-item-show{% endif %}">
+                <a href="?tab=pontuacao">Pontuação</a>
+            </li>
+            <li class="{% if active_tab == 'assistencia' %}nav-item-show{% endif %}">
+                <a href="?tab=assistencia">Assistência</a>
+            </li>
+            <li class="{% if active_tab == 'atletas' %}nav-item-show{% endif %}">
+                <a href="?tab=atletas">Atletas</a>
+            </li>
+            {% endwith %}
+        </ul>
+        <div class="tab-content">
+            {% with active_tab=request.GET.tab|default:"atletas" %}
+            
+            {% if active_tab == 'tempo' %}
+            <div class="content-tempo item-content">
+                {% if perms.app.view_time_pause %}
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-3','accordion-content-3')" id="accordion-header-3">
+                        <p>Pausas</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-3">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>INICIO</th>
+                                    <th>FIM</th>
+                                    {% if perms.app.delete_time_pause %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in time_pauses %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.start_pause }}</td>
+                                    <td>{{ i.end_pause }}</td>
+                                    {% if perms.app.delete_time_pause %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="pauses_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUMA PAUSAS.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if active_tab == 'penalidades' %}
+            <div class="content-penalidades item-content">
+                {% if perms.app.view_penalties %}
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-3','accordion-content-3')" id="accordion-header-3">
+                        <p>Penalidades {{team_match_a.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-3">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TIPO</th>
+                                    <th>HORA</th>
+                                    {% if perms.app.delete_penalties %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in penalties_a %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.get_type_penalties_display }}</td>
+                                    <td>{{ i.time }}</td>
+                                    {% if perms.app.delete_penalties %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="penalties_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUMA PENALIDADE.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                <br>
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-3-1','accordion-content-3-1')" id="accordion-header-3-1">
+                        <p>Penalidades {{team_match_b.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-3-1">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TIPO</th>
+                                    <th>HORA</th>
+                                    {% if perms.app.delete_penalties %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in penalties_b %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.get_type_penalties_display }}</td>
+                                    <td>{{ i.time }}</td>
+                                    {% if perms.app.delete_penalties %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="penalties_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUMA PENALIDADE.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if active_tab == 'pontuacao' %}
+            <div class="content-pontuacao item-content">
+                {% if perms.app.view_point %}
+                <div class="accordion">
+                    <div class="accordion-header" onclick="minhaFuncao('accordion-header-4','accordion-content-4')" id="accordion-header-4">
+                        <p>Pontuação {{team_match_a.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-4">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TIPO</th>
+                                    <th>HORA</th>
+                                    {% if perms.app.delete_point %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in points_a %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name|default:'---' }}</td>
+                                    <td>{{ i.get_point_types_display }}</td>
+                                    <td>{{ i.time }}</td>
+                                    {% if perms.app.delete_point %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="point_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM PONTO.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                <br>
+                <div class="accordion">
+                    <div class="accordion-header" onclick="minhaFuncao('accordion-header-4-1','accordion-content-4-1')" id="accordion-header-4-1">
+                        <p>Pontuação {{team_match_b.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-4-1">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TIPO</th>
+                                    <th>HORA</th>
+                                    {% if perms.app.delete_point %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in points_b %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.get_point_types_display }}</td>
+                                    <td>{{ i.time }}</td>
+                                    {% if perms.app.delete_point %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="point_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM PONTO.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if active_tab == 'assistencia' %}
+            <div class="content-assistencia item-content">
+                {% if perms.app.view_assistance %}
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-3-1','accordion-content-3-1')" id="accordion-header-3-1">
+                        <p>Assistências</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-3-1">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>PONTO</th>
+                                    {% if perms.app.delete_assistance %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in assistance %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.assis_to }}</td>
+                                    {% if perms.app.delete_assistance %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="assistance_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUMA ASSISTÊNCIA.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if active_tab == 'atletas' %}
+            <div class="content-atletas item-content">
+                {% if perms.app.view_player and perms.app.view_player_team_sport %}
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-7','accordion-content-7')" id="accordion-header-7">
+                        <p>Atletas {{team_match_a.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-7">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TURMA</th>
+                                </tr>
+
+                                {% for i in player_a %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.player.classroom }}</td>
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                <br>
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-7-1','accordion-content-7-1')" id="accordion-header-7-1">
+                        <p>Atletas {{team_match_b.team.name}}</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-7-1">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>TURMA</th>
+                                </tr>
+
+                                {% for i in player_b %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.player.name }}</td>
+                                    <td>{{ i.player.classroom }}</td>
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<style>
+
+
+</style>
+
+<script>
+    
+function minhaFuncao(contenth, contentd) {
+    const accordionh = document.getElementById(contenth)
+    const accordiond = document.getElementById(contentd)
+    accordionh.classList.toggle('accordion-header-show');
+    accordiond.classList.toggle('accordion-show');
+}
+
+</script>
+
+{% endblock content %}

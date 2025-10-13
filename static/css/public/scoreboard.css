@@ -49,6 +49,9 @@ nav {
     width: 100%;
     padding: 0 16px;
 }
+.icon li{
+    padding-bottom: 13px;
+}
 
 img.logo-jiifs {
     height: 60px;
@@ -479,7 +482,8 @@ main {
     display: flex;
     align-items: center;
     gap: 8px;
-
+    font-weight: 500;
+    font-size: 1px;
 }
 
 .player-text-informations {
@@ -488,18 +492,23 @@ main {
     gap: 10px;
 }
 
-.player-instagram a {
-    font-weight: 400;
-    font-size: 16px;
-}
-
 .player-instagram img {
-    height: 22px;
+    height: 30px;
 }
 
 .events-content {
     display: none;
     gap: 134px;
+}
+
+.lineup-content {
+    display: none;
+    gap: 134px;
+}
+
+.lineup-info{
+    display: flex;
+    justify-content: center;
 }
 
 footer {

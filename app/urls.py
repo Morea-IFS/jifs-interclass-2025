@@ -38,6 +38,7 @@ urlpatterns = [
     path('settings', views.settings, name="settings"),
     path('settings_new', views.settings_new, name="settings_new"),
     path("status/", views.manage_session, name="manage_sessions"),
+    path("match/<int:id_sport>/<int:id_match>", views.match_settings, name="match_settings"),
 
     path('manage/statement', views.statement_manage, name="statement_manage"),
     path('register/statement', views.statement_register, name="statement_register"),
