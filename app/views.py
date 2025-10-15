@@ -26,7 +26,6 @@ from django.urls import reverse
 
 User = get_user_model()
 
-@login_required(login_url="login")
 def events_list(request):
     if request.method == 'GET':
         events = Event.objects.all()
