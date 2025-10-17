@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/nav.css' %}">
     <link rel="stylesheet" href="{% static 'css/public/home.css' %}">
-    <title>JIIFS HOME</title>
+    <title>ATUM SPORTS</title>
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-LM08HSDTFS"></script>
@@ -25,7 +25,7 @@
         <nav>
             <img
                 class="logo-jiifs"
-                src="{% static 'images/logo-morea-sports.svg' %}"
+                src="{% static 'images/ATUM-FAV-ICON.svg' %}"
                 alt="JIIFS"
             />
             <ul>
@@ -38,9 +38,8 @@
                 </li>
                 <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                 <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
-                <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
                 <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
-                <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
                 <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
             </ul>
             <img
@@ -61,16 +60,16 @@
                         <input class="search-input" type="text" name="" id="" placeholder="Pesquisar" >
                     </div>
                     <div class="game-filters">
-                        <div class="games-filter">
+                        <form class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
-                            <select name="sport" id="sport">
+                            <select name="sport" id="sport" onchange="this.form.submit();">
                                 <option value="all">Esporte</option>
-                                <option value="Futsal">Futsal</option>
-                                <option value="Voleibol">Vôlei</option>
-                                <option value="Queimado">Queimado</option>
+                                {% for i in event_sports %}
+                                <option value="{{i.id}}">{{i.get_sport_display}}</option>
+                                {% endfor %}
                             </select>
                             <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
-                        </div>
+                        </form>
                         <div class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
                             <select name="genre" id="genre">
@@ -103,12 +102,11 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_futsal_masc %}
-                        <div class="game">
+                        <div class="game row-bottom">
                             <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
                             <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
                             <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
                         </div>
-                        <br>
                         {% endfor %}
                     </div>
                 </div>
@@ -120,14 +118,13 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_futsal_fem %}
-                        <div class="game">
+                        <div class="game row-bottom">
                             <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
-                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="score" >{{ i.points_a }} - {{ i.points_b }}</p>
                             <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
                         </div>
                         <br>
                         {% endfor %}
-                        
                     </div>
                 </div>
                 {% endif %}
@@ -138,8 +135,9 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_volei_masc %}
+                        <h3>JOGO #{{i.volley_match.id}} ( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
                             {% for match in i.matches %}
-                                <div class="game">
+                                <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
                                     <p class="score">{{ match.times.0.points }} - {{ match.times.1.points }}</p>
                                     <p class="team-b"><img class="logo-time" src="{{ match.times.1.photo_url }}" alt="Logo time">{{ match.times.1.name }}</p>
@@ -158,7 +156,7 @@
                     <div class="games-of-block">
                         {% for i in context_volei_fem %}
                             {% for match in i.matches %}
-                                <div class="game">
+                                <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
                                     <p class="score">{{ match.times.0.points }} - {{ match.times.1.points }}</p>
                                     <p class="team-b"><img class="logo-time" src="{{ match.times.1.photo_url }}" alt="Logo time">{{ match.times.1.name }}</p>
@@ -176,9 +174,9 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_queimado_masc %}
-                        <div class="game">
+                        <div class="game row-bottom">
                             <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
-                            <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
+                            <p class="score" {% if i.match.status == 2 %} style="background-color: red;" {% endif %}>{{ i.points_a }} - {{ i.points_b }}</p>
                             <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
                         </div>
                         <br>
@@ -193,7 +191,7 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_queimado_fem %}
-                        <div class="game">
+                        <div class="game row-bottom">
                             <p class="team-a">{{ i.times.0.team.name }} <img class="logo-time" src="{{ i.times.0.team.photo.url }}" alt="Logo time"></p>
                             <p class="score">{{ i.points_a }} - {{ i.points_b }}</p>
                             <p class="team-b"><img class="logo-time" src="{{ i.times.1.team.photo.url }}" alt="Logo time">{{ i.times.1.team.name }}</p>
@@ -246,5 +244,6 @@
         </ul>
     </nav>
     <script src="{% static 'js/home.js' %}"></script>
+
 </body>
 </html>

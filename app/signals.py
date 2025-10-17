@@ -63,26 +63,27 @@ def team_updated(sender, instance, using, **kwargs):
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
-    match_data, match_public = send_scoreboard_point()
+    match_data, match_public = send_scoreboard_point(instance)
     async_to_sync(channel_layer.group_send)(
-        'scoreboard',
+        f'scoreboard_{instance.team_match.match.event.id}',
         {
             'type': 'point_new',
             'match': match_data,
         }
     )
     async_to_sync(channel_layer.group_send)(
-        'public',
+        f'public_{instance.team_match.match.event.id}',
         {
             'type': 'point_new',
             'match': match_public,
         }
     )
 
-def send_scoreboard_point():
+def send_scoreboard_point(instance):
+    event = instance.team_match.match.event
     if settings.DEBUG: print("eita, mudanças (pontos) sendo preparadas. :)")
-    if Match.objects.filter(status=1):
-        match = Match.objects.get(status=1)
+    if Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
         team_matchs = Team_match.objects.filter(match=match)
         if len(team_matchs) < 2:
             return None
@@ -100,7 +101,7 @@ def send_scoreboard_point():
         point_a = Point.objects.filter(team_match=team_match_a).count()
         point_b = Point.objects.filter(team_match=team_match_b).count()
 
-        point = Point.objects.all().last()
+        point = Point.objects.filter(team_match__match=match).last()
 
         match_data = {
             'point_a': point_a,
@@ -133,26 +134,27 @@ def send_scoreboard_point():
 def point_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças no (tempo) :)")
     channel_layer = get_channel_layer()
-    match_data, match_public = send_scoreboard_time()
+    match_data, match_public = send_scoreboard_time(instance)
     async_to_sync(channel_layer.group_send)(
-        'scoreboard',
+        f'scoreboard_{instance.match.event.id}',
         {
             'type': 'time_new',
             'match': match_data,
         }
     )
     async_to_sync(channel_layer.group_send)(
-        'public',
+        f'public_{instance.match.event.id}',
         {
             'type': 'time_new',
             'match': match_public,
         }
     )
 
-def send_scoreboard_time():
+def send_scoreboard_time(instance):
+    event = instance.match.event
     if settings.DEBUG: print("eita, mudanças (tempo) sendo preparadas. :)")
-    if Match.objects.filter(status=1):
-        match = Match.objects.get(status=1)
+    if Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
         seconds, status = generate_timer(match)
 
         match_data = {
@@ -170,21 +172,22 @@ def send_scoreboard_time():
 def banner_changed(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas banner :)")
     channel_layer = get_channel_layer()
-    match_data = send_scoreboard_banner()
+    match_data = send_scoreboard_banner(instance)
     async_to_sync(channel_layer.group_send)(
-        'scoreboard',
+        f'scoreboard_{instance.event.id}',
         {
             'type': 'banner_new',
             'match': match_data,
         }
     )
 
-def send_scoreboard_banner():
+def send_scoreboard_banner(instance):
     if settings.DEBUG: print("eita, mudanças (banner) sendo preparadas. :)")
     match_data = {}
-    if Banner.objects.filter(status=0).exists(): 
+    event = instance.event
+    if Banner.objects.filter(status=0, event=event).exists(): 
         match_data['status'] = 1
-        match_data['banner'] = Banner.objects.filter(status=0)[0].image.url
+        match_data['banner'] = Banner.objects.filter(status=0, event=event)[0].image.url
     else:
         match_data['status'] = 0
     if settings.DEBUG: print("eita, saindo signals (banner) sendo preparadas. :)")
@@ -197,14 +200,14 @@ def penalties_updated(sender, instance, using, **kwargs):
     channel_layer = get_channel_layer()
     match_data, match_public = send_scoreboard_penalties(instance)
     async_to_sync(channel_layer.group_send)(
-        'scoreboard',
+        f'scoreboard_{instance.team_match.match.event.id}',
         {
             'type': 'penalties_new',
             'match': match_data,
         }
     )
     async_to_sync(channel_layer.group_send)(
-        'public',
+        f'public_{instance.team_match.match.event.id}',
         {
             'type': 'penalties_new',
             'match': match_public,
@@ -212,9 +215,10 @@ def penalties_updated(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_penalties(instance):
+    event = instance.team_match.match.event
     if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
-    if Match.objects.filter(status=1):
-        match = Match.objects.get(status=1)
+    if Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
         team_matchs = Team_match.objects.filter(match=match)
         if len(team_matchs) < 2:
             return None
@@ -266,7 +270,7 @@ def occurrence_updated(sender, instance, using, **kwargs):
     channel_layer = get_channel_layer()
     match_public = send_scoreboard_occurrence(instance)
     async_to_sync(channel_layer.group_send)(
-        'public',
+        f'public_{instance.match.event.id}',
         {
             'type': 'occurrence_new',
             'match': match_public,
@@ -274,12 +278,13 @@ def occurrence_updated(sender, instance, using, **kwargs):
     )
 
 def send_scoreboard_occurrence(instance):
+    event = instance.match.event
     if settings.DEBUG: print("eita, mudanças (penalidades) sendo preparadas. :)")
-    if Match.objects.filter(status=1):
-        match = Match.objects.get(status=1)
+    if Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
         occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
     else:
-        match = Match.objects.all().last()
+        match = Match.objects.filter(event=event).last()
         occurrence = Occurrence.objects.filter(match=match).order_by('-datetime')[:10]
     match_public = {
         'occurrence': serialize_occurrence(occurrence),
@@ -293,41 +298,42 @@ def send_scoreboard_occurrence(instance):
 def volley_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas partidas de vôlei :)")
     if instance.status == 1:
-        channel_match()
+        channel_match(instance)
 
 @receiver([post_save, post_delete], sender=Match)
 def match_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nas partidas :)")
     if instance.status == 1:
-        channel_match()
+        channel_match(instance)
 
-def channel_match():
+def channel_match(instance):
     channel_layer = get_channel_layer()
-    match_data, match_public = send_scoreboard_match()
+    match_data, match_public = send_scoreboard_match(instance)
     async_to_sync(channel_layer.group_send)(
-        'scoreboard',
+        f'scoreboard_{instance.event.id}',
         {
             'type': 'match_new',
             'match': match_data,
         }
     )
     async_to_sync(channel_layer.group_send)(
-        'public',
+        f'public_{instance.event.id}',
         {
             'type': 'match_new',
             'match': match_public,
         }
     )
 
-def send_scoreboard_match():
+def send_scoreboard_match(instance):
     if settings.DEBUG: print("eita, mudanças (partidas) sendo preparadas. :)")
     match = None
-    if Volley_match.objects.filter(status=1).exists():
-        volley_match = Volley_match.objects.get(status=1)
-        if Match.objects.filter(volley_match=volley_match, status=1).exists():
-            match = Match.objects.get(volley_match=volley_match, status=1)
-    elif Match.objects.filter(status=1):
-        match = Match.objects.get(status=1)
+    event = instance.event
+    if Volley_match.objects.filter(status=1, event=event).exists():
+        volley_match = Volley_match.objects.get(status=1, event=event)
+        if Match.objects.filter(volley_match=volley_match, status=1, event=event).exists():
+            match = Match.objects.get(volley_match=volley_match, status=1, event=event)
+    elif Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
         seconds, status = generate_timer(match)
     if match:
         team_matchs = Team_match.objects.filter(match=match)
@@ -460,8 +466,9 @@ def create_user_common_group(sender, **kwargs):
         "view_event_sport",
         "view_help",
 
-        "view_match",
         "view_team",
+        "add_team",
+        
         "view_event",
 
         "add_player",
@@ -488,6 +495,11 @@ def create_user_common_group(sender, **kwargs):
         "change_voluntary",
         "delete_voluntary",
         "view_voluntary",
+
+        "add_match",
+        "change_match",
+        "delete_match",
+        "view_match",
 
         "add_point",
         "add_assistance",

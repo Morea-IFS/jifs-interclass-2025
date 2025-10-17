@@ -22,7 +22,11 @@
             </h1>
             {% if perms.app.add_match %}
             <div class="title-buttons">
+                {% if user.event_user or select_event %}
                 <span onclick="openModal()"><p>Novo</p></span>
+                {% else %}
+                <h3>EVENTO -></h3>
+                {% endif %}
                 {% if user.type == 0 %}
                 <form method="get">
                     <select name="e" onchange="this.form.submit();">
@@ -55,7 +59,7 @@
                     <h3>{% if i.match.Winner_team %} Vencedor:  {{ i.match.Winner_team }} {% else %} {{i.match.time_match|date:"d/m/Y - H:i" }} {% endif %}</h3>
                 </div>
                 <div class="games-config">  
-                    <a class="games-config-link" {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' %}" {% endif %}>
+                    <a class="games-config-link" {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' i.match.event.id %}" {% endif %}>
                         <div {% if i.match.status == 1 %} class="games-config-item games-config-item-active" {% else %} class="games-config-item games-config-item-desactive"{% endif %}>
                             <img class="games-config-item-img" src="{% static 'images/icon-timer.png' %}"
                                 alt="Timer Icon" />
@@ -96,47 +100,37 @@
         <span class="close" onclick="closeModal()">&times;</span>
         <h2>Cadastrar partida</h2>
         <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <label for="sport">Esporte</label>
-            <select id="sport" name="sport">
-                <option selected disabled value="None">Selecione o esporte</option>
-                {% for value, name in sport %}
-                <option value="{{value }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-            <label for="sexo">Sexo</label>
-            <select id="sexo" name="sexo">
-                <option selected disabled value="None">Selecione o sexo</option>
-                <option value="0">Masculino</option>
-                <option value="1">Feminino</option>
-            </select>
-            <label for="times-a">Time A</label>
-            <select id="time-a" name="time_a" required>
-                <option selected disabled value="None">Selecione o time</option>
-                {% for i in team %}
-                <option value="{{i.id}}">{{i.name}}</option>
-                {% endfor %}
-            </select>
-            <label for="times-b">Time B</label>
-            <select id="times-b" name="time_b" required>
-                <option selected disabled value="None">Selecione o time</option>
-                {% for i in team %}
-                <option value="{{i.id}}">{{i.name}}</option>
-                {% endfor %}
-            </select>
-            {% if not user.event_user %}
-            <label for="nome">Evento</label>
-            <select id="user_admin" name="event">
-                <option selected disabled>Selecione o evento</option>
-                {% for i in events %}
-                <option value="{{i.id}}">{{i.name}}</option>
-                {% endfor %}
-            </select>
-            {% endif %}
-            <label for="date-game">Horário</label>
-            <input class="input-data" type="datetime-local" name="datetime" id="date-game" />
-            <p style="color: #6d6c6c; font-size: 15px;">*Informe a data e horário da partida ou coloque o horário por ordem de partida.</p>
-            <button type="submit">Cadastrar</button>
+        {% csrf_token %}
+        <label for="sport">Esporte</label>
+        <select id="sport" name="sport">
+            <option selected disabled value="None">Selecione o esporte</option>
+            {% for i in event_sports %}
+            <option value="{{i.id}}">
+            {{i.get_sport_display}}
+            {% if i.masc %}(masc){% endif %}
+            {% if i.fem %}(fem){% endif %}
+            {% if i.mist %}(mist){% endif %}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="sexo">Sexo</label>
+        <select id="sexo" name="sexo" disabled>
+            <option selected disabled value="None">Selecione o sexo</option>
+        </select>
+
+        <div id="team-selects" style="display: none;">
+            <label for="time-a">Time A</label>
+            <select id="time-a" name="time_a" required></select>
+
+            <label for="time-b">Time B</label>
+            <select id="time-b" name="time_b" required></select>
+        </div>
+
+        <label for="date-game">Horário</label>
+        <input class="input-data" type="datetime-local" name="datetime" id="date-game" />
+        <p style="color: #6d6c6c; font-size: 15px;">*Informe a data e horário da partida ou coloque o horário por ordem de partida.</p>
+        <button type="submit">Cadastrar</button>
         </form>
     </div>
 </div>
@@ -150,5 +144,107 @@
         document.getElementById("eventModal").style.display = "none";
     }
 </script>
+<script>
+  const sportSelect = document.getElementById("sport");
+  const sexoSelect = document.getElementById("sexo");
+  const timeASelect = document.getElementById("time-a");
+  const timeBSelect = document.getElementById("time-b");
+  const teamDiv = document.getElementById("team-selects");
+
+  // ---------- 1️⃣ Carregar sexos disponíveis ao selecionar esporte ----------
+  async function carregarSexos() {
+    const sport = sportSelect.value;
+    if (sport && sport !== "None") {
+      const response = await fetch(`/get_sexos/?sport=${sport}`);
+      const data = await response.json();
+
+      // Limpa e preenche select de sexo
+      sexoSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      data.sexos.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.value;
+        opt.textContent = s.label;
+        sexoSelect.appendChild(opt);
+      });
+
+      sexoSelect.disabled = false;
+      // Limpa e oculta selects de times
+      teamDiv.style.display = "none";
+      timeASelect.innerHTML = '';
+      timeBSelect.innerHTML = '';
+    } else {
+      sexoSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      sexoSelect.disabled = true;
+      teamDiv.style.display = "none";
+    }
+  }
+
+  // ---------- 2️⃣ Carregar times disponíveis ao selecionar esporte + sexo ----------
+  async function carregarTimes() {
+    const sport = sportSelect.value;
+    const sexo = sexoSelect.value;
+
+    if (sport && sexo && sport !== "None" && sexo !== "None") {
+      const response = await fetch(`/get_teams/?sport=${sport}&sexo=${sexo}`);
+      const data = await response.json();
+
+      // Limpa selects
+      timeASelect.innerHTML = '<option selected disabled value="None">Selecione o time</option>';
+      timeBSelect.innerHTML = '<option selected disabled value="None">Selecione o time</option>';
+
+      // Preenche selects com os times retornados
+      data.teams.forEach(team => {
+        const optA = document.createElement("option");
+        const optB = document.createElement("option");
+        optA.value = team.id;
+        optB.value = team.id;
+        optA.textContent = team.name;
+        optB.textContent = team.name;
+        timeASelect.appendChild(optA);
+        timeBSelect.appendChild(optB);
+      });
+
+      teamDiv.style.display = "block";
+    } else {
+      teamDiv.style.display = "none";
+    }
+  }
+
+  // ---------- 3️⃣ Evitar selecionar mesmo time em A e B ----------
+  function atualizarOpcoesTimes() {
+    const selectedA = timeASelect.value;
+    const selectedB = timeBSelect.value;
+
+    // Reabilita todas as opções antes de desabilitar
+    for (let opt of timeASelect.options) opt.disabled = false;
+    for (let opt of timeBSelect.options) opt.disabled = false;
+
+    if (selectedA && selectedA !== "None") {
+      for (let opt of timeBSelect.options) {
+        if (opt.value === selectedA) opt.disabled = true;
+      }
+    }
+    if (selectedB && selectedB !== "None") {
+      for (let opt of timeASelect.options) {
+        if (opt.value === selectedB) opt.disabled = true;
+      }
+    }
+  }
+
+  // ---------- 4️⃣ Event listeners ----------
+  sportSelect.addEventListener("change", () => {
+    carregarSexos();
+    // Limpa e esconde times
+    teamDiv.style.display = "none";
+    timeASelect.innerHTML = '';
+    timeBSelect.innerHTML = '';
+  });
+
+  sexoSelect.addEventListener("change", carregarTimes);
+  timeASelect.addEventListener("change", atualizarOpcoesTimes);
+  timeBSelect.addEventListener("change", atualizarOpcoesTimes);
+</script>
+
+
 {% endif %}
 {% endblock content %}

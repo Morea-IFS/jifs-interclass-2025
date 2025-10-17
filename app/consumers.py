@@ -6,12 +6,15 @@ from django.conf import settings
 class ScoreboardConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         if settings.DEBUG: print("Websocket da rota scoreboard funcionando.")
-        await self.channel_layer.group_add("scoreboard", self.channel_name)
+        self.event_id = self.scope['url_route']['kwargs']['event_id']
+        self.group_name = f"scoreboard_{self.event_id}"
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
         if settings.DEBUG: print("Websocket da rota scoreboard desconectado.")
-        await self.channel_layer.group_discard("scoreboard", self.channel_name)
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
 
     async def time_new(self, event):
@@ -56,11 +59,14 @@ class ScoreboardConsumer(AsyncWebsocketConsumer):
 
 class PublicConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.channel_layer.group_add("public", self.channel_name)
+        self.event_id = self.scope['url_route']['kwargs']['event_id']
+        self.group_name = f"public_{self.event_id}"
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("public", self.channel_name)
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def time_new(self, event):
         if settings.DEBUG: print("Canal de comunicação do scoreboard: time.")
@@ -102,7 +108,7 @@ class PublicConsumer(AsyncWebsocketConsumer):
             "data": match_public
         }))
 
-class AdminConsumer(AsyncWebsocketConsumer):
+class AdminConsumer(AsyncWebsocketConsumer):          
     async def connect(self):
         await self.channel_layer.group_add("admin", self.channel_name)
         await self.accept()

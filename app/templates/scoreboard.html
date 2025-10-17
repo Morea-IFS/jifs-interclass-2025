@@ -226,7 +226,7 @@
 {% endblock head %}
 
 {% block content %}
-<div class="scoreboard-all-block">
+<div class="scoreboard-all-block" id="scoreboard_event_id" data-event-id="{{event.id}}">
   <div class="title-ad-scor">
     <h1>PAINEL DE CONTROLE DO JOGO</h1>
   </div>
@@ -529,7 +529,7 @@
   </div>
 </div>
 
-<script src="{% static 'js/timer.js' %}"></script>
+<script src="{% static 'js/admin.js' %}"></script>
 
 <script>
   // menu e conteúdo

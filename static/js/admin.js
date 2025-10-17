@@ -1,7 +1,7 @@
 const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-const eventId = document.body.dataset.eventId;
-const socket = new WebSocket(protocol + window.location.host + "/ws/scoreboard/" + eventId + "/");
-console.log(protocol + window.location.host + "/ws/scoreboard/" + eventId + "/");
+const eventId = document.getElementById('scoreboard_event_id').dataset.eventId;
+const socket = new WebSocket(protocol + window.location.host + "/ws/admin/" + eventId + "/");
+console.log(protocol + window.location.host + "/ws/admin/" + eventId + "/");
 
 socket.addEventListener('open', (event) => {
     console.log('WebSocket connection opened:', event);
