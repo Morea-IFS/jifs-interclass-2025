@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/about_us.css' %}" />
-    <title>JIIFS - SOBRE NÓS</title>
+    <title>ATUM - SOBRE NÓS</title>
 </head>
 <body>
     <div class="modal-mobile mobile"></div>
@@ -15,7 +15,7 @@
             <nav>
                 <img
                     class="logo-jiifs"
-                    src="{% static 'images/logo-morea-sports.svg' %}"
+                    src="{% static 'images/ATUM-FAV-ICON.svg' %}"
                     alt="JIIFS"
                 />
                 <ul>
@@ -28,9 +28,8 @@
                     </li>
                     <li><a href="{%url 'home_public' event.id %}" class="home-link">Home</a></li>
                     <li><a href="{%url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
-                    <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
                     <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
-                    <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                    <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
                     <li><a href="{% url 'login' %}" class="login-link">Login</a></li>
                 </ul>
                 <img
@@ -44,7 +43,7 @@
             <section class="about-morea">
                 <div class="content">
                     <h1>Mais Um Projeto <span class="stroke-morea">MOREA</span></h1>
-                    <p>Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto</p>
+                    <p>Um projeto MOREA-SPORTS desenvolvido por alunos do IFS campus Lagarto.</p>
                     <p>Veja mais em nosso <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">site</a>.</p>
                     <div class="social-media">
                         <a class="link-instagram-morea" href="https://www.instagram.com/projeto.morea?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{%static 'images/icon-instagram-colorful.svg'%}" alt="" aria-hidden="true"><p>@projeto.morea</p></a>
@@ -59,12 +58,151 @@
                 <div class="advisors">
                     <h2>Orientadores</h2>
                     <div class="members">
-                       
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-alfredo-vieira.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Alfredo Vieira</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/0184910034142755" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/alfredo_menezes?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/alfredomvieira" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-rubens-matos.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Rubens Matos</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="https://lattes.cnpq.br/2244198352280617" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/rubens.matos?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/rubensmatosjr" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-fabio-nunes.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Fabio Nunes</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="active-members">
                     <h2>Membros Ativos</h2>
                     <div class="members">
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-sayran-felix.png' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Sayran Felix</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/3308832783495250" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/sayranfelix/" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/sayranfs" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-edvan-barbosa.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Edvan Barbosa</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="https://lattes.cnpq.br/6715351860663582" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/edvan_barbosaaaaa/?igsh=OXYycjRtdzRkemR6" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/edvanbarbosa" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-alexandre-michael.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Alexandre Michael</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/0744449750120052" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/alexandre._.michael/?utm_source=ig_web_button_share_sheet" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/Alexandre-Michael" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-victor-araujo.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Victor Araujo</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/0396602990452551" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/victor_araujo1981/?utm_source=ig_web_button_share_sheet" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/Victor-arauj0" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-silas-santos.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Silas Santos</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/6448625749792597" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/slas_sstos/?utm_source=ig_web_button_share_sheet" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/Silas-Prog" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-marcos-vinicius.jpg' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Vinicius Souza</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="http://lattes.cnpq.br/7240440169673564" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/thevinisouza/?utm_source=ig_web_button_share_sheet" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/Vineees" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="member">
+                            <div class="photo-person">
+                                <img src="{% static 'images/perfil-felipe-carvalho.png' %}" alt="Foto do Membro"/>
+                            </div>
+                            <div class="content-of-person">
+                                <h3>Felipe Carvalho Leal</h3>
+                                <p></p>
+                                <a class="link-morea-or-lattes" href="https://lattes.cnpq.br/9147323402699881" target="_blank">Currículo Lattes</a>
+                                <div class="socia-media">
+                                    <a href="https://www.instagram.com/felipscarvalho?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank"><img src="{% static 'images/icon-instagram-colorful.svg' %}" alt="Instagram" aria-hidden="true"></a>
+                                    <a href="https://github.com/felipscarvalho" target="_blank"><img src="{% static 'images/icon-github.svg' %}" alt="Github" aria-hidden="true"></a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -75,11 +75,23 @@
                     <p>C. técnica</p>
                 </button>
 
+                <button name="all_arbitrator" type="submit" class="relatorio-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>Árbritagem</p>
+                </button>
+
                 {% for i in teams %}
-                    <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
-                        <i class="fas fa-university"></i>
-                        <p> {{ i.team.name }} <br> {{ i.sport.get_sport_display }} <br> {{ i.get_sexo_display  }} </p>
-                    </button>
+                <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                    <i class="fas fa-university"></i>
+                    <p> {{ i.name }}</p>
+                </button>
+                {% endfor %}
+
+                {% for i in teams_sport %}
+                <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                    <i class="fas fa-university"></i>
+                    <p> {{ i.team.name }} <br> {{ i.sport.get_sport_display }} <br> {{ i.get_sexo_display  }} </p>
+                </button>
                 {% endfor %}
             </form>
             {% else %}

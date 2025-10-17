@@ -11,6 +11,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 import os, time
 from typing import List, Dict
 from django.http import HttpResponse
+from django.templatetags.static import static
 from .models import Certificate, Match, Occurrence, Match, Time_pause
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
@@ -124,6 +125,18 @@ def generate_badges(players, t, namebadge):
                 except Exception as e:
                     print("Erro ao carregar foto:", e)
 
+            imag = user.team_sport.team.event.logo_badge
+            if imag:
+                try:
+                    imag = imag.path
+                    center_x = x + nametag_width / 2 - 41
+                    center_y = y + nametag_height - photo_diameter - 220
+                    c.drawImage(imag, center_x, center_y, width=67, height=36)
+                except Exception as e:
+                    print("Erro ao carregar foto:", e)
+
+            
+
             c.setFont("Helvetica-Bold", 28)
             short_name = (
                 name.upper()
@@ -166,10 +179,12 @@ def generate_badges(players, t, namebadge):
 
             if hasattr(user, 'player'):
                 photo = user.player.photo
+                imag = user.team_sport.team.event.logo_badge
                 name = user.player.name
                 registration = user.player.registration
             else:
                 photo = user.photo
+                imag = user.event.logo_badge
                 name = user.name
                 registration = user.registration
 
@@ -179,6 +194,15 @@ def generate_badges(players, t, namebadge):
                     center_x = x + nametag_width / 2
                     center_y = y + nametag_height - photo_diameter + 43
                     draw_circular_image(c, photo, center_x, center_y, photo_diameter)
+                except Exception as e:
+                    print("Erro ao carregar foto:", e)
+
+            if imag:
+                try:
+                    imag = imag.path
+                    center_x = x + nametag_width / 2 - 41
+                    center_y = y + nametag_height - photo_diameter - 220
+                    c.drawImage(imag, center_x, center_y, width=67, height=36)
                 except Exception as e:
                     print("Erro ao carregar foto:", e)
 

@@ -8,9 +8,9 @@
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/scoreboard_projector.css' %}">
     <link rel="stylesheet" href="{% static 'css/public/goal.css' %}">
-    <title>ATUM PLACAR</title>
+    <title>ATUM PLACAR - {{event.id}}</title>
 </head>
-<body>
+<body data-event-id="{{event.id}}">
     <div>
         <img class="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; display: none;">
     </div>

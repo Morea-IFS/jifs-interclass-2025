@@ -55,7 +55,7 @@ nav {
 }
 
 img.logo-jiifs {
-    height: 60px;
+    height: 45px;
 }
 
 header nav ul {
@@ -202,7 +202,7 @@ main {
     height: 30px;
     padding: 0 10px;
 }
- select{
+select{
     -webkit-appearance: none;
     -moz-appearance: none;
     text-overflow: '';
@@ -280,6 +280,11 @@ option{
     justify-content: center;
     gap: 18px;
 
+}
+.row-bottom{
+    padding-bottom: 15px;
+    border-bottom: 1.5px solid #575757;
+    width: auto;
 }
 .games-of-block .game img{
     width: 32px;
@@ -387,7 +392,7 @@ footer img {
     }
 
     img.logo-jiifs {
-        height: 45px;
+        height: 30px;
     }
     .future-feature{
         display: none;

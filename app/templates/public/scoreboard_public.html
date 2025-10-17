@@ -12,7 +12,7 @@
         />
         <title>ATUM PLACAR</title>
     </head>
-    <body>
+    <body data-event-id="{{event.id}}">
         <style>
             .hidden{
                 display: none;
@@ -37,7 +37,7 @@
             <nav>
                 <img
                     class="logo-jiifs"
-                    src="{% static 'images/morea-sports.png' %}"
+                    src="{% static 'images/ATUM-FAV-ICON.svg' %}"
                     alt="JIIFS"
                 />
                 <ul>
@@ -50,9 +50,8 @@
                     </li>
                     <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                     <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
-                    <!-- <li><a href="#" class="games-link">Jogos</a></li> -->
                     <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
-                    <li><a href="{% url 'events' %}" class="event-link">Eventos</a></li>
+                    <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
                     <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
                 </ul>
                 <img

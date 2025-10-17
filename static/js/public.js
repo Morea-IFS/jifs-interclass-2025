@@ -1,6 +1,7 @@
 const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-const socket = new WebSocket(protocol + window.location.host + "/ws/public/");
-console.log(protocol + window.location.host + "/ws/public/");
+const eventId = document.body.dataset.eventId;
+const socket = new WebSocket(protocol + window.location.host + "/ws/public/" + eventId + "/");
+console.log(protocol + window.location.host + "/ws/public/" + eventId + "/");
 
 socket.addEventListener('open', (event) => {
     console.log('WebSocket connection opened:', event);

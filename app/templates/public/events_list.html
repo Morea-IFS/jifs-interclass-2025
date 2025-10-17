@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/events.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
-    <title>MOREA SPORTS</title>
+    <title>ATUM EVENTS</title>
 </head>
 <body>
     <div class="modal-mobile mobile"></div>
@@ -16,7 +16,7 @@
             <nav>
                 <img
                     class="logo-jiifs"
-                    src="{% static 'images/logo-morea-sports.svg' %}"
+                    src="{% static 'images/ATUM-FAV-ICON.svg' %}"
                     alt="JIIFS"
                 />
                 <ul>
@@ -40,7 +40,7 @@
         <main>
             <section class="about-morea">
                 <div class="content">
-                    <h1>Seja bem vindo ao <span class="stroke-morea">MOREA SPORTS</span></h1>
+                    <h1>Seja bem vindo ao <span class="stroke-morea">ATUM SPORTS</span></h1>
                     <p>Escolha o evento esportivo que deseja e o acompanhe em tempo real.</p>
                     <p>Veja mais em nosso <a class="link-morea-or-lattes" href="https://morea-ifs.org/" target="_blank">site</a>.</p>
                     <div class="social-media">
@@ -53,18 +53,20 @@
                 </div>
             </section>    
             <section class="about-events">
-                <div class="container-events">
                 {% for event in events %}
-                <div class="event">
-                    <div class="event-img"><img src="{{ event.logo.url }}" alt=""></div>
-                    <div class="event-block">
-                        <p class="event-title">{{ event.name }}</p>
-                        <p class="event-subtitle"><i class="fa-solid fa-location-dot" style="color: blue;"></i>{{ event.local }}</p>
-                        <a class="event-link" href="{% url 'home_public' event.id %}">ACESSAR</a>
+                <a class="card-item" href="{% url 'home_public' event.id %}">
+                    <div class="card-imagem">
+                        <img src="{{ event.logo.url }}" alt="Imagem do evento {{event.name}}">
                     </div>
-                </div>
+                    <div class="card-conteudo">
+                        <h2>{{event.name}}</h2>
+                        <p><i class="fas fa-map-marker-alt icon"></i> <strong>Local:</strong> {{event.local}}</p>
+                        <p><i class="fas fa-calendar-alt icon"></i> <strong>Data:</strong> {{event.date_init}}</p>
+                        <br><br>
+                        <h3>ACESSAR</h3>
+                    </div>
+                </a>
                 {% endfor %}
-                </div>
             </section>
 
         </main>
@@ -81,5 +83,96 @@
             />
         </footer>
         <script src="{% static 'js/about_us.js' %}"></script>
+        <style>
+                    /* ================== GRID DE EVENTOS ================== */
+        :root {
+            --cor-principal: #3a86ff; /* Azul Vibrante e Moderno */
+            --cor-fundo: #f4f7fa; /* Fundo Suave e Clean */
+            --cor-card-fundo: #2A2A2A;
+            --cor-texto-principal: #ffffff;
+            --cor-texto-secundario: #d4d4d4;
+            --sombra-card: 0 6px 15px rgba(0, 0, 0, 0.08);
+            --sombra-hover: 0 12px 25px rgba(0, 0, 0, 0.15);
+            --fonte-principal: 'Inter', sans-serif;
+        }
+        /* Estilo do Card (UI/UX Refinado) */
+        .card-item {
+            width: 21em;
+            height: 30em;
+            background-color: var(--cor-card-fundo);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--sombra-card);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s;
+            cursor: pointer;
+            border: 1px solid transparent; /* Borda para destacar no hover */
+        }
+
+        .card-item:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--sombra-hover);
+            border: 1px solid var(--cor-principal);
+        }
+
+        .card-imagem {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .card-imagem img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+
+        .card-evento:hover .card-imagem img {
+            transform: scale(1.05); /* Efeito de zoom sutil */
+        }
+
+        .card-conteudo {
+            padding: 25px 25px 30px; /* Mais espaço embaixo */
+        }
+
+        .card-conteudo h2 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: var(--cor-texto-principal);
+            font-weight: 700;
+            border-left: 4px solid var(--cor-principal); /* Destaque sutil */
+            padding-left: 10px;
+        }
+
+        .card-conteudo h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: var(--cor-texto-principal);
+            font-weight: 700;
+            border-bottom: 4px solid var(--cor-principal); /* Destaque sutil */
+            padding-bottom: 10px;
+        }
+
+        .card-conteudo p {
+            color: var(--cor-texto-secundario);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+        }
+
+        .card-conteudo p strong {
+            color: var(--cor-texto-principal);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        /* Ícones para UX */
+        .icon {
+            margin-right: 10px;
+            color: var(--cor-principal);
+        }
+        </style>
 </body>
 </html>
