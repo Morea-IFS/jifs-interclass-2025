@@ -26,7 +26,7 @@ urlpatterns = [
     path('attachments', views.attachments, name = "attachments"),
     path('manage/user', views.user_manage, name = "user_manage"),
     path('manage/voluntary', views.voluntary_manage, name = "voluntary_manage"),
-    path('scoreboard', views.scoreboard, name = "scoreboard"),
+    path('scoreboard/<int:event_id>', views.scoreboard, name = "scoreboard"),
     path('manage/banner', views.banner_manage, name="banner_manage"),
     path('register/banner', views.banner_register, name="banner_register"),
     path('players_match/<int:id>', views.players_match, name = "players_match"),
@@ -52,7 +52,6 @@ urlpatterns = [
     path('anexo_register', views.anexo_register, name="anexo_register"),
 
     path('manage/event', views.event_manage, name="event_manage"),
-    path('teste', views.event_edit, name="event_edit"),
     path('manage/sport', views.event_sport_manage, name="event_sport_manage"),
     path('edit/sport', views.event_sport_edit, name="event_sport_edit"),
 
@@ -67,6 +66,10 @@ urlpatterns = [
     path('generator/badge', views.generator_badge, name="badge"),
     path('generator/certificate', views.generator_certificate, name="certificate"),
     path('generator/data', views.generator_data, name="data"),
+
+    #API
+    path('get_teams/', views.get_teams, name='get_teams'),
+    path('get_sexos/', views.get_sexos, name='get_sexos'),
 ]
 
 if settings.DEBUG:

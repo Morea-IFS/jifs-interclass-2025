@@ -27,7 +27,6 @@ class CustomUserAdmin(UserAdmin):
     list_display = ['username', 'email', 'first_name', 'last_name', 'is_staff']
     search_fields = ['username', 'email', 'first_name', 'last_name']
 
-
 @admin.register(Settings_access)
 class Settings_accessAdmin(admin.ModelAdmin):
     list_display = ('id','start','end')

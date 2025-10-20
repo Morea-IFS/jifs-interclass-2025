@@ -101,11 +101,19 @@ class Type_service(models.IntegerChoices):
     trainee = 3, "Estagiário"
     head_delegation = 4,"Chefe de delegação"
     organization = 5,"Organização"
+    arbitrator = 6,"Árbitro"
 
 class Sexo_types(models.IntegerChoices):
     masculine = 0, "Masculino"
     feminine = 1, "Feminino"
     mixed = 2, "Misto"
+
+class Phase_types(models.IntegerChoices):
+    group = 0, "Fase de Grupos"
+    quarter = 1, "Quartas de Final"
+    semi = 2, "Semifinal"
+    final = 3, "Final"
+    other = 4, "Outra"
 
 class UserSession(models.Model):
     session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="extra")
@@ -123,6 +131,7 @@ class UserSession(models.Model):
 class Event(models.Model):
     name = models.CharField(max_length=100)
     logo = models.ImageField(upload_to='events/')
+    logo_badge = models.ImageField(upload_to='events/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     date_init = models.DateField(blank=True, null=True)
     date_end = models.DateField(blank=True, null=True)
@@ -245,6 +254,7 @@ class Certificate(models.Model):
     def __str__(self):    
         return f"{self.name}"
 
+    
 class Team_sport(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     sport = models.ForeignKey(Event_sport, on_delete=models.CASCADE)
@@ -277,7 +287,7 @@ class Volley_match(models.Model):
 
     def __str__(self):    
         return f"{self.get_status_display()} | {self.sets_team_a} | {self.sets_team_b}"
-
+    
 class Match(models.Model):
     sport = models.IntegerField(choices=Sport_types.choices)
     status = models.IntegerField(choices=Status.choices, default=Status.shortly)
@@ -293,7 +303,8 @@ class Match(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
 
     def __str__(self):    
-        return f"{self.id} | {self.get_sport_display()} | {self.get_status_display()} | {self.sexo}"
+        label = f"{self.id} | {self.get_sport_display()}"
+        return label
 
 class Point(models.Model):
     point_types = models.IntegerField(choices=Point_types.choices, default=Point_types.empty)
