@@ -1020,9 +1020,9 @@ def games(request):
         return redirect('games')
 
     else:
-        # 4️⃣ Criar nova PARTIDA
-        sport = int(request.POST.get('sport'))
-        sexo = int(request.POST.get('sexo'))
+        print(request.POST)
+        sport = request.POST.get('sport')
+        sexo = request.POST.get('sexo')
         team_a_id = request.POST.get('time_a')
         team_b_id = request.POST.get('time_b')
         datetime = request.POST.get('datetime')
@@ -1030,6 +1030,9 @@ def games(request):
         if not sport or not sexo or not team_a_id or not team_b_id or not datetime:
             messages.error(request, "Você precisa informar todos os dados.")
             return redirect('games')
+        
+        sport = int(sport)
+        sexo = int(sexo)
         
         event_sport = Event_sport.objects.get(id=sport)
         sport_id = event_sport.sport
