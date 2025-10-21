@@ -222,9 +222,8 @@ def generate_badges(players, t, namebadge):
     buffer.seek(0)
 
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="CRACHA_{unidecode(namebadge)}.pdf"'
-    # response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
-    print('ir baixar peste')
+    #response['Content-Disposition'] = f'inline; filename="CRACHA_{unidecode(namebadge)}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
     return response
 
 def generate_events(name, details):
