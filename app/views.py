@@ -2700,18 +2700,18 @@ def generator_data(request):
             name_html = 'data-general'
             name_pdf = 'dados_gerais'
             
-            qnt_players = Player.objects.all().count()
-            qnt_players_fem = Player.objects.filter(sexo=1).count()
-            qnt_players_masc = Player.objects.filter(sexo=0).count()
+            qnt_players = Player.objects.filter(event=event).count()
+            qnt_players_fem = Player.objects.filter(sexo=1, event=event).count()
+            qnt_players_masc = Player.objects.filter(sexo=0, event=event).count()
             cont['qnt_players'] = qnt_players
             cont['qnt_players_fem'] = qnt_players_fem
             cont['qnt_players_masc'] = qnt_players_masc
-            cont['qnt_teams'] = Team_sport.objects.all().count()
-            cont['qnt_voluntary_0'] = Voluntary.objects.filter(type_voluntary=0).count()
-            cont['qnt_voluntary_1'] = Voluntary.objects.filter(type_voluntary=1).count()
-            cont['qnt_voluntary_2'] = Voluntary.objects.filter(type_voluntary=2).count()
-            cont['qnt_voluntary_3'] = Voluntary.objects.filter(type_voluntary=3).count()
-            cont['qnt_voluntary_4'] = Voluntary.objects.filter(type_voluntary=4).count()
+            cont['qnt_teams'] = Team_sport.objects.filter(event=event).count()
+            cont['qnt_voluntary_0'] = Voluntary.objects.filter(type_voluntary=0, event=event).count()
+            cont['qnt_voluntary_1'] = Voluntary.objects.filter(type_voluntary=1, event=event).count()
+            cont['qnt_voluntary_2'] = Voluntary.objects.filter(type_voluntary=2, event=event).count()
+            cont['qnt_voluntary_3'] = Voluntary.objects.filter(type_voluntary=3, event=event).count()
+            cont['qnt_voluntary_4'] = Voluntary.objects.filter(type_voluntary=4, event=event).count()
 
 
             cont['porcent_fem'] = (qnt_players_fem * 100) / qnt_players
@@ -2849,8 +2849,8 @@ def generator_data(request):
         html_string = render_to_string(f'generator/{name_html}.html', cont)
 
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
-        # response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
+        #response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
 
         HTML(string=html_string).write_pdf(response)
 
