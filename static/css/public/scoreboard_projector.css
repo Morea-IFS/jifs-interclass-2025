@@ -167,6 +167,7 @@ body {
 .title-team h2 {
     font-family: 'Flick', sans-serif;
     font-size: 78px;
+    max-width: 50%;
     text-shadow: 0 4px 4px #0000003a;
 }
 
@@ -176,6 +177,7 @@ body {
 
 .team-b .title-team {
     justify-content: flex-end;
+    text-align: end;
 }
 
 .teams img {
