@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -284,6 +284,35 @@ def home_public(request, event_id):
                 'Phase_types': Phase_types,
             }
 
+            if request.GET.get('sport'):
+                event_sport = get_object_or_404(Event_sport, id=request.GET.get('sport'))
+                phases = Phase.objects.filter(event=event_sport)\
+                    .prefetch_related(
+                        'groups__group_matches__teams__team', 
+                    )
+
+                matches_by_phase = {}
+
+                for phase in phases:
+                    matches_no_group = Match.objects.filter(
+                        event=event_sport.event,
+                        sport=event_sport.sport,
+                        group_phase__isnull=True,
+                    )
+
+                    matches_in_groups = Match.objects.filter(
+                        event=event_sport.event,
+                        sport=event_sport.sport,
+                        group_phase__phase=phase
+                    )
+
+                    matches_by_phase[phase.id] = matches_no_group | matches_in_groups
+                    matches_by_phase[phase.id] = matches_by_phase[phase.id].prefetch_related('teams__team')
+
+                context['event'] = event_sport
+                context['phases'] = phases
+                context['matches_by_phase'] = matches_by_phase
+            
             print(context)
             return render(request, 'public/home_public.html', context)
 
@@ -969,25 +998,28 @@ def matches_edit(request, id):
 def games(request):
     if request.method == "GET":
         context = {
+            'team': Team.objects.all(),
             'sport': Sport_types.choices,
             'events': Event.objects.all(),
+            'phase_types': Phase_types.choices
         }
 
         selected_event = None
 
         if request.user.type in [1, 2] and request.user.event_user:
             selected_event = request.user.event_user
-            context['event_sports'] = Event_sport.objects.filter(event=selected_event)
-            context['teams'] = Team.objects.filter(event=selected_event)
         elif 'e' in request.GET and request.GET['e'] != '':
             selected_event = Event.objects.get(id=request.GET['e'])
             context['select_event'] = request.GET['e']
+            context['phases'] = Phase.objects.filter(event__event__id=request.GET['e'])
+            context['groups'] = Group_phase.objects.filter(phase__event__event__id=request.GET['e'])
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
-            context['teams'] = Team.objects.filter(event=selected_event)
 
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
         else:
+            context['phases'] = []
+            context['groups'] = []
             matches = Match.objects.all().prefetch_related('teams__team').order_by('time_match')
 
         context['context'] = [
@@ -1019,27 +1051,62 @@ def games(request):
             messages.info(request, "A partida já foi finalizada.")
         return redirect('games')
 
-    else:
+    # 2️⃣ Criar nova FASE
+    elif 'create_phase' in request.POST:
+        if not request.user.has_perm('app.add_phase'):
+            messages.error(request, "Você não tem permissão para criar fases.")
+            return redirect('games')
         print(request.POST)
-        sport = request.POST.get('sport')
+        event_id = int(request.POST.get('event_sport'))
+        name = int(request.POST.get('name'))
+        if not event_id or not name:
+            if not name == 0:
+                messages.error(request, "Dados insuficientes para criar a fase.")
+                return redirect('games')
+
+        event_sport = Event_sport.objects.get(id=event_id)
+        print("event_S", event_sport)
+        if not event_sport:
+            messages.error(request, "Evento ou esporte não encontrado.")
+            return redirect('games')
+
+        Phase.objects.create(event=event_sport, name=name)
+        messages.success(request, "Fase criada com sucesso!")
+        return redirect(f"{reverse('games')}?e={event_sport.event.id}")
+
+    # 3️⃣ Criar novo GRUPO
+    elif 'create_group' in request.POST:
+        if not request.user.has_perm('app.add_group_phase'):
+            messages.error(request, "Você não tem permissão para criar grupos.")
+            return redirect('games')
+
+        phase_id = request.POST.get('phase')
+        group_name = request.POST.get('group_name')
+
+        if not phase_id:
+            messages.error(request, "Preencha todos os campos para criar o grupo.")
+            return redirect('games')
+
+        phase = Phase.objects.get(id=phase_id)
+        Group_phase.objects.create(phase=phase, name=group_name)
+        messages.success(request, "Grupo criado com sucesso!")
+        return redirect(f"{reverse('games')}?e={phase.event.event.id}")
+
+    else:
+        # 4️⃣ Criar nova PARTIDA
+        event_sport = Event_sport.objects.get(id=int(request.POST.get('sport')))
+        sport_id = event_sport.sport
         sexo = request.POST.get('sexo')
         team_a_id = request.POST.get('time_a')
         team_b_id = request.POST.get('time_b')
         datetime = request.POST.get('datetime')
-        
-        if not sport or not sexo or not team_a_id or not team_b_id or not datetime:
-            messages.error(request, "Você precisa informar todos os dados.")
-            return redirect('games')
-        
-        sport = int(sport)
-        sexo = int(sexo)
-        
-        event_sport = Event_sport.objects.get(id=sport)
-        sport_id = event_sport.sport
+        group_phase_id = request.POST.get('group')
+        location = request.POST.get('location')
 
-        if sexo == 0 and not event_sport.masc or sexo == 1 and not event_sport.fem or sexo == 2 and not event_sport.mist:
-            messages.error(request, "O esporte escolhido não está disponível para este sexo. Em caso de dúvidas, consulte o regulamento.")
-            return redirect('games')
+        if group_phase_id:
+            if sport_id != Group_phase.objects.get(id=group_phase_id).phase.event.sport:
+                messages.error(request, "O grupo precisa corresponder ao esporte.")
+                return redirect('games')
 
         # Define o evento
         if not request.user.event_user:
@@ -1075,6 +1142,10 @@ def games(request):
                 time_match=datetime,
                 volley_match=volley_match,
                 event=event,
+                defaults={
+                    'group_phase_id': group_phase_id or None,
+                    'location': location or "",
+                }
             )
         else:
             match, created = Match.objects.get_or_create(
@@ -1082,6 +1153,10 @@ def games(request):
                 sexo=sexo,
                 time_match=datetime,
                 event=event,
+                defaults={
+                    'group_phase_id': group_phase_id or None,
+                    'location': location or "",
+                }
             )
 
         if created:
@@ -1129,6 +1204,20 @@ def get_teams(request):
     teams = Team_sport.objects.filter(sport__id=sport_id, sexo=sexo)
     data = {"teams": [{"id": t.team.id, "name": t.team.name} for t in teams]}
     return JsonResponse(data)
+
+@login_required(login_url="login")
+def get_groups(request):
+    sport_id = request.GET.get('sport')
+    groups = Group_phase.objects.filter(phase__event__id=sport_id)
+    data = [
+        {
+            "id": g.id,
+            "name": g.name,
+            "phase_name": g.phase.get_name_display(),
+        }
+        for g in groups
+    ]
+    return JsonResponse({"groups": data})
 
 @login_required(login_url="login")
 def get_sexos(request):
@@ -2060,15 +2149,21 @@ def scoreboard(request, event_id):
             if match.volley_match and match.status == 1:
                 volley_match = Volley_match.objects.get(status=1)
                 match.status = 2
-                match.save()
                 if point_a > point_b:
+                    match.Winner_team = team_match_a.team
                     volley_match.sets_team_a += 1
                 elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                     volley_match.sets_team_b += 1
+                match.save()
                 volley_match.save()
                 print("CRIANDO NOVO SET")
                 print("1:: ",volley_match)
                 new_match = Match.objects.create(sport=1, sexo=match.sexo, event=match.event, status=5, volley_match=volley_match, time_match=time_now2)
+                if match.location:
+                    new_match.location = match.location
+                if match.group_phase:
+                    new_match.group_phase = match.group_phase
                 print(new_match)
                 new_match.save()
                 team_a_match = Team_match.objects.create(match=new_match, team=team_match_a.team)
@@ -2101,12 +2196,23 @@ def scoreboard(request, event_id):
                 volley_match = get_object_or_404(Volley_match, status=1)
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                    volley_match.sets_team_a += 1
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
+                    volley_match.sets_team_b += 1
                 match.save()
                 volley_match.status= 2 
                 volley_match.save()
             else:
                 match.status = 2
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                 match.save()
+
             return redirect('games')
         elif 'match_new' in request.POST:
             if match.time_start and not match.time_end:
@@ -2122,6 +2228,12 @@ def scoreboard(request, event_id):
                 print("mudando estatus da partida")
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                    volley_match.sets_team_a += 1
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
+                    volley_match.sets_team_b += 1
                 match.save()
                 print("mUdeii:")
                 print(volley_match.status)
@@ -2132,6 +2244,10 @@ def scoreboard(request, event_id):
                 print("A partida anterios é qualquer uma")
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                 match.save()
                 print("Foi finalizada!", match.get_status_display())
             if next_match.volley_match:

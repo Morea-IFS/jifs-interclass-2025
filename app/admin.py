@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -46,6 +46,16 @@ class UserSessionAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     list_display = ('id','name','logo')
     search_fields = ('id','name','logo')
+
+@admin.register(Phase)
+class PhaseAdmin(admin.ModelAdmin):
+    list_display = ('id','name')
+    search_fields = ('id','name')
+
+@admin.register(Group_phase)
+class Group_phaseAdmin(admin.ModelAdmin):
+    list_display = ('id','name')
+    search_fields = ('id','name')
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):

@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -155,6 +156,7 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_volei_fem %}
+                        <h3>JOGO #{{i.volley_match.id}} ( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
                             {% for match in i.matches %}
                                 <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
@@ -202,6 +204,39 @@
                 </div>
                 {% endif %}
             </div>
+            {% for phase in phases %}
+            <div class="phase">
+                <div class="phase-title">{{ phase.get_name_display }}</div>
+
+                <div class="matches">
+                    {% for match in matches_by_phase|get_item:phase.id %}
+                        <div class="match-card {% if match.group_phase.phase.name == 3 %}final-match{% endif %}">
+                            <div class="match-header">
+                                <span>Q{{ match.id }} {% if not match.group_phase.name == "Unico" %} - {{ match.group_phase.name }} {% endif %}</span>
+                                <span>{{ match.time_match|date:"d/m - H:i" }}</span>
+                            </div>
+
+                            {% for tm in match.teams.all %}
+                                <div class="team {% if match.Winner_team == tm.team %}winner{% endif %}">
+                                    <span class="team-name">{{ tm.team.name }}</span>
+                                    <span class="team-score">
+                                        {{ tm.point_set.count }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+
+                            <div class="match-info">
+                                <span>{{ match.location }}</span>
+                                <span>{{ match.time_match|timesince }}</span>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p>Nenhuma partida nesta fase.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
         </section>
         <section class="today-games">
             <h2>Jogos do Dia</h2>

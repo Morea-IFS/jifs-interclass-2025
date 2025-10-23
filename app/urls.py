@@ -70,6 +70,7 @@ urlpatterns = [
     #API
     path('get_teams/', views.get_teams, name='get_teams'),
     path('get_sexos/', views.get_sexos, name='get_sexos'),
+    path('get_groups/', views.get_groups, name='get_groups'),
 ]
 
 if settings.DEBUG:

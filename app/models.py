@@ -288,6 +288,20 @@ class Volley_match(models.Model):
     def __str__(self):    
         return f"{self.get_status_display()} | {self.sets_team_a} | {self.sets_team_b}"
     
+class Phase(models.Model):
+    event = models.ForeignKey(Event_sport, on_delete=models.CASCADE, related_name="phases", null=True, blank=True)
+    name = models.IntegerField(choices=Phase_types.choices, default=Phase_types.other, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.event} | {self.get_name_display()}"
+
+class Group_phase(models.Model):
+    phase = models.ForeignKey(Phase, on_delete=models.CASCADE, related_name="groups", null=True, blank=True)
+    name = models.CharField(max_length=50, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name} | {self.phase}"
+
 class Match(models.Model):
     sport = models.IntegerField(choices=Sport_types.choices)
     status = models.IntegerField(choices=Status.choices, default=Status.shortly)
@@ -301,6 +315,9 @@ class Match(models.Model):
     add = models.TimeField(blank=True, null=True)
     time_match = models.DateTimeField(null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+    group_phase = models.ForeignKey('Group_phase', on_delete=models.SET_NULL, null=True, blank=True, related_name="group_matches")
+    location = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):    
         label = f"{self.id} | {self.get_sport_display()}"
