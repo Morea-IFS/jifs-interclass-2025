@@ -110,23 +110,23 @@
   <div class="modal-content" style="max-width: 400px; text-align:center;">
     <span class="close" onclick="closeOptionsModal()">&times;</span>
     <h2>O que deseja criar?</h2>
-    <div class="buttons-options">
+    <div class="buttons-options" style="margin-top: 2em; gap: 1em;">
         {% if perms.app.add_match %}
-        <span class="button-op-1" style="background:#2196F3;" onclick="openModal('match')">
-            <p style="color:white; margin-top:15px;">Partida</p>
-            <i class="fa-solid fa-futbol"></i>
+        <span class="button-op-1" style="background:#2196F3; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('match')">
+            <p style="color:white;">Partida</p>
+            <i class="fa-solid fa-futbol" style="position: static;"></i>
         </span>
         {% endif %}
         {% if perms.app.add_phase %}
-        <span class="button-op-2" style="background:#4CAF50;" onclick="openModal('phase')">
-            <p style="color:white; margin-top:15px;">Fase</p>
-            <i class="fa-solid fa-layer-group"></i>
+        <span class="button-op-2" style="background:#4CAF50; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('phase')">
+            <p style="color:white;">Fase</p>
+            <i class="fa-solid fa-layer-group" style="position: static;"></i>
         </span>
         {% endif %}
         {% if perms.app.add_groupphase %}
-        <span class="button-op-2" style="background:#FF9800;" onclick="openModal('group')">
-            <p style="color:white; margin-top:15px;">Grupo</p>
-            <i class="fa-solid fa-people-group"></i>
+        <span class="button-op-2" style="background:#FF9800; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('group')">
+            <p style="color:white;">Grupo</p>
+            <i class="fa-solid fa-people-group" style="position: static;"></i>
         </span>
         {% endif %}
     </div>
