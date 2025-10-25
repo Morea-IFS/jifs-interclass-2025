@@ -201,7 +201,8 @@ a {
     width: 70vw;
     max-width: 80vw;
     text-align: center;
-    overflow: auto;
+    overflow-x: auto;
+    height: 100%;
 }
 .title-home-admin{
     width: 70vw;

@@ -218,23 +218,28 @@ button {
         justify-content: center;
         cursor: pointer;
         z-index: 2;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid #3A7BD5;
+        border-radius: 50%;
+        transform-origin: center;
     }
 
     .line {
         width: 30px;
         height: 2px;
-        background: var(--global-eighth-color);
+        background: #00FF00;
         margin: 5px;
         transition: all 0.4s ease;
         z-index: 2;
+        border-radius: 2px;
     }
 
     .change .first-line {
-        transform: rotate(45deg);
+        transform: rotate(45deg) translate(4px, 4px);
     }
 
     .change .second-line {
-        transform: rotate(-45deg) translate(8px, -8px);
+        transform: rotate(-45deg) translate(4px, -4px);
     }
 
     .change ~ .side-bar {
