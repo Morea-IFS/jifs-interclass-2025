@@ -89,20 +89,20 @@
                         </button>
                     </a>
                     <form method="post">{% csrf_token %}
-                      <button class="action-btn" name="change_match" value="{{ i.match.id }}" type="submit" style="margin: 0; background-color: #282828;">
-                        <i class="fa-solid fa-gear"></i>
-                      </button>
+                        <button class="action-btn" name="change_match" value="{{ i.match.id }}" type="submit" style="margin: 0; background-color: #282828;">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
                     </form>
                     <a href="{% url 'match_settings' i.match.sport i.match.id %}">  
                         <button class="action-btn" style="background-color: red;">
                             <i class="fa-solid fa-chart-line"></i>
                         </button>
                     </a>
-                    <a href="#">
-                        <button class="action-btn" style="background-color: #0289f7;">
+                    <form method="post">{% csrf_token %}
+                        <button class="action-btn" name="sumula" value="{{ i.match.id }}" style="margin: 0; background-color: #0289f7;">
                             <i class="fa-solid fa-file-text"></i>
                         </button>
-                    </a>
+                    </form>
                 </div>
             </section>
             {% empty %}
