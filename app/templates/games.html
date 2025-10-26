@@ -4,6 +4,7 @@
 {% block head %}
 <title>ATUM ADMIN</title>
 <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/match.css' %}">
 {% endblock head %}
 
 {% block content %}
@@ -34,6 +35,67 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- ================== FILTRO ================== -->
+        <div class="filter-container">
+            <button class="filter-toggle" onclick="toggleFilterMenu()">
+              <i class="fa-solid fa-filter"></i> Filtros
+            </button>
+
+            <div class="filter-menu" id="filterMenu">
+                <div class="filter-section">
+                    <button type="button" class="filter-category" onclick="toggleSubmenu('sport')">
+                        <i class="fa-solid fa-futbol"></i> Esporte
+                    </button>
+                    <div class="filter-submenu" id="submenu-sport">
+                        <select>
+                            <option>Todos os Esportes</option>
+                            <option>Futsal</option>
+                            <option>Vôlei</option>
+                            <option>Basquete</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <button type="button" class="filter-category" onclick="toggleSubmenu('sexo')">
+                        <i class="fa-solid fa-venus-mars"></i> Sexo
+                    </button>
+                    <div class="filter-submenu" id="submenu-sexo">
+                        <select>
+                            <option>Todos</option>
+                            <option>Masculino</option>
+                            <option>Feminino</option>
+                        </select>
+                    </div>
+                  </div>
+
+                  <div class="filter-section">
+                      <button type="button" class="filter-category" onclick="toggleSubmenu('turma')">
+                          <i class="fa-solid fa-users"></i> Turma
+                      </button>
+                      <div class="filter-submenu" id="submenu-turma">
+                          <select>
+                              <option>Todas</option>
+                              <option>3° IRC</option>
+                              <option>2° ADS</option>
+                          </select>
+                      </div>
+                  </div>
+
+                  <div class="filter-buttons">
+                      <button class="btn-filter">
+                          <i class="fa-solid fa-check"></i>
+                          <span>Aplicar</span>
+                      </button>
+                      <a href="#" class="btn-clear">
+                          <i class="fa-solid fa-rotate-right"></i>
+                          <span>Limpar</span>
+                      </a>
+                  </div>
+                </div>
+              </div>
+
 
         <div class="games">
             {% for i in context %}
@@ -382,5 +444,19 @@
     function closeOptionsModal() { document.getElementById("optionsModal").style.display = "none"; }
     function openModal(type) { closeOptionsModal(); document.getElementById("modal-" + type).style.display = "block"; }
     function closeModal(type) { document.getElementById("modal-" + type).style.display = "none"; }
+  function toggleFilterMenu() {
+  const menu = document.getElementById("filterMenu");
+  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
+
+function toggleSubmenu(name) {
+  const submenu = document.getElementById(`submenu-${name}`);
+  const allSubmenus = document.querySelectorAll(".filter-submenu");
+  allSubmenus.forEach(sm => {
+    if (sm !== submenu) sm.style.display = "none";
+  });
+  submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+}
+
 </script>
 {% endblock content %}

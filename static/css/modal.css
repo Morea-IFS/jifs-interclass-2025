@@ -7,7 +7,7 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
@@ -63,7 +63,7 @@ form button {
     cursor: pointer;
 }
 
-.button-modal{
+.button-modal {
     margin-top: 20px;
     padding: 10px 15px;
     background-color: #273c75;
@@ -73,7 +73,7 @@ form button {
     cursor: pointer;
 }
 
-.button-modal:hover{
+.button-modal:hover {
     background-color: #192a56;
 }
 
@@ -116,11 +116,11 @@ form button {
     border-radius: 50%;
 }
 
-.toggle-switch input:checked + .slider {
+.toggle-switch input:checked+.slider {
     background-color: #2196F3;
 }
 
-.toggle-switch input:checked + .slider:before {
+.toggle-switch input:checked+.slider:before {
     transform: translateX(24px);
 }
 
@@ -135,28 +135,32 @@ form button {
     font-weight: bold;
 }
 
-.buttons-options{
-    width: 100%; 
-    height: auto; 
+.buttons-options {
+    width: 100%;
+    height: auto;
     display: flex;
     justify-content: space-around;
 }
-.buttons-options span{
+
+.buttons-options span {
     width: 35%;
     height: 3em;
     border-radius: 10px;
     position: relative;
     cursor: pointer;
 }
-.buttons-options i{
+
+.buttons-options i {
     position: absolute;
     top: 10px;
     right: 10px;
     color: white;
 }
-.button-op-1:hover{
+
+.button-op-1:hover {
     transform: scale(1.2);
 }
-.button-op-2:hover{
+
+.button-op-2:hover {
     transform: scale(1.2);
 }
