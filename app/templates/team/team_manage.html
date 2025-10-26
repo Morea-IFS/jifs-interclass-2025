@@ -412,6 +412,13 @@
                 <option value="1">Feminino</option>
                 <option value="2">Misto</option>
             </select>
+            <label for="esportes">Técnico</label>
+            <select id="times" name="technitian">
+                <option selected disabled value="None">Selecione o técnico</option>
+                {% for i in voluntarys %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
             <input type="hidden" name="add-team-sport" id="addTimeId">
             <button class="button-modal" type="submit">Adicionar esporte</button>
         </form>

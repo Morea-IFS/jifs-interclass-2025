@@ -257,6 +257,12 @@
       <p><strong>Evento:</strong> {{match.event.name}}</p>
       <p><strong>Local:</strong> {{match.event.local}}</p>
       <p><strong>Esporte:</strong> {{match.get_sport_display}} - {{match.get_sexo_display}}</p>
+      {% if match_referee %}
+      <hr>
+      {% for i in match_referee %}
+      <p><strong>{{i.get_role_display}}:</strong> {{i.referee.name}}</p>
+      {% endfor %}
+      {% endif %}
       <hr>
       <p><strong>Time A:</strong> {{team_match_a.team.name}}</p>
       <p><strong>Time B:</strong> {{team_match_b.team.name}}</p>
@@ -419,12 +425,12 @@
         <option selected disabled value="None">Selecione o atleta</option>
         <optgroup label="JOGADORES DO TIME: {{team_match_a.team.name}}">
           {% for i in players_match_a %}
-          {% if i.activity == 0 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% if i.activity != 1 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
           {% endfor %}
         </optgroup>
         <optgroup label="JOGADORES DO TIME: {{team_match_b.team.name}}">
           {% for i in players_match_b %}
-          {% if i.activity == 0 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
+          {% if i.activity != 1 %}<option value="{{i.id}}">{{i.player.name}} - {{i.player_number}}</option>{% endif %}
           {% endfor %}
       </select>
       <label for="">Entrada</label>
@@ -517,9 +523,32 @@
         <select name="match_new" id="">
           <option value="None">Selecione a próxima partida.</option>
           {% for i in matches %}
-          <option value="{{i.id}}">Partida de {{i.get_sport_display}} {{i.get_sexo_display}}: {% for j in team_match_all %} {% if i.id == j.match.id %} {{j.team.name}}; {% endif %} {% endfor %}</option>
+          <option value="{{i.id}}">Partida de {{i.get_sport_display}} {{i.get_sexo_display}}: {% for j in team_match_all %} {% if i.id == j.match.id %} {{j.team.name}}; {% endif %} {% endfor %} {{i.group_phase.phase.get_name_display}} ({{i.group_phase.name}})</option>
           {% endfor %}
         </select>
+        <button class="button-modal" type="submit">Confirmar</button>
+      </form>
+      <hr>
+      <p>Árbitragem</p>
+      <form method="post">{% csrf_token %}
+        <select name="referee" id="">
+          <option value="None">Selecione o árbitro.</option>
+          {% for i in referee %}
+          <option value="{{i.id}}">{{i.name}} {% for j in match_referee %} {% if i.id == j.referee.id %} (cadastrado) {% endif %} {% endfor %}</option>
+          {% endfor %}
+        </select><br><br>
+        <select name="type_referee" id="">
+          <option value="None">Selecione a função.</option>
+          {% for i, j in types_referee %}
+          <option value="{{i}}">{{j}}</option>
+          {% endfor %}
+        </select>
+        <button class="button-modal" type="submit">Confirmar</button>
+      </form>
+      <hr>
+      <p>Observações</p>
+      <form method="post">{% csrf_token %}
+        <textarea name="observations" {% if not match.observations %} placeholder="Escreva aqui as observações da partida. máximo 500 caracter." {% endif %}  maxlength="500">{{match.observations}}</textarea>
         <button class="button-modal" type="submit">Confirmar</button>
       </form>
 

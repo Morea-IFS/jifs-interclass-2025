@@ -39,7 +39,7 @@
                 </li>
                 <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                 <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
-                <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
+                <li><a href="{% url 'switching' event.id %}" class="about-us-link">Chave</a></li>
                 <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
                 <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
             </ul>
@@ -61,16 +61,16 @@
                         <input class="search-input" type="text" name="" id="" placeholder="Pesquisar" >
                     </div>
                     <div class="game-filters">
-                        <form class="games-filter">
+                        <div class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
-                            <select name="sport" id="sport" onchange="this.form.submit();">
+                            <select name="sport" id="sport">
                                 <option value="all">Esporte</option>
                                 {% for i in event_sports %}
                                 <option value="{{i.id}}">{{i.get_sport_display}}</option>
                                 {% endfor %}
                             </select>
                             <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
-                        </form>
+                        </div>
                         <div class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
                             <select name="genre" id="genre">
@@ -204,38 +204,6 @@
                 </div>
                 {% endif %}
             </div>
-            {% for phase in phases %}
-            <div class="phase">
-                <div class="phase-title">{{ phase.get_name_display }}</div>
-
-                <div class="matches">
-                    {% for match in matches_by_phase|get_item:phase.id %}
-                        <div class="match-card {% if match.group_phase.phase.name == 3 %}final-match{% endif %}">
-                            <div class="match-header">
-                                <span>Q{{ match.id }} {% if not match.group_phase.name == "Unico" %} - {{ match.group_phase.name }} {% endif %}</span>
-                                <span>{{ match.time_match|date:"d/m - H:i" }}</span>
-                            </div>
-
-                            {% for tm in match.teams.all %}
-                                <div class="team {% if match.Winner_team == tm.team %}winner{% endif %}">
-                                    <span class="team-name">{{ tm.team.name }}</span>
-                                    <span class="team-score">
-                                        {{ tm.point_set.count }}
-                                    </span>
-                                </div>
-                            {% endfor %}
-
-                            <div class="match-info">
-                                <span>{{ match.location }}</span>
-                                <span>{{ match.time_match|timesince }}</span>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <p>Nenhuma partida nesta fase.</p>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
 
         </section>
         <section class="today-games">

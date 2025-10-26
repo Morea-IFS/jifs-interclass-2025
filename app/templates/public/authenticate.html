@@ -1,0 +1,94 @@
+{% load static %}
+{% load custom_tags %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'css/public/nav.css' %}">
+    <link rel="stylesheet" href="{% static 'css/public/home.css' %}">
+    <title>ATUM SPORTS</title>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LM08HSDTFS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LM08HSDTFS');
+</script>
+<body>
+    <div class="modal-mobile mobile"></div>
+    <header>
+        <nav>
+            <img
+                class="logo-jiifs"
+                src="{% static 'images/ATUM-FAV-ICON.svg' %}"
+                alt="JIIFS"
+            />
+            <ul>
+                <li class="item-close mobile">
+                    <img
+                        class="icon-close mobile"
+                        src="{% static 'images/icon-close.svg' %}"
+                        alt="Menu"
+                    />
+                </li>
+                <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
+                <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
+            </ul>
+            <img
+                class="icon-burguer"
+                src="{% static 'images/icon-burguer.svg' %}"
+                alt="Menu"
+            />
+        </nav>
+    </header>
+    <main>
+        <section></section>
+        <section class="games">
+            <div class="filters">
+                <h2>Digite o código abaixo: </h2>
+                <div class="search-game-filters">
+                    <form method="get">
+                        <input type="text" name="code" id="" placeholder="Código" class="input-authenticate">
+                    </form>
+                </div>
+                <a href="{% url 'authenticate' %}">Limpar</a>
+            </div>
+            <div class="games-container">
+                {% if status %}
+                    {% if authenticity %}
+                    <h2 style="color: white;">DOCUMENTO ENCONTRADO:</h2>
+                    <p style="color: white;">Nome: {{authenticity.name}}.</p>
+                    <p style="color: white;">Código: {{authenticity.number}}.</p>
+                    <p style="color: white;">Verificador: {{authenticity.code}}.</p>
+                    {% else %}
+                    <h2 style="color: white;">DOCUMENTO NÃO ENCONTRADO.</h2>
+                    {% endif %}
+                {% else %}
+                <h2 style="color: white;">AUTENTICAR DOCUMENTOS ATUM SPORTS.</h2>
+                {% endif %}
+            </div>
+
+        </section>
+    </main>
+    <footer>
+        <img
+            src="{% static 'images/logo-ifs-white.png' %}"
+            alt=""
+            class="logo-ifs"
+        />
+        <img
+            src="{% static 'images/logo-morea-colorful.svg' %}"
+            alt=""
+            class="logo-ifs"
+        />
+    </footer>
+    <script src="{% static 'js/home.js' %}"></script>
+
+</body>
+</html>

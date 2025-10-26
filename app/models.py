@@ -24,6 +24,13 @@ class Detailed(models.IntegerChoices):
     penalties = 4, "Penaltis"
     Escalation = 5, "Escalação"
 
+class Type_referee(models.IntegerChoices):
+    referee_main = 0, "Árbitro principal"
+    main = 1, "Árbitro"
+    Assistant = 2, "Assistente"
+    annotator = 3, "Anotador"
+    timekeeper = 4, "Cronometrista"
+
 class Sport_types(models.IntegerChoices):
     futsal = 0, "Futsal"
     volleyball = 1, "Voleibol"
@@ -113,7 +120,6 @@ class Phase_types(models.IntegerChoices):
     quarter = 1, "Quartas de Final"
     semi = 2, "Semifinal"
     final = 3, "Final"
-    other = 4, "Outra"
 
 class UserSession(models.Model):
     session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="extra")
@@ -261,6 +267,7 @@ class Team_sport(models.Model):
     sexo = models.IntegerField(choices=Sexo_types.choices)
     status = models.BooleanField(default=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="team_sport_set")
+    technitian = models.ForeignKey(Voluntary, on_delete=models.SET_NULL, limit_choices_to={'type_voluntary': Type_service.technician}, null=True, blank=True)
 
     def __str__(self):      
         return f"{self.team.name} | {self.get_sexo_display()}"
@@ -275,6 +282,7 @@ class Player_team_sport(models.Model):
 class Team_match(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     match = models.ForeignKey('Match', on_delete=models.CASCADE, related_name='teams')
+    technitian = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):    
         return f"{self.team} | {self.match}"
@@ -290,7 +298,8 @@ class Volley_match(models.Model):
     
 class Phase(models.Model):
     event = models.ForeignKey(Event_sport, on_delete=models.CASCADE, related_name="phases", null=True, blank=True)
-    name = models.IntegerField(choices=Phase_types.choices, default=Phase_types.other, null=True, blank=True)
+    sexo = models.IntegerField(choices=Sexo_types.choices, default=Sexo_types.masculine)
+    name = models.IntegerField(choices=Phase_types.choices, default=Phase_types.group, null=True, blank=True)
 
     def __str__(self):
         return f"{self.event} | {self.get_name_display()}"
@@ -318,10 +327,19 @@ class Match(models.Model):
 
     group_phase = models.ForeignKey('Group_phase', on_delete=models.SET_NULL, null=True, blank=True, related_name="group_matches")
     location = models.CharField(max_length=100, null=True, blank=True)
+    observations = models.CharField(max_length=700, null=True, blank=True)
 
     def __str__(self):    
         label = f"{self.id} | {self.get_sport_display()}"
         return label
+    
+class Match_referee(models.Model):
+    match = models.ForeignKey('Match', on_delete=models.CASCADE, related_name='referees', null=True, blank=True)
+    referee = models.ForeignKey(Voluntary, on_delete=models.CASCADE, limit_choices_to={'type_voluntary': Type_service.arbitrator}, null=True, blank=True)
+    role = models.IntegerField(choices=Type_referee.choices, default=Type_referee.main, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.referee.name} ({self.get_role_display()}) - {self.match}"
 
 class Point(models.Model):
     point_types = models.IntegerField(choices=Point_types.choices, default=Point_types.empty)
@@ -341,6 +359,16 @@ class Assistance(models.Model):
 
     def __str__(self):    
         return f"{self.assis_to} | {self.player}"
+    
+class Authenticity(models.Model):
+    name = models.CharField(max_length=400, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
+    code = models.CharField(max_length=100, null=True, blank=True)
+    number = models.CharField(max_length=50, null=True, blank=True)
+    date_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):    
+        return f"{self.name} | {self.event} | {self.date_time}"
 
 class Player_match(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
@@ -350,7 +378,14 @@ class Player_match(models.Model):
     team_match = models.ForeignKey(Team_match, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):    
-        return f"{self.player} | {self.match} | {self.player_number} | {self.team_match} | {self.get_activity_display()}" 
+        return f"{self.player} | {self.match} | {self.player_number} | {self.team_match} | {self.get_activity_display()}"
+
+class Replacement(models.Model):
+    team_match = models.ForeignKey(Team_match, on_delete=models.CASCADE, null=True, blank=True)
+    player_entry = models.ForeignKey(Player_match, on_delete=models.CASCADE, related_name='replacements_as_entry', null=True, blank=True)
+    player_exit = models.ForeignKey(Player_match, on_delete=models.CASCADE, related_name='replacements_as_exit', null=True, blank=True)
+    date_time = models.DateTimeField(auto_now_add=True)
+
 class Penalties(models.Model):
     type_penalties = models.IntegerField(choices=Type_penalties.choices, default=Type_penalties.empty)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, null=True, blank=True)

@@ -1,0 +1,422 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SÚMULA OFICIAL</title>
+    <style>
+        @page {
+            size: landscape;
+            margin: 0.5cm;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 15px;
+            font-size: 12px;
+            line-height: 1.2;
+            transform: rotate(0deg);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .header h1 {
+            font-size: 16px;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        .competition {
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        
+        .match-details {
+            width: 100%;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .match-details td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+        
+        .teams-section {
+            width: 100%;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .teams-section td {
+            border: 1px solid #000;
+            padding: 3px;
+            vertical-align: top;
+            width: 50%;
+        }
+        
+        .team-header {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 2px;
+            font-size: 11px;
+        }
+        
+        .players-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 3px 0;
+        }
+        
+        .players-table td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: top;
+        }
+        
+        .player-number {
+            width: 25px;
+            text-align: center;
+        }
+        
+        .player-name {
+            width: auto;
+        }
+        
+        .player-cards {
+            width: 35px;
+            text-align: center;
+        }
+        
+        .player-goals {
+            width: 60px;
+            text-align: center;
+        }
+        
+        .substitutions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 3px 0;
+        }
+        
+        .substitutions-table td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            vertical-align: top;
+        }
+        
+        .sub-time {
+            width: 30px;
+            text-align: center;
+        }
+        
+        .sub-team {
+            width: 120px;
+        }
+        
+        .sub-players {
+            width: auto;
+        }
+        
+        .events-section {
+            width: 100%;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .events-section td {
+            border: 1px solid #000;
+            padding: 3px;
+            vertical-align: top;
+        }
+        
+        .officials-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .officials-table td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 15px;
+            color: #333333;
+        }
+        
+        .section-title {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 3px;
+            border: 1px solid #000;
+            margin: 5px 0 2px 0;
+            font-size: 11px;
+        }
+        
+        .goal-entry {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        
+        .column {
+            border: 1px solid #000;
+            padding: 5px;
+        }
+        
+        .three-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin: 5px 0;
+        }
+        
+        .three-columns .column {
+            padding: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho -->
+        <div class="header">
+            <h1>SÚMULA ATUM SPORTS  #{{authenticity.number}} #{{match.id}}</h1>
+        </div>
+        
+        <!-- Detalhes da Partida -->
+        <table class="match-details">
+            <tr>
+                <td style="width: 15%;"><strong>Competição:</strong><br>{{ match.event.name }}</td>
+                <td style="width: 15%;"><strong>Times:</strong><br>{{ team_match_a.team.name }} x {{ team_match_b.team.name }}</td>
+                <td style="width: 30%;"><strong>Modalidade:</strong><br>{{ match.get_sport_display }} {{ match.get_sexo_display }}</td>
+                <td style="width: 20%;"><strong>Partida:</strong><br>{{ match.id }}º Partida - {{ match.group_phase.phase.get_name_display }} - {{ match.group_phase.name }}</td>
+                <td style="width: 20%;"><strong>Horário previsto:</strong> {{ match.time_match|date:"d/m/Y - H:i" }}<br><strong>Horário efetivo:</strong> {{ match.time_start|date:"H:i" }} - {{ match.time_end|date:"H:i" }}</td>
+            </tr>
+        </table>
+        
+        <!-- Times e Resultado -->
+        <table class="teams-section">
+            <tr>
+                <td>
+                    <div class="team-header">{{ team_match_a.team.name }}</div>
+                    <div><strong>Resultado Final: {% if match.status != 0 %} {{ point_a.count }} {% endif %}</strong></div>
+                    <div><strong>Técnico:</strong>{% if team_sport_a.technitian %} {{team_sport_a.technitian}} {% else %} - {% endif %}</div>
+                </td>
+                <td>
+                    <div class="team-header">{{ team_match_b.team.name }}</div>
+                    <div><strong>Resultado Final: {% if match.status != 0 %} {{ point_b.count }} {% endif %}</strong></div>
+                    <div><strong>Técnico:</strong>{% if team_sport_b.technitian %} {{team_sport_b.technitian}} {% else %} - {% endif %} </div>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="two-columns">
+            <div class="column">
+                <div class="section-title">ESCALAÇÃO - {{ team_match_a.team.name }}</div>
+                <table class="players-table">
+                    <tr>
+                        <td class="team-header player-number">Nº</td>
+                        <td class="team-header player-name">NOME DO ATLETA</td>
+                        <td class="team-header player-cards">CARTÕES</td>
+                        <td class="team-header player-goals">GOLS</td>
+                    </tr>
+                    {% for i in players_a %}
+                    <tr>
+                        <td class="player-number">{% if i.number != 0 %} {{ i.number }} {% endif %}</td>
+                        <td class="player-name">{{ i.name }}</td>
+                        <td class="player-cards">
+                            {% if i.card_y == 0 and i.card_r == 0 %}
+                            
+                            {% else %}
+                                {% if i.card_y != 0 %} {{i.card_y}}A {% endif %} 
+                                {% if i.card_r != 0 %} {{i.card_r}}V {% endif %} 
+                            {% endif %} 
+                        </td>
+                        <td class="player-goals">
+                            
+                            {% if i.point != 0 %} {{i.point}}{% endif %} 
+                        </td>
+                    </tr>
+                    {% empty %}
+                        {% for _ in "iiiiiiiiiiiii" %}
+                        <tr>
+                            <td class="player-number" style="height: 9px;"></td>
+                            <td class="player-name"></td>
+                            <td class="player-cards"></td>
+                            <td class="player-goals"></td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </table>
+            </div>
+            
+            <div class="column">
+                <div class="section-title">ESCALAÇÃO - {{ team_match_b.team.name }}</div>
+                <table class="players-table">
+                    <tr>
+                        <td class="team-header player-number">Nº</td>
+                        <td class="team-header player-name">NOME DO ATLETA</td>
+                        <td class="team-header player-cards">CARTÕES</td>
+                        <td class="team-header player-goals">GOLS</td>
+                    </tr>
+                    {% for i in players_b %}
+                    <tr>
+                        <td class="player-number">{% if i.number != 0 %} {{ i.number }} {% endif %}</td>
+                        <td class="player-name">{{ i.name }}</td>
+                        <td class="player-cards">
+                            {% if i.card_y == 0 and i.card_r == 0 %}
+                            
+                            {% else %}
+                                {% if i.card_y != 0 %} {{i.card_y}}A {% endif %} 
+                                {% if i.card_r != 0 %} {{i.card_r}}V {% endif %} 
+                            {% endif %} 
+                        </td>
+                        <td class="player-goals">
+                            
+                            {% if i.point != 0 %} {{i.point}} {% endif %} 
+                        </td>
+                    </tr>
+                    {% empty %}
+                        {% for _ in "iiiiiiiiiiiii" %}
+                        <tr>
+                            <td class="player-number" style="height: 9.5px;"></td>
+                            <td class="player-name"></td>
+                            <td class="player-cards"></td>
+                            <td class="player-goals"></td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Ocorrências da Partida -->
+        <div class="section-title">OCORRÊNCIAS DA PARTIDA</div>
+        <div class="three-columns">
+            <div class="column" style="min-height: 9em;">
+                <strong>GOLS - {{ team_match_a.team.name }}</strong><br>
+                {% for i in point_a %}
+                <div class="goal-entry">{% if i.player.name %} {{ i.player.name }} {% else %} Atleta não registrado {% endif %} ({{ i.time }}')</div>
+                {% endfor %}
+            </div>
+            <div class="column" style="min-height: 9em;">
+                <strong>GOLS - {{ team_match_b.team.name }}</strong><br>
+                {% for i in point_b %}
+                <div class="goal-entry">{% if i.player.name %} {{ i.player.name }} {% else %} Atleta não registrado {% endif %} ({{ i.time }}')</div>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <strong>SUBSTITUIÇÕES</strong><br>
+                <table class="substitutions-table">
+                    <tr>
+                        <td class="team-header sub-time">TEMPO</td>
+                        <td class="team-header sub-team">TIME</td>
+                        <td class="team-header sub-players">SUBSTITUIÇÃO</td>
+                    </tr>
+                    {% for i in replacements %}
+                    <tr>
+                        <td class="sub-time">{{ i.date_time|date:"H:i" }}</td>
+                        <td class="sub-team">{{i.team_match.team.name}}
+                        </td>
+                        <td class="sub-players">
+                            {{ i.player_exit.player.name|truncatewords:1|cut:"…" }} ({{ i.player_exit.player_number }}) → {{ i.player_entry.player.name|truncatewords:1|cut:"…" }} ({{ i.player_entry.player_number }})
+                        </td>
+                    </tr>
+                    {% empty %}
+                        {% for _ in "iiiii" %}
+                        <tr>
+                            <td class="sub-time" style="height: 9px;"></td>
+                            <td class="sub-team"></td>
+                            <td class="sub-players"></td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <div class="two-columns">
+            <div class="column">
+                <div class="section-title">EQUIPE DE ARBITRAGEM</div>
+                <table class="officials-table">
+                    <tr>
+                        <td style="width: 35%;">Função</td>
+                        <td style="width: 65%;">Nome</td>
+                    </tr>
+                    {% for i in match_referee %}
+                    <tr>
+                        <td style="width: 35%;">{{ i.get_role_display }}</td>
+                        <td style="width: 65%;">{{ i.referee.name }} {% if i.referee.registration %} - {{ i.referee.registration }} {% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td style="width: 35%; height: 8px;"></td>
+                        <td style="width: 65%; height: 8px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 35%; height: 8px;"></td>
+                        <td style="width: 65%; height: 8px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 35%; height: 8px;"></td>
+                        <td style="width: 65%; height: 8px;"></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            
+            <div class="column">
+                <div class="section-title">OBSERVAÇÕES</div>
+                <div style="padding: 5px; min-height: 50px; font-size: 10px; line-height: 1.3;">
+                    {{ match.observations|default:"Nenhuma observação registrada." }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Súmula gerada em {{authenticity.date_time}} {% if user %} por {{user.username}}{% endif %} - confira a autenticidade em atum.morea-ifs.org/autenticar <br> {{authenticity.code}}
+        </div>
+        <div style="width: 100vw; display: flex; align-items: center;">
+            <img style="height: 5.8em;" src="data:image/png;base64,{{ qr_code }}"alt="" aria-hidden="true">
+            <img style="height: 5.2em; padding-left: 15px; padding-right: 15px;" src="{{logo_ifs}}"alt="" aria-hidden="true">
+            <img style="height: 5.7em;" src="{{logo_morea}}"alt="" aria-hidden="true">
+        </div>
+        
+    </div>
+</body>
+</html>

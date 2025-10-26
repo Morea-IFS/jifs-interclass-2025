@@ -198,6 +198,11 @@
         {% endfor %}
       </select>
 
+      <label for="sexo_phase">Sexo</label>
+      <select id="sexo_phase" name="sexo_phase" disabled>
+          <option selected disabled value="None">Selecione o sexo</option>
+      </select>
+
       <label>Nome da Fase</label>
       <select name="name" required>
         {% for value, name in phase_types %}
@@ -224,7 +229,7 @@
       <select name="phase" required>
         <option value="" disabled selected>Selecione a fase</option>
         {% for p in phases %}
-          <option value="{{ p.id }}">{{ p.get_name_display }} - {{ p.event.event.name }} - {{ p.event.get_sport_display }}</option>
+          <option value="{{ p.id }}">{{ p.get_name_display }} - {{ p.event.get_sport_display }} - {{ p.get_sexo_display }}</option>
         {% endfor %}
       </select>
 
@@ -244,6 +249,36 @@
   const timeASelect = document.getElementById("time-a");
   const timeBSelect = document.getElementById("time-b");
   const teamDiv = document.getElementById("team-selects");
+
+  // ---------- 1️⃣ Carregar sexos para o modal de FASE ----------
+  const eventSportPhaseSelect = document.querySelector('#modal-phase select[name="event_sport"]');
+  const sexoPhaseSelect = document.getElementById("sexo_phase");
+
+  async function carregarSexosPhase() {
+    const sport = eventSportPhaseSelect.value;
+    if (sport && sport !== "None") {
+      const response = await fetch(`/get_sexos/?sport=${sport}`);
+      const data = await response.json();
+
+      // Limpa e preenche select de sexo_phase
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      data.sexos.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.value;
+        opt.textContent = s.label;
+        sexoPhaseSelect.appendChild(opt);
+      });
+
+      sexoPhaseSelect.disabled = false;
+    } else {
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      sexoPhaseSelect.disabled = true;
+    }
+  }
+
+  if (eventSportPhaseSelect) {
+    eventSportPhaseSelect.addEventListener("change", carregarSexosPhase);
+  }
 
   // ---------- 1️⃣ Carregar sexos disponíveis ao selecionar esporte ----------
   async function carregarSexos() {
@@ -342,7 +377,7 @@
             data.groups.forEach(g => {
                 const opt = document.createElement("option");
                 opt.value = g.id;
-                opt.textContent = `${g.name} - ${g.phase_name}`;
+                opt.textContent = `${g.phase_name} - ${g.sexo} | ${g.name}`;
                 groupSelect.appendChild(opt);
             });
         } else {

@@ -6,10 +6,12 @@ from . import views
 
 urlpatterns = [
     path('<int:event_id>' , views.home_public, name = "home_public"),
+    path('chaveamento/<int:event_id>', views.switching_public, name='switching'),
     path('placar/<int:event_id>' , views.scoreboard_public, name="scoreboard_public"),
     path('scoreboard_projector/<int:event_id>', views.scoreboard_projector, name="scoreboard_projector"),
     path('sobre/<int:event_id>', views.about_us, name="about_us"),
     path('login' , views.login, name = "login"),
+    path('autenticar' , views.authenticate_file, name = "authenticate"),
     path('' , views.events_list, name = "events"),
     path('logout', views.sair, name='logout'),
     path('morea-admin', views.home_admin, name = "Home"),
