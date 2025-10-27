@@ -248,10 +248,10 @@
             </main>
 
             <div class="card-footer">
-                <h2 id="card-player-name">Griezmann</h2>
+                <h2 id="card-player-name"></h2>
                 <div class="line-container">
                     <span class="line"></span>
-                    <p id="card-team-name">França</p>
+                    <p id="card-team-name"></p>
                     <span class="line"></span>
                 </div>
             </div>
@@ -265,7 +265,7 @@
         </div>
 
         <div class="teams">
-            <div class="team-color team-a" style=" background-color: #02007a">
+            <div class="team-color team-a" id="team-a-container">
                 <div class="title-team" >
                     <img
                         class="team-photo" 
@@ -287,7 +287,7 @@
                     <p class="score points" id="point-a">{{point_a|default:'0'}}</p>
                 </div>
             </div>
-            <div class="team-color team-b" style=" background-color: #d10000">
+            <div class="team-color team-b" id="team-b-container">
                 <div class="title-team">
                     <h2 class="team-name" id="team-name-b">{{team_match_b.team.name|default:'TEAM B'}}</h2>
                     <img
@@ -339,41 +339,135 @@
     </footer>
     <script src="{% static 'js/scoreboard.js' %}"></script>
     <script>
+        let teamColors = {
+            teamA: '#030a70ff',
+            teamB: '#74744aff' 
+        };
+
         function isLightColor(color) {
             color = color.replace('#', '');
-            const r = parseInt(color.substr(0, 2), 16);
-            const g = parseInt(color.substr(2, 2), 16);
-            const b = parseInt(color.substr(4, 2), 16);
+            const r = parseInt(color.length === 3 ? color[0] + color[0] : color.substr(0, 2), 16);
+            const g = parseInt(color.length === 3 ? color[1] + color[1] : color.substr(2, 2), 16);
+            const b = parseInt(color.length === 3 ? color[2] + color[2] : color.substr(4, 2), 16);
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             return luminance > 0.5;
         }
 
-        function applyTextColorBasedOnBackground() {
-            const root = document.documentElement;
-            const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
-            const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
-            root.style.setProperty('--text-color', textColor);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            applyTextColorBasedOnBackground();
+        function applyTeamColors() {
+            const teamAContainer = document.getElementById('team-a-container');
+            const teamBContainer = document.getElementById('team-b-container');
             
-            // Aplicar cores para os nomes das equipes do vôlei
+            if (teamAContainer) {
+                teamAContainer.style.backgroundColor = teamColors.teamA;
+                const textColorA = isLightColor(teamColors.teamA) ? '#000000' : '#ffffff';
+                teamAContainer.style.color = textColorA;
+                const titleTeamA = teamAContainer.querySelector('.title-team');
+                const scoreTeamA = teamAContainer.querySelector('.score-team');
+                if (titleTeamA) titleTeamA.style.color = textColorA;
+                if (scoreTeamA) scoreTeamA.style.color = textColorA;
+            }
+            
+            if (teamBContainer) {
+                teamBContainer.style.backgroundColor = teamColors.teamB;
+                const textColorB = isLightColor(teamColors.teamB) ? '#000000' : '#ffffff';
+                teamBContainer.style.color = textColorB;
+                const titleTeamB = teamBContainer.querySelector('.title-team');
+                const scoreTeamB = teamBContainer.querySelector('.score-team');
+                if (titleTeamB) titleTeamB.style.color = textColorB;
+                if (scoreTeamB) scoreTeamB.style.color = textColorB;
+            }
             const volleyballTeamA = document.getElementById('volleyball-team-a');
             const volleyballTeamB = document.getElementById('volleyball-team-b');
             
             if (volleyballTeamA) {
-                volleyballTeamA.style.color = '#4d4de5';
+                volleyballTeamA.style.color = teamColors.teamA;
                 volleyballTeamA.style.fontWeight = 'bold';
             }
             
             if (volleyballTeamB) {
-                volleyballTeamB.style.color = '#e54d4d';
+                volleyballTeamB.style.color = teamColors.teamB;
                 volleyballTeamB.style.fontWeight = 'bold';
             }
+            const futsalTeamA = document.getElementById('futsal-team-a');
+            const futsalTeamB = document.getElementById('futsal-team-b');
+            
+            if (futsalTeamA) {
+                futsalTeamA.style.color = teamColors.teamA;
+                futsalTeamA.style.fontWeight = 'bold';
+            }
+            
+            if (futsalTeamB) {
+                futsalTeamB.style.color = teamColors.teamB;
+                futsalTeamB.style.fontWeight = 'bold';
+            }
+            document.documentElement.style.setProperty('--casa-border', teamColors.teamA);
+            document.documentElement.style.setProperty('--fora-border', teamColors.teamB);
+        }
+
+        function showGoalCard(team, playerName, playerImage, teamLogo, teamName) {
+            const goalCard = document.getElementById('card-goal');
+            const cardHeader = goalCard.querySelector('.card-header');
+            const cardFooter = goalCard.querySelector('.card-footer');
+            const cornerDecorations = goalCard.querySelectorAll('.corner-decoration');
+            const cornerInners = goalCard.querySelectorAll('.corner-inner');
+            const imageDecorations = goalCard.querySelectorAll('.image-decoration');
+            const primaryColor = team === 'A' ? teamColors.teamA : teamColors.teamB;
+            const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
+
+            goalCard.style.setProperty('--primary-color', primaryColor);
+            goalCard.style.setProperty('--text-color', textColor);
+
+            goalCard.style.backgroundColor = primaryColor;
+            cardHeader.style.backgroundColor = primaryColor;
+            cardHeader.style.color = textColor;
+            cardFooter.style.backgroundColor = primaryColor;
+            cardFooter.style.color = textColor;
+
+            cornerDecorations.forEach(corner => {
+                corner.style.borderColor = primaryColor;
+            });
+            
+            cornerInners.forEach(corner => {
+                corner.style.borderColor = textColor;
+            });
+
+            const lines = goalCard.querySelectorAll('.line');
+            lines.forEach(line => {
+                line.style.backgroundColor = textColor;
+            });
+
+            imageDecorations.forEach(decoration => {
+                decoration.style.backgroundColor = primaryColor;
+                decoration.style.opacity = '0.1';
+            });
+
+            document.getElementById('card-player-name').textContent = playerName;
+            document.getElementById('card-player-name').style.color = textColor;
+            document.getElementById('card-team-name').textContent = teamName;
+            document.getElementById('card-team-name').style.color = textColor;
+            document.getElementById('card-player-img').style.backgroundImage = `url('${playerImage}')`;
+            document.getElementById('card-team-img').src = teamLogo;
+
+            const teamImg = document.getElementById('card-team-img');
+            teamImg.style.borderColor = textColor;
+
+            goalCard.style.display = 'flex';
+
+            setTimeout(() => {
+                goalCard.style.display = 'none';
+            }, 5000);
+        }
+
+        function updateTeamColors(newTeamAColor, newTeamBColor) {
+            teamColors.teamA = newTeamAColor;
+            teamColors.teamB = newTeamBColor;
+            applyTeamColors();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            applyTeamColors();
         });
-    </script>
-    <script>
+
         {% if seconds %}
         stopwatch({{seconds}}, {{status}})
         {% endif %}
