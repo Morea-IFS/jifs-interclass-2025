@@ -174,7 +174,8 @@ main {
 
 .title-team h2 {
     font-family: 'Flick', sans-serif;
-    font-size: 56px;
+    font-size: 52px;
+    max-width: 40%;
     text-shadow: 0 4px 4px #0000003a;
 }
 
@@ -567,7 +568,8 @@ footer img {
     }
 
     .title-team h2 {
-        font-size: 32px;
+        font-size: 27px;
+        width: 40%;
     }
 
     .teams img {
@@ -768,7 +770,8 @@ footer img {
     }
 
     .title-team h2 {
-        font-size: 20px;
+        font-size: 15px;
+        width: 40%;
     }
 
     .teams img {

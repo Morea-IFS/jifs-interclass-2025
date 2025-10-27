@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Detailed, Status, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -976,6 +976,7 @@ def matches_edit(request, id):
             match_disable = True
         else:
             match_disable = False
+        
         context = {
             'match': match, 
             'sport': sport,
@@ -983,8 +984,6 @@ def matches_edit(request, id):
             'team_match_a': team_match_a,
             'team_match_b': team_match_b,
             'match_disable': match_disable,
-            
-
         }
         if request.method == "GET":
             return render(request, 'matches/matches_edit.html', context)
@@ -1030,7 +1029,8 @@ def games(request):
             'team': Team.objects.all(),
             'sport': Sport_types.choices,
             'events': Event.objects.all(),
-            'phase_types': Phase_types.choices
+            'phase_types': Phase_types.choices,
+            'sexo': Sexo_types.choices,
         }
 
         selected_event = None
@@ -1043,7 +1043,12 @@ def games(request):
             context['phases'] = Phase.objects.filter(event__event__id=request.GET['e']).order_by('name','event','sexo')
             context['groups'] = Group_phase.objects.filter(phase__event__event__id=request.GET['e']).order_by('phase__name','phase__event','phase__sexo')
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
+            context['teams'] = Team.objects.filter(event=selected_event)
 
+        if 'sport' in request.POST and request.POST.get('sport') != '':
+            filter = f'sport={int(request.POST.get('sport'))}'
+        if 'genre' in request.POST and request.POST.get('genre') != '':
+            filter += f'sexo={int(request.POST.get('genre'))}'
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
         else:
@@ -1254,7 +1259,9 @@ def games(request):
         ]
 
         authenticity = generate_authenticity(f"Súmula gerada por {request.user.username} da partida entre {team_match[0].team.name} e {team_match[1].team.name}", match.event)
-        qr = qrcode.make(f"{request.get_host()}/autenticar?code={authenticity.code}")
+        link = f"https://{request.get_host()}/autenticar?code={authenticity.code}"
+        qr = qrcode.make(link)
+        print(link)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         buffer.seek(0)
@@ -1279,258 +1286,8 @@ def games(request):
             'logo_morea': request.build_absolute_uri('/static/images/logo-morea.svg'),
             
         }
-        dados = {
-            'competicao_nome': 'CAMPEONATO BRASILEIRO - SÉRIE A 2024',
-            'data_partida': '25/10/2024',
-            'hora_partida': '16:00',
-            'local_partida': 'Estádio do Maracanã',
-            'estadio': 'Maracanã - Rio de Janeiro/RJ',
-            'rodada': '25ª Rodada',
-            'data_geracao': '25/10/2024 18:30:00',
-            'sistema_nome': 'Sistema Oficial da Liga',
-            
-            'time_mandante': {
-                'nome': 'CR FLAMENGO',
-                'tecnico': 'TITE',
-                'gols': 2,
-                'jogadores': [
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 1,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 9}]
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23},{'tempo': 9}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 3,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 21}]
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 10},{'tempo': 9}]
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 2,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-
-                    # ... mais jogadores
-                ],
-                'gols_detalhes': [
-                    {'atleta': 'GABRIEL BARBOSA', 'tempo': 23},
-                    {'atleta': 'PEDRO', 'tempo': 89}
-                ]
-            },
-            
-            'time_visitante': {
-                'nome': 'SE PALMEIRAS', 
-                'tecnico': 'ABEL FERREIRA',
-                'gols': 1,
-                'jogadores': [
-                    {
-                        'numero': 7, 
-                        'nome': 'RAPHAEL VEIGA', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 67}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    {
-                        'numero': 1, 
-                        'nome': 'SANTOS', 
-                        'cartoes_amarelos': 0, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': []
-                    },
-                    {
-                        'numero': 10, 
-                        'nome': 'GABRIEL BARBOSA', 
-                        'cartoes_amarelos': 1, 
-                        'cartoes_vermelhos': 0,
-                        'gols_tempo': [{'tempo': 23}]
-                    },
-                    # ... mais jogadores
-                ],
-                'gols_detalhes': [
-                    {'atleta': 'RAPHAEL VEIGA', 'tempo': 67}
-                ]
-            },
-            
-            'substituicoes': [
-                {
-                    'tempo': 78, 
-                    'time': 'mandante', 
-                    'saiu': 'PEDRO', 
-                    'numero_saiu': 9, 
-                    'entrou': 'CEBOLINHA', 
-                    'numero_entrou': 11
-                },
-                {
-                    'tempo': 78, 
-                    'time': 'mandante', 
-                    'saiu': 'PEDRO', 
-                    'numero_saiu': 9, 
-                    'entrou': 'CEBOLINHA', 
-                    'numero_entrou': 11
-                },
-                {
-                    'tempo': 78, 
-                    'time': 'mandante', 
-                    'saiu': 'PEDRO', 
-                    'numero_saiu': 9, 
-                    'entrou': 'CEBOLINHA', 
-                    'numero_entrou': 11
-                },
-                {
-                    'tempo': 78, 
-                    'time': 'mandante', 
-                    'saiu': 'PEDRO', 
-                    'numero_saiu': 9, 
-                    'entrou': 'CEBOLINHA', 
-                    'numero_entrou': 11
-                },
-                {
-                    'tempo': 78, 
-                    'time': 'mandante', 
-                    'saiu': 'PEDRO', 
-                    'numero_saiu': 9, 
-                    'entrou': 'CEBOLINHA', 
-                    'numero_entrou': 11
-                }
-            ],
-            
-            'arbitragem': [
-                {'funcao': 'Árbitro Principal', 'nome': 'WILTON SAMPAIO', 'matricula': 'CB-1234'},
-                {'funcao': 'Assistente 1', 'nome': 'BRUNO PIRES', 'matricula': 'CB-5678'},
-                {'funcao': 'Assistente 2', 'nome': 'FABRÍCIO VILARINHO', 'matricula': 'CB-9012'},
-                {'funcao': 'Quarto Árbitro', 'nome': 'BRÁULIO MACHADO', 'matricula': 'CB-3456'},
-            ],
-            
-            'observacoes': 'Partida realizada com portões abertos ao público. Temperatura: 28°C.'
-        }
-        dados.update(context)
         print(context)
-        html_string = render_to_string('generator/sumula.html', dados)
+        html_string = render_to_string('generator/sumula.html', context)
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="sumula-{authenticity.number}.pdf"'
@@ -1626,6 +1383,16 @@ def match_settings(request, id_sport, id_match):
         points_b = Point.objects.filter(team_match=team_match_b)
         penalties_a = Penalties.objects.filter(team_match=team_match_a)
         penalties_b = Penalties.objects.filter(team_match=team_match_b)
+        match_referee = Match_referee.objects.filter(match=match)
+        
+        group_phases = Group_phase.objects.filter(phase__event__event=match.event)
+        player_match = Player_match.objects.filter(match=match)
+        team_match = Team_match.objects.filter(match=match)
+        sports = Event_sport.objects.filter(event=match.event)
+        status = Status.choices
+        detailed = Detailed.choices
+        sexos = Sexo_types.choices
+
         context = {
             'match': match,
             'player_a': player_a,
@@ -1638,7 +1405,19 @@ def match_settings(request, id_sport, id_match):
             'team_match_b': team_match_b,
             'time_pauses': time_pauses,
             'assistance': assistance,
+            'match_referee': match_referee,
+
+            'players_match': player_match,
+            'teams_match': team_match,
+            'group_phases': group_phases,
+            'sports': sports,
+            'status': status,
+            'detailed': detailed,
+            'sexos': sexos,
         }
+        if match.sport in [1, 2]: 
+            context['volley_matchs'] = Volley_match.objects.filter(event=match.event)
+
         return render(request, 'match_settings.html', context)
     else:
         if 'pauses_delete' in request.POST:
@@ -1653,6 +1432,98 @@ def match_settings(request, id_sport, id_match):
         elif 'assistance_delete' in request.POST:
             assistance = Assistance.objects.get(id=request.POST.get('assistance_delete'))
             assistance.delete()
+        elif 'referee_delete' in request.POST:
+            referee = Match_referee.objects.get(id=request.POST.get('referee_delete'))
+            referee.delete()
+        elif 'sumula' in request.POST:
+            match_referee = Match_referee.objects.filter(match=match)
+            team_match = Team_match.objects.filter(match=match)
+            players_match_a = Player_match.objects.filter(team_match=team_match[0])
+            players_match_b = Player_match.objects.filter(team_match=team_match[1])
+            team_sport_a = Team_sport.objects.get(team=team_match[0].team, sport__sport=team_match[0].match.sport, sexo=team_match[0].match.sexo)
+            team_sport_b = Team_sport.objects.get(team=team_match[1].team, sport__sport=team_match[1].match.sport, sexo=team_match[1].match.sexo)
+            point_a = Point.objects.filter(team_match=team_match[0])
+            point_b = Point.objects.filter(team_match=team_match[1])
+            replacements = Replacement.objects.filter(team_match__match=match)
+            players_a = [
+                {
+                'name': i.player.name,
+                'number': i.player_number,
+                'card_r': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=0).count(),
+                'card_y': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=1).count(),
+                'point': Point.objects.filter(player=i.player, team_match=team_match[0]).count(),
+                }
+                for i in players_match_a
+            ]
+            players_b = [
+                {
+                'name': i.player.name,
+                'number': i.player_number,
+                'card_r': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=0).count(),
+                'card_y': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=1).count(),
+                'point': Point.objects.filter(player=i.player, team_match=team_match[0]).count(),
+                }
+                for i in players_match_b
+            ]
+
+            authenticity = generate_authenticity(f"Súmula gerada por {request.user.username} da partida entre {team_match[0].team.name} e {team_match[1].team.name}", match.event)
+            link = f"https://{request.get_host()}/autenticar?code={authenticity.code}"
+            qr = qrcode.make(link)
+            print(link)
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            buffer.seek(0)
+
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+            context = {
+                'match':match,
+                'team_match_a':team_match[0],
+                'team_match_b':team_match[1],
+                'players_a':players_a,
+                'players_b':players_b,
+                'team_sport_a':team_sport_a,
+                'team_sport_b':team_sport_b,
+                'point_a':point_a,
+                'point_b':point_b,
+                'replacements': replacements,
+                'user': request.user,
+                'match_referee': match_referee,
+                'authenticity': authenticity,
+                'qr_code': img_base64,
+                'logo_ifs': request.build_absolute_uri('/static/images/logo-ifs-black.svg'),
+                'logo_morea': request.build_absolute_uri('/static/images/logo-morea.svg'),
+                
+            }
+            print(context)
+            html_string = render_to_string('generator/sumula.html', context)
+
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="sumula-{authenticity.number}.pdf"'
+            #response['Content-Disposition'] = f'attachment; filename="sumula.pdf"'
+
+            HTML(string=html_string).write_pdf(response)
+
+            return response
+        elif 'location' in request.POST or 'add' in request.POST or 'winner' in request.POST:
+            print(request.POST)
+            if request.POST.get('sport'): match.sport = int(request.POST.get('sport'))
+            if request.POST.get('sexo'): match.sexo = int(request.POST.get('sexo'))
+            if request.POST.get('status'): match.status = int(request.POST.get('status'))
+            if request.POST.get('detailed'): match.detailed = int(request.POST.get('detailed'))
+            if request.POST.get('mvp'): match.mvp_player_player = Player.objects.get(id=request.POST.get('mvp'))
+            else: match.mvp_player_player = None
+            if request.POST.get('winner'): match.Winner_team = Team.objects.get(id=request.POST.get('winner')) 
+            else: match.Winner_team = None
+            if request.POST.get('group_phase'): match.group_phase = Group_phase.objects.get(id=request.POST.get('group_phase'))
+            if request.POST.get('volley_match'): match.volley_match = Volley_match.objects.get(id=request.POST.get('volley_match'))
+            if request.POST.get('time_match'): match.time_match = request.POST.get('time_match')
+            if request.POST.get('time_start'): match.time_start = request.POST.get('time_start')
+            if request.POST.get('time_end'): match.time_end = request.POST.get('time_end')
+            if request.POST.get('location'): match.location = request.POST.get('location')
+
+            if request.POST.get('add'): match.add = request.POST.get('add')
+            if request.POST.get('observations'): match.observations = request.POST.get('observations')
+            match.save()
         if current_get_params:
             return redirect(f"{reverse('match_settings', args=[id_sport, id_match])}?{current_get_params}")
         else:

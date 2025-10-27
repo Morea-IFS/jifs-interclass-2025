@@ -75,7 +75,7 @@
                     </div>
                     <div id="team_b_color" style=" background-color: #ff0000" class="team-b">
                         <div class="title-team">
-                            <h2 id="team-b">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %} </h2>
+                            <h2 id="team-b" style="text-align: right;">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %} </h2>
                             <img class="photo-team-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt="foto time b"/>
                             
                         </div>

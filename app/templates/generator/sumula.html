@@ -167,7 +167,7 @@
         
         .footer {
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
             margin-top: 15px;
             color: #333333;
         }
@@ -409,7 +409,7 @@
         </div>
         
         <div class="footer">
-            Súmula gerada em {{authenticity.date_time}} {% if user %} por {{user.username}}{% endif %} - confira a autenticidade em atum.morea-ifs.org/autenticar <br> {{authenticity.code}}
+            Súmula gerada em {{authenticity.date_time}} {% if user %} por {{user.username}}{% endif %} - confira a autenticidade no qr code abaixo. <br>MOREA SPORTS - ATUM 
         </div>
         <div style="width: 100vw; display: flex; align-items: center;">
             <img style="height: 5.8em;" src="data:image/png;base64,{{ qr_code }}"alt="" aria-hidden="true">

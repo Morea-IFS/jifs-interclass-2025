@@ -368,6 +368,8 @@ input[type="file"],
 input[type="date"],
 input[type="checkbox"],
 input[type=search],
+textarea,
+.button-match-settings,
 select {
     width: 100%;
     padding: 10px 14px;
@@ -390,6 +392,8 @@ input[type="file"]:focus,
 input[type="date"]:focus,
 input[type="checkbox"]:focus,
 input[type=search]:focus,
+textarea:focus,
+.button-match-settings:focus,
 select:focus {
     border-color: #0066ff;
     outline: none;

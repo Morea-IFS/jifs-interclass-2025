@@ -37,64 +37,66 @@
         </div>
 
         <!-- ================== FILTRO ================== -->
-        <div class="filter-container">
-            <button class="filter-toggle" onclick="toggleFilterMenu()">
-              <i class="fa-solid fa-filter"></i> Filtros
-            </button>
+        <div class="filter-container" {% if not select_event %} style="display: none;" {% endif %}>
+          <button class="filter-toggle" onclick="toggleFilterMenu()">
+            <i class="fa-solid fa-filter"></i> Filtros
+          </button>
 
-            <div class="filter-menu" id="filterMenu">
-                <div class="filter-section">
-                    <button type="button" class="filter-category" onclick="toggleSubmenu('sport')">
-                        <i class="fa-solid fa-futbol"></i> Esporte
-                    </button>
-                    <div class="filter-submenu" id="submenu-sport">
-                        <select>
-                            <option>Todos os Esportes</option>
-                            <option>Futsal</option>
-                            <option>Vôlei</option>
-                            <option>Basquete</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filter-section">
-                    <button type="button" class="filter-category" onclick="toggleSubmenu('sexo')">
-                        <i class="fa-solid fa-venus-mars"></i> Sexo
-                    </button>
-                    <div class="filter-submenu" id="submenu-sexo">
-                        <select>
-                            <option>Todos</option>
-                            <option>Masculino</option>
-                            <option>Feminino</option>
-                        </select>
-                    </div>
-                  </div>
-
-                  <div class="filter-section">
-                      <button type="button" class="filter-category" onclick="toggleSubmenu('turma')">
-                          <i class="fa-solid fa-users"></i> Turma
-                      </button>
-                      <div class="filter-submenu" id="submenu-turma">
-                          <select>
-                              <option>Todas</option>
-                              <option>3° IRC</option>
-                              <option>2° ADS</option>
-                          </select>
-                      </div>
-                  </div>
-
-                  <div class="filter-buttons">
-                      <button class="btn-filter">
-                          <i class="fa-solid fa-check"></i>
-                          <span>Aplicar</span>
-                      </button>
-                      <a href="#" class="btn-clear">
-                          <i class="fa-solid fa-rotate-right"></i>
-                          <span>Limpar</span>
-                      </a>
-                  </div>
-                </div>
+          <form class="filter-menu" id="filterMenu">
+            <div class="filter-section">
+              <button type="button" class="filter-category" onclick="toggleSubmenu('sport')">
+                  <i class="fa-solid fa-futbol"></i> Esporte
+              </button>
+              <div class="filter-submenu" id="submenu-sport">
+                  <select name="sport">
+                      <option value="">Todos os Esportes</option>
+                      {% for i in event_sports %}
+                      <option value="{{i.sport}}">{{i.get_sport_display}}</option>
+                      {% endfor %}
+                  </select>
               </div>
+            </div>
+
+            <div class="filter-section">
+              <button type="button" class="filter-category" onclick="toggleSubmenu('sexo')">
+                  <i class="fa-solid fa-venus-mars"></i> Sexo
+              </button>
+              <div class="filter-submenu" id="submenu-sexo">
+                  <select name="genre">
+                    <option value="">Todos</option>
+                    {% for i,j in sexo %}
+                    <option value="{{i}}">{{j}}</option>
+                    {% endfor %}
+                  </select>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <button type="button" class="filter-category" onclick="toggleSubmenu('turma')">
+                  <i class="fa-solid fa-users"></i> Times
+              </button>
+              <div class="filter-submenu" id="submenu-turma">
+                  <select name="team">
+                    <option value="">Todos</option>
+                    {% for i in teams %}
+                    <option value="{{i.id}}">{{i.name}}</option>
+                    {% endfor %}
+                  </select>
+              </div>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="btn-filter">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Aplicar</span>
+                </button>
+                <a href="" class="btn-clear">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Limpar</span>
+                </a>
+            </div>
+          </form>
+        </div>
 
 
         <div class="games">
@@ -122,9 +124,10 @@
 
                     <div class="match-details">
                         <div class="match-info">
-                            <span class="info-tag">{{ i.match.get_sexo_display }}</span>
-                            <span class="info-tag">{{ i.match.get_sport_display }}</span>
-                            <span class="info-tag">{% if i.match.group_phase %} {{ i.match.group_phase.name }}{% endif %}</span>
+                          <span class="info-tag">{{ i.match.get_sport_display }}</span>
+                          <span class="info-tag">{{ i.match.get_sexo_display }}</span>
+                          {% if i.match.group_phase.phase %}<span class="info-tag">{{ i.match.group_phase.phase.get_name_display }}</span>{% endif %}
+                          {% if i.match.group_phase %}<span class="info-tag">{{ i.match.group_phase.name }}</span>{% endif %}
                         </div>
                         <div class="match-status">
                           {{ i.match.get_status_display }}
