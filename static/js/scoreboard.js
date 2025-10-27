@@ -221,7 +221,7 @@ socket.onmessage = function(e) {
             if (point_a_point) point_a_point.textContent = point.point_a;
             if (point_b_point) point_b_point.textContent = point.point_b;
 
-            if(point.aces_a && point.aces_b){
+            if(point.aces_a || point.aces_b){
                 if (aces_a_point) aces_a_point.textContent = point.aces_a;
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
             }

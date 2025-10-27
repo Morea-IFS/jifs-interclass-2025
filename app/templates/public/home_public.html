@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -38,7 +39,7 @@
                 </li>
                 <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                 <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
-                <li><a href="{% url 'about_us' event.id %}" class="about-us-link">Sobre Nós</a></li>
+                <li><a href="{% url 'switching' event.id %}" class="about-us-link">Chave</a></li>
                 <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
                 <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
             </ul>
@@ -60,16 +61,16 @@
                         <input class="search-input" type="text" name="" id="" placeholder="Pesquisar" >
                     </div>
                     <div class="game-filters">
-                        <form class="games-filter">
+                        <div class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
-                            <select name="sport" id="sport" onchange="this.form.submit();">
+                            <select name="sport" id="sport">
                                 <option value="all">Esporte</option>
                                 {% for i in event_sports %}
                                 <option value="{{i.id}}">{{i.get_sport_display}}</option>
                                 {% endfor %}
                             </select>
                             <img class="icon-arrow" src="{% static 'images/arrow.svg'%}" alt="" aria-hidden="true">
-                        </form>
+                        </div>
                         <div class="games-filter">
                             <img src="{% static 'images/icon-filter.svg'%}" alt="" aria-hidden="true">
                             <select name="genre" id="genre">
@@ -155,6 +156,7 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_volei_fem %}
+                        <h3>JOGO #{{i.volley_match.id}} ( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
                             {% for match in i.matches %}
                                 <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
@@ -202,6 +204,7 @@
                 </div>
                 {% endif %}
             </div>
+
         </section>
         <section class="today-games">
             <h2>Jogos do Dia</h2>

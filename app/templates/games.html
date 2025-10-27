@@ -4,28 +4,18 @@
 {% block head %}
 <title>ATUM ADMIN</title>
 <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/match.css' %}">
 {% endblock head %}
 
-{% block navbar %}
-<style>
-
-</style>
-{% endblock navbar %}
-
 {% block content %}
-
 <div class="all-block">
     <div class="block1">
         <div class="title-adm">
-            <h1>
-                GERENCIAMENTO DE PARTIDAS
-            </h1>
-            {% if perms.app.add_match %}
+            <h1>GERENCIAMENTO DE PARTIDAS</h1>
+            {% if perms.app.add_match or perms.app.add_phase or perms.app.add_groupphase %}
             <div class="title-buttons">
-                {% if user.event_user or select_event %}
-                <span onclick="openModal()"><p>Novo</p></span>
-                {% else %}
-                <h3>EVENTO -></h3>
+                {% if select_event %}
+                <span onclick="openOptionsModal()"><p>Novo</p></span>
                 {% endif %}
                 {% if user.type == 0 %}
                 <form method="get">
@@ -37,67 +27,195 @@
                     </select>
                 </form>
                 {% else %}
-                <h3>
-                    {{user.event_user.name}}
-                </h3>
+                <h3>{{ user.event_user.name }}</h3>
+                {% endif %}
+                {% if not select_event %}
+                <h2>ADMIN</h2>
                 {% endif %}
             </div>
             {% endif %}
         </div>
+
+        <!-- ================== FILTRO ================== -->
+        <div class="filter-container">
+            <button class="filter-toggle" onclick="toggleFilterMenu()">
+              <i class="fa-solid fa-filter"></i> Filtros
+            </button>
+
+            <div class="filter-menu" id="filterMenu">
+                <div class="filter-section">
+                    <button type="button" class="filter-category" onclick="toggleSubmenu('sport')">
+                        <i class="fa-solid fa-futbol"></i> Esporte
+                    </button>
+                    <div class="filter-submenu" id="submenu-sport">
+                        <select>
+                            <option>Todos os Esportes</option>
+                            <option>Futsal</option>
+                            <option>Vôlei</option>
+                            <option>Basquete</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <button type="button" class="filter-category" onclick="toggleSubmenu('sexo')">
+                        <i class="fa-solid fa-venus-mars"></i> Sexo
+                    </button>
+                    <div class="filter-submenu" id="submenu-sexo">
+                        <select>
+                            <option>Todos</option>
+                            <option>Masculino</option>
+                            <option>Feminino</option>
+                        </select>
+                    </div>
+                  </div>
+
+                  <div class="filter-section">
+                      <button type="button" class="filter-category" onclick="toggleSubmenu('turma')">
+                          <i class="fa-solid fa-users"></i> Turma
+                      </button>
+                      <div class="filter-submenu" id="submenu-turma">
+                          <select>
+                              <option>Todas</option>
+                              <option>3° IRC</option>
+                              <option>2° ADS</option>
+                          </select>
+                      </div>
+                  </div>
+
+                  <div class="filter-buttons">
+                      <button class="btn-filter">
+                          <i class="fa-solid fa-check"></i>
+                          <span>Aplicar</span>
+                      </button>
+                      <a href="#" class="btn-clear">
+                          <i class="fa-solid fa-rotate-right"></i>
+                          <span>Limpar</span>
+                      </a>
+                  </div>
+                </div>
+              </div>
+
+
         <div class="games">
             {% for i in context %}
-            <section class="game-section">
-                <div class="game-block1">
-                    <div class="game-title">
-                        <h1 {% if i.match.sexo == 1 %}  style="color: #ee005b;" {% endif %}>{{ i.times.0.team.name }} <span style="color: black;">X</span> {{ i.times.1.team.name }}</h1>
+            <section class="game-card">
+                <div class="game-header" {% if i.match.sexo == 1 %} style="background-color: #ee0063;" {% endif %}>
+                    <h2>{{ i.match.get_sport_display }}</h2>
+                    <span class="match-id">PARTIDA #{{ i.match.id }}</span>
+                </div>
+
+                <div class="game-content">
+                    <div class="teams-section">
+                        <div class="teams-vs">
+                            <div class="team">
+                                <span class="team-name">{{ i.times.0.team.name }}</span>
+                                <span class="team-score" {% if i.match.sexo == 1 %} style="color: #ee005b;" {% endif %}>{{ i.points_a }}</span>
+                            </div>
+                            <span class="vs">VS</span>
+                            <div class="team">
+                                <span class="team-name">{{ i.times.1.team.name }}</span>
+                                <span class="team-score" {% if i.match.sexo == 1 %} style="color: #ee005b;" {% endif %}>{{ i.points_b }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div {% if i.match.sexo == 1 %} style="background-color: #ee005b;" {% endif %} class="game-score">{{ i.points_a }} x {{ i.points_b }}</div>
-                </div>
-                <div class="game-block2">
-                    <p>PARTIDA #{{i.match.id}}<br>{{i.match.get_sexo_display}}<br>{{ i.match.get_sport_display }}</p>
-                    <h2>{{i.match.get_status_display}}</h2>
-                    <h3>{% if i.match.Winner_team %} Vencedor:  {{ i.match.Winner_team }} {% else %} {{i.match.time_match|date:"d/m/Y - H:i" }} {% endif %}</h3>
-                </div>
-                <div class="games-config">  
-                    <a class="games-config-link" {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' i.match.event.id %}" {% endif %}>
-                        <div {% if i.match.status == 1 %} class="games-config-item games-config-item-active" {% else %} class="games-config-item games-config-item-desactive"{% endif %}>
-                            <img class="games-config-item-img" src="{% static 'images/icon-timer.png' %}"
-                                alt="Timer Icon" />
+
+                    <div class="match-details">
+                        <div class="match-info">
+                            <span class="info-tag">{{ i.match.get_sexo_display }}</span>
+                            <span class="info-tag">{{ i.match.get_sport_display }}</span>
+                            <span class="info-tag">{% if i.match.group_phase %} {{ i.match.group_phase.name }}{% endif %}</span>
                         </div>
-                    </a>
-                    <a class="games-config-link">
-                        <form method="post" class="games-config-item">{% csrf_token %}
-                            <button name="change_match" value="{{i.match.id}}" type="submit" style="margin: 0; background-color: transparent;"><img class="games-config-item-img" src="{% static 'images/icon-config.png' %}"
-                                alt="Gear Icon" /></button>
-                        </form>
-                    </a>
-                    <a class="games-config-link" href="{% url 'match_settings' i.match.sport i.match.id %}">
-                        <div class="games-config-item games-config-item-player">
-                            <img class="games-config-item-img" src="{% static 'images/icon-player.png' %}"
-                                alt="Player Icon" />
+                        <div class="match-status">
+                          {{ i.match.get_status_display }}
                         </div>
+                        <div class="match-time">
+                        {% if i.match.Winner_team %}
+                            Vencedor: {{ i.match.Winner_team }}
+                        {% else %}
+                            {{ i.match.time_match|date:"d/m/Y - H:i" }}
+                        {% endif %}
+                        </div>
+                        <div class="match-location">
+                            {% if i.match.location %}
+                            📍 {{ i.match.location }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-actions">  
+                    <a {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' i.match.event.id %}" {% endif %}>
+                        <button {% if i.match.status == 1 %} class="action-btn action-btn-active" {% else %} class="action-btn action-btn-desactive"{% endif %}>
+                            <i class="fa-solid fa-gamepad"></i>
+                        </button>
                     </a>
+                    <form method="post">{% csrf_token %}
+                        <button class="action-btn" name="change_match" value="{{ i.match.id }}" type="submit" style="margin: 0; background-color: #282828;">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </form>
+                    <a href="{% url 'match_settings' i.match.sport i.match.id %}">  
+                        <button class="action-btn" style="background-color: red;">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </button>
+                    </a>
+                    <form method="post">{% csrf_token %}
+                        <button class="action-btn" name="sumula" value="{{ i.match.id }}" style="margin: 0; background-color: #0289f7;">
+                            <i class="fa-solid fa-file-text"></i>
+                        </button>
+                    </form>
                 </div>
             </section>
             {% empty %}
             <section class="alert-page">
                 <div class="alert-img">
-                <i class="fa-solid fa-circle-exclamation"></i> 
+                    <i class="fa-solid fa-circle-exclamation"></i> 
                 </div>
                 <div class="alert-text">
                     <p>NÃO HÁ NENHUMA PARTIDA PROGRAMADA.</p>
                 </div>
             </section>
             {% endfor %}
-
         </div>
     </div>
 </div>
-{% if perms.app.add_match %}
 
-<div id="eventModal" class="modal">
+{% if perms.app.add_match or perms.app.add_phase or perms.app.add_groupphase %}
+
+<!-- ================= MODAL DE OPÇÕES ================= -->
+<div id="optionsModal" class="modal">
+  <div class="modal-content" style="max-width: 400px; text-align:center;">
+    <span class="close" onclick="closeOptionsModal()">&times;</span>
+    <h2>O que deseja criar?</h2>
+    <div class="buttons-options" style="margin-top: 2em; gap: 1em;">
+        {% if perms.app.add_match %}
+        <span class="button-op-1" style="background:#2196F3; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('match')">
+            <p style="color:white;">Partida</p>
+            <i class="fa-solid fa-futbol" style="position: static;"></i>
+        </span>
+        {% endif %}
+        {% if perms.app.add_phase %}
+        <span class="button-op-2" style="background:#4CAF50; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('phase')">
+            <p style="color:white;">Fase</p>
+            <i class="fa-solid fa-layer-group" style="position: static;"></i>
+        </span>
+        {% endif %}
+        {% if perms.app.add_groupphase %}
+        <span class="button-op-2" style="background:#FF9800; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('group')">
+            <p style="color:white;">Grupo</p>
+            <i class="fa-solid fa-people-group" style="position: static;"></i>
+        </span>
+        {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL PARTIDA ================= -->
+{% if perms.app.add_match %}
+<div id="modal-match" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
+        <span class="close" onclick="closeModal('match')">&times;</span>
         <h2>Cadastrar partida</h2>
         <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -107,11 +225,13 @@
             {% for i in event_sports %}
             <option value="{{i.id}}">
             {{i.get_sport_display}}
-            {% if i.masc %}(masc){% endif %}
-            {% if i.fem %}(fem){% endif %}
-            {% if i.mist %}(mist){% endif %}
             </option>
             {% endfor %}
+        </select>
+
+        <label for="group">Fase / Grupo</label>
+        <select id="group" name="group">
+            <option selected disabled value="">Selecione a fase/grupo</option>
         </select>
 
         <label for="sexo">Sexo</label>
@@ -127,6 +247,9 @@
             <select id="time-b" name="time_b" required></select>
         </div>
 
+        <label for="location">Local</label>
+        <input type="text" id="location" name="location" placeholder="Informe o local" />
+
         <label for="date-game">Horário</label>
         <input class="input-data" type="datetime-local" name="datetime" id="date-game" />
         <p style="color: #6d6c6c; font-size: 15px;">*Informe a data e horário da partida ou coloque o horário por ordem de partida.</p>
@@ -134,22 +257,106 @@
         </form>
     </div>
 </div>
+{% endif %}
 
-<script>
-    function openModal() {
-        document.getElementById("eventModal").style.display = "block";
-    }
+<!-- ================= MODAL FASE ================= -->
+{% if perms.app.add_phase %}
+<div id="modal-phase" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('phase')">&times;</span>
+    <h2>Cadastrar Fase</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="create_phase">
+      <label>Evento / Esporte</label>
+      <select name="event_sport" required>
+        <option value="" disabled selected>Selecione</option>
+        {% for e in event_sports %}
+          <option value="{{ e.id }}">{{ e.get_sport_display }}</option>
+        {% endfor %}
+      </select>
 
-    function closeModal() {
-        document.getElementById("eventModal").style.display = "none";
-    }
-</script>
+      <label for="sexo_phase">Sexo</label>
+      <select id="sexo_phase" name="sexo_phase" disabled>
+          <option selected disabled value="None">Selecione o sexo</option>
+      </select>
+
+      <label>Nome da Fase</label>
+      <select name="name" required>
+        {% for value, name in phase_types %}
+          <option value="{{ value }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Cadastrar</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ================= MODAL GRUPO ================= -->
+{% if perms.app.add_groupphase %}
+<div id="modal-group" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('group')">&times;</span>
+    <h2>Cadastrar Grupo</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="create_group">
+      <label>Fase</label>
+      <select name="phase" required>
+        <option value="" disabled selected>Selecione a fase</option>
+        {% for p in phases %}
+          <option value="{{ p.id }}">{{ p.get_name_display }} - {{ p.event.get_sport_display }} - {{ p.get_sexo_display }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Nome do Grupo</label>
+      <input type="text" name="group_name" placeholder="Ex: Grupo A">
+
+      <button type="submit">Cadastrar</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
 <script>
   const sportSelect = document.getElementById("sport");
   const sexoSelect = document.getElementById("sexo");
   const timeASelect = document.getElementById("time-a");
   const timeBSelect = document.getElementById("time-b");
   const teamDiv = document.getElementById("team-selects");
+
+  // ---------- 1️⃣ Carregar sexos para o modal de FASE ----------
+  const eventSportPhaseSelect = document.querySelector('#modal-phase select[name="event_sport"]');
+  const sexoPhaseSelect = document.getElementById("sexo_phase");
+
+  async function carregarSexosPhase() {
+    const sport = eventSportPhaseSelect.value;
+    if (sport && sport !== "None") {
+      const response = await fetch(`/get_sexos/?sport=${sport}`);
+      const data = await response.json();
+
+      // Limpa e preenche select de sexo_phase
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      data.sexos.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.value;
+        opt.textContent = s.label;
+        sexoPhaseSelect.appendChild(opt);
+      });
+
+      sexoPhaseSelect.disabled = false;
+    } else {
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      sexoPhaseSelect.disabled = true;
+    }
+  }
+
+  if (eventSportPhaseSelect) {
+    eventSportPhaseSelect.addEventListener("change", carregarSexosPhase);
+  }
 
   // ---------- 1️⃣ Carregar sexos disponíveis ao selecionar esporte ----------
   async function carregarSexos() {
@@ -187,6 +394,7 @@
     if (sport && sexo && sport !== "None" && sexo !== "None") {
       const response = await fetch(`/get_teams/?sport=${sport}&sexo=${sexo}`);
       const data = await response.json();
+      console.log(data)
 
       // Limpa selects
       timeASelect.innerHTML = '<option selected disabled value="None">Selecione o time</option>';
@@ -210,6 +418,8 @@
     }
   }
 
+
+
   // ---------- 3️⃣ Evitar selecionar mesmo time em A e B ----------
   function atualizarOpcoesTimes() {
     const selectedA = timeASelect.value;
@@ -230,7 +440,28 @@
       }
     }
   }
+    const groupSelect = document.getElementById("group");
 
+    async function carregarGrupos() {
+        const sport = sportSelect.value;
+        if (sport && sport !== "None") {
+            const response = await fetch(`/get_groups/?sport=${sport}`);
+            const data = await response.json();
+
+            // Limpa o select
+            groupSelect.innerHTML = '<option selected disabled value="">Selecione a fase/grupo</option>';
+
+            // Preenche com os grupos retornados
+            data.groups.forEach(g => {
+                const opt = document.createElement("option");
+                opt.value = g.id;
+                opt.textContent = `${g.phase_name} - ${g.sexo} | ${g.name}`;
+                groupSelect.appendChild(opt);
+            });
+        } else {
+            groupSelect.innerHTML = '<option selected disabled value="">Selecione a fase/grupo</option>';
+        }
+    }
   // ---------- 4️⃣ Event listeners ----------
   sportSelect.addEventListener("change", () => {
     carregarSexos();
@@ -238,13 +469,29 @@
     teamDiv.style.display = "none";
     timeASelect.innerHTML = '';
     timeBSelect.innerHTML = '';
+    carregarGrupos();
   });
 
   sexoSelect.addEventListener("change", carregarTimes);
   timeASelect.addEventListener("change", atualizarOpcoesTimes);
   timeBSelect.addEventListener("change", atualizarOpcoesTimes);
+    function openOptionsModal() { document.getElementById("optionsModal").style.display = "block"; }
+    function closeOptionsModal() { document.getElementById("optionsModal").style.display = "none"; }
+    function openModal(type) { closeOptionsModal(); document.getElementById("modal-" + type).style.display = "block"; }
+    function closeModal(type) { document.getElementById("modal-" + type).style.display = "none"; }
+  function toggleFilterMenu() {
+  const menu = document.getElementById("filterMenu");
+  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
+
+function toggleSubmenu(name) {
+  const submenu = document.getElementById(`submenu-${name}`);
+  const allSubmenus = document.querySelectorAll(".filter-submenu");
+  allSubmenus.forEach(sm => {
+    if (sm !== submenu) sm.style.display = "none";
+  });
+  submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+}
+
 </script>
-
-
-{% endif %}
 {% endblock content %}

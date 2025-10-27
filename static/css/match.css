@@ -1,0 +1,135 @@
+
+/* CSS FILTER */
+
+/* ====== CONTAINER PRINCIPAL ====== */
+.filter-container {
+  margin-bottom: 2em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ====== BOTÃO PRINCIPAL ====== */
+.filter-toggle {
+  background: #0289f7;
+  color: white;
+  border: none;
+  padding: 0.6em 1.3em;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  transition: 0.3s;
+}
+
+.filter-toggle:hover {
+  background: #0074d1;
+}
+
+/* ====== MENU DE FILTROS (INICIALMENTE ESCONDIDO) ====== */
+.filter-menu {
+  background: #1f1f1f;
+  border-radius: 10px;
+  padding: 1em 1.5em;
+  margin-top: 1em;
+  width: 100%;
+  max-width: 650px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  display: none;
+  flex-direction: column;
+  gap: 0.8em;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ====== CATEGORIAS DE FILTRO ====== */
+.filter-category {
+  background: #2b2b2b;
+  color: white;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.6em 1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter-category:hover {
+  background: #3a3a3a;
+}
+
+.filter-category i {
+  margin-right: 0.6em;
+  color: #0289f7;
+}
+
+/* ====== SUBMENUS ====== */
+.filter-submenu {
+  display: none;
+  margin-top: 0.5em;
+}
+
+.filter-submenu select {
+  width: 100%;
+  padding: 0.6em;
+  border-radius: 8px;
+  border: none;
+  background: #2a2a2a;
+  color: white;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.filter-submenu select option {
+  color: white;
+}
+
+/* ====== BOTÕES FINAIS ====== */
+.filter-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6em;
+  margin-top: 1em;
+}
+
+.btn-filter, .btn-clear {
+  border: none;
+  padding: 0.6em 1.1em;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  text-decoration: none;
+}
+
+.btn-filter {
+  background: #0289f7;
+  color: white;
+}
+
+.btn-filter:hover {
+  background: #0074d1;
+}
+
+.btn-clear {
+  background: #3a3a3a;
+  color: white;
+}
+
+.btn-clear:hover {
+  background: #5a5a5a;
+}

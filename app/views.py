@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -16,7 +16,7 @@ from datetime import date, datetime
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from .generators import generate_certificates, generate_badges, generate_events, generate_timer
-import time, pytz, os
+import time, pytz, os, random
 from django.core.files.base import ContentFile
 from weasyprint import HTML
 from django.utils import timezone
@@ -283,10 +283,64 @@ def home_public(request, event_id):
                 'event_sports':event_sports,
                 'Phase_types': Phase_types,
             }
-
+            
             print(context)
             return render(request, 'public/home_public.html', context)
+        
+def switching_public(request, event_id):
+        print(request.GET)
+        event = Event.objects.get(id=event_id)
+        event_sports = Event_sport.objects.filter(event=event)
 
+        if request.method == "GET":
+            context = {
+                'event':event,
+                'event_sports':event_sports,
+                'phase_types': Phase_types.choices,
+                'sexo_types': Sexo_types.choices,
+                'phases_all': Phase.objects.filter(event__event=event).order_by('event'),
+            }
+            phases = Phase.objects.filter(event__event=event)\
+                .prefetch_related(
+                    'groups__group_matches__teams__team', 
+                )
+            if request.GET.get('sport') and request.GET.get('sport') != '':
+                event_sport = get_object_or_404(Event_sport, id=request.GET.get('sport'))
+                phases = phases.filter(event=event_sport)
+                context['event_sport'] = event_sport
+
+            if request.GET.get('genre') and request.GET.get('genre') != '':
+                phases = phases.filter(sexo=int(request.GET.get('genre')))
+                context['genre'] = int(request.GET.get('genre'))
+
+            if request.GET.get('phase') and request.GET.get('phase') != '':
+                phases = phases.filter(name=int(request.GET.get('phase')))
+                context['phase'] = int(request.GET.get('phase'))
+
+            matches_by_phase = {}
+
+            for phase in phases:
+                matches_no_group = Match.objects.filter(
+                    event=event,
+                    group_phase__isnull=True,
+                )
+
+                matches_in_groups = Match.objects.filter(
+                    event=event,
+                    group_phase__phase=phase,
+                )
+
+                matches_by_phase[phase.id] = matches_no_group | matches_in_groups
+                matches_by_phase[phase.id] = matches_by_phase[phase.id].prefetch_related('teams__team')
+
+            
+            context['phases'] = phases
+            context['matches_by_phase'] = matches_by_phase
+            
+            print(context)
+            return render(request, 'public/switching.html', context)
+        else:
+            return redirect('switching')
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -534,6 +588,7 @@ def team_manage(request):
             context['events_sport'] = Event_sport.objects.filter(event__id=e)
             context['team_sports'] = Team_sport.objects.filter(team__id=t, team__event__id=e)
             context['team'] = Team.objects.get(id=t)
+            context['voluntarys'] = Voluntary.objects.filter(event__id=e, type_voluntary=1)
             context['select_event'] = e
 
         elif e:
@@ -557,7 +612,7 @@ def team_manage(request):
             context['team'] = Team.objects.get(id=request.user.team.id)
             context['team_sports'] = Team_sport.objects.filter(team__id=request.user.team.id)
             context['events_sport'] = Event_sport.objects.filter(event__id=request.user.event_user.id)
-            
+        
         print("passou: ", context)
         return render(request, 'team/team_manage.html', context)
 
@@ -580,7 +635,10 @@ def team_manage(request):
                 if sexo == 0 and not sport.masc or sexo == 1 and not sport.fem or sexo == 2 and not sport.mist:
                     messages.error(request,"O esporte escolhido não está disponível para este sexo. Em caso de dúvidas, consulte o regulamento.")
                 else:
-                    Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+                    team_sport = Team_sport.objects.create(team=team, sport=sport, sexo=sexo, event=sport.event)
+                    if request.POST.get("technitian"):
+                        team_sport.technitian = Voluntary.objects.get(id=request.POST.get("technitian"))
+                    team_sport.save()
                     messages.success(request,"Esporte cadastrado com sucesso, adicione atletas.")
             else:
                 messages.info(request,"O esporte já existe, adicione atletas.")
@@ -969,25 +1027,28 @@ def matches_edit(request, id):
 def games(request):
     if request.method == "GET":
         context = {
+            'team': Team.objects.all(),
             'sport': Sport_types.choices,
             'events': Event.objects.all(),
+            'phase_types': Phase_types.choices
         }
 
         selected_event = None
 
         if request.user.type in [1, 2] and request.user.event_user:
             selected_event = request.user.event_user
-            context['event_sports'] = Event_sport.objects.filter(event=selected_event)
-            context['teams'] = Team.objects.filter(event=selected_event)
         elif 'e' in request.GET and request.GET['e'] != '':
             selected_event = Event.objects.get(id=request.GET['e'])
             context['select_event'] = request.GET['e']
+            context['phases'] = Phase.objects.filter(event__event__id=request.GET['e']).order_by('name','event','sexo')
+            context['groups'] = Group_phase.objects.filter(phase__event__event__id=request.GET['e']).order_by('phase__name','phase__event','phase__sexo')
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
-            context['teams'] = Team.objects.filter(event=selected_event)
 
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
         else:
+            context['phases'] = []
+            context['groups'] = []
             matches = Match.objects.all().prefetch_related('teams__team').order_by('time_match')
 
         context['context'] = [
@@ -1019,27 +1080,64 @@ def games(request):
             messages.info(request, "A partida já foi finalizada.")
         return redirect('games')
 
-    else:
+    # 2️⃣ Criar nova FASE
+    elif 'create_phase' in request.POST:
+        if not request.user.has_perm('app.add_phase'):
+            messages.error(request, "Você não tem permissão para criar fases.")
+            return redirect('games')
         print(request.POST)
-        sport = request.POST.get('sport')
+        event_id = int(request.POST.get('event_sport'))
+        name = int(request.POST.get('name'))
+        sexo = int(request.POST.get('sexo_phase'))
+        if not event_id or not name or not sexo:
+            if not name == 0 and not name or not sexo == 0 and not sexo:
+                messages.error(request, "Dados insuficientes para criar a fase.")
+                return redirect('games')
+
+        event_sport = Event_sport.objects.get(id=event_id)
+        print("event_S", event_sport)
+        if not event_sport:
+            messages.error(request, "Evento ou esporte não encontrado.")
+            return redirect('games')
+
+        Phase.objects.create(event=event_sport, name=name, sexo=sexo)
+        messages.success(request, "Fase criada com sucesso!")
+        return redirect(f"{reverse('games')}?e={event_sport.event.id}")
+
+    # 3️⃣ Criar novo GRUPO
+    elif 'create_group' in request.POST:
+        if not request.user.has_perm('app.add_group_phase'):
+            messages.error(request, "Você não tem permissão para criar grupos.")
+            return redirect('games')
+
+        phase_id = request.POST.get('phase')
+        group_name = request.POST.get('group_name')
+
+        if not phase_id:
+            messages.error(request, "Preencha todos os campos para criar o grupo.")
+            return redirect('games')
+
+        phase = Phase.objects.get(id=phase_id)
+        Group_phase.objects.create(phase=phase, name=group_name)
+        messages.success(request, "Grupo criado com sucesso!")
+        return redirect(f"{reverse('games')}?e={phase.event.event.id}")
+
+    elif 'time_a' in request.POST and 'time_b' in request.POST:
+
+        # 4️⃣ Criar nova PARTIDA
+        event_sport = Event_sport.objects.get(id=int(request.POST.get('sport')))
+        sport_id = event_sport.sport
         sexo = request.POST.get('sexo')
         team_a_id = request.POST.get('time_a')
         team_b_id = request.POST.get('time_b')
         datetime = request.POST.get('datetime')
-        
-        if not sport or not sexo or not team_a_id or not team_b_id or not datetime:
-            messages.error(request, "Você precisa informar todos os dados.")
-            return redirect('games')
-        
-        sport = int(sport)
-        sexo = int(sexo)
-        
-        event_sport = Event_sport.objects.get(id=sport)
-        sport_id = event_sport.sport
+        group_phase_id = request.POST.get('group')
+        location = request.POST.get('location')
 
-        if sexo == 0 and not event_sport.masc or sexo == 1 and not event_sport.fem or sexo == 2 and not event_sport.mist:
-            messages.error(request, "O esporte escolhido não está disponível para este sexo. Em caso de dúvidas, consulte o regulamento.")
-            return redirect('games')
+        if group_phase_id:
+            if sport_id != Group_phase.objects.get(id=group_phase_id).phase.event.sport:
+                messages.error(request, "O grupo precisa corresponder ao esporte.")
+                return redirect('games')
 
         # Define o evento
         if not request.user.event_user:
@@ -1075,6 +1173,10 @@ def games(request):
                 time_match=datetime,
                 volley_match=volley_match,
                 event=event,
+                defaults={
+                    'group_phase_id': group_phase_id or None,
+                    'location': location or "",
+                }
             )
         else:
             match, created = Match.objects.get_or_create(
@@ -1082,6 +1184,10 @@ def games(request):
                 sexo=sexo,
                 time_match=datetime,
                 event=event,
+                defaults={
+                    'group_phase_id': group_phase_id or None,
+                    'location': location or "",
+                }
             )
 
         if created:
@@ -1091,16 +1197,13 @@ def games(request):
         else:
             messages.info(request, f"Essa partida já foi cadastrada! Identificação: #{match.id}")
 
-        # Atualiza jogadores
         team_matches = Team_match.objects.filter(match=match)
         team_match_a = team_matches[0]
         team_match_b = team_matches[1]
-
+  
         players_match_a = Player_match.objects.filter(team_match=team_match_a)
         players_match_b = Player_match.objects.filter(team_match=team_match_b)
 
-        team_sport_a = Team_sport.objects.get(team=team_match_a.team, sport__sport=team_match_a.match.sport, sexo=match.sexo)
-        team_sport_b = Team_sport.objects.get(team=team_match_b.team, sport__sport=team_match_b.match.sport, sexo=match.sexo)
 
         player_team_sport_a = Player_team_sport.objects.filter(team_sport=team_sport_a)
         player_team_sport_b = Player_team_sport.objects.filter(team_sport=team_sport_b)
@@ -1117,7 +1220,352 @@ def games(request):
             if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_b).exists():
                 i.delete()
 
-        return redirect('games')
+    elif 'sumula' in request.POST:
+        print(request.POST)
+        match = Match.objects.get(id=request.POST.get('sumula'))
+        match_referee = Match_referee.objects.filter(match=match)
+        team_match = Team_match.objects.filter(match=match)
+        players_match_a = Player_match.objects.filter(team_match=team_match[0])
+        players_match_b = Player_match.objects.filter(team_match=team_match[1])
+        team_sport_a = Team_sport.objects.get(team=team_match[0].team, sport__sport=team_match[0].match.sport, sexo=team_match[0].match.sexo)
+        team_sport_b = Team_sport.objects.get(team=team_match[1].team, sport__sport=team_match[1].match.sport, sexo=team_match[1].match.sexo)
+        point_a = Point.objects.filter(team_match=team_match[0])
+        point_b = Point.objects.filter(team_match=team_match[1])
+        replacements = Replacement.objects.filter(team_match__match=match)
+        players_a = [
+            {
+            'name': i.player.name,
+            'number': i.player_number,
+            'card_r': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=0).count(),
+            'card_y': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=1).count(),
+            'point': Point.objects.filter(player=i.player, team_match=team_match[0]).count(),
+            }
+            for i in players_match_a
+        ]
+        players_b = [
+            {
+            'name': i.player.name,
+            'number': i.player_number,
+            'card_r': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=0).count(),
+            'card_y': Penalties.objects.filter(player=i.player, team_match=team_match[0], type_penalties=1).count(),
+            'point': Point.objects.filter(player=i.player, team_match=team_match[0]).count(),
+            }
+            for i in players_match_b
+        ]
+
+        authenticity = generate_authenticity(f"Súmula gerada por {request.user.username} da partida entre {team_match[0].team.name} e {team_match[1].team.name}", match.event)
+        qr = qrcode.make(f"{request.get_host()}/autenticar?code={authenticity.code}")
+        buffer = BytesIO()
+        qr.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        img_base64 = base64.b64encode(buffer.getvalue()).decode()
+        context = {
+            'match':match,
+            'team_match_a':team_match[0],
+            'team_match_b':team_match[1],
+            'players_a':players_a,
+            'players_b':players_b,
+            'team_sport_a':team_sport_a,
+            'team_sport_b':team_sport_b,
+            'point_a':point_a,
+            'point_b':point_b,
+            'replacements': replacements,
+            'user': request.user,
+            'match_referee': match_referee,
+            'authenticity': authenticity,
+            'qr_code': img_base64,
+            'logo_ifs': request.build_absolute_uri('/static/images/logo-ifs-black.svg'),
+            'logo_morea': request.build_absolute_uri('/static/images/logo-morea.svg'),
+            
+        }
+        dados = {
+            'competicao_nome': 'CAMPEONATO BRASILEIRO - SÉRIE A 2024',
+            'data_partida': '25/10/2024',
+            'hora_partida': '16:00',
+            'local_partida': 'Estádio do Maracanã',
+            'estadio': 'Maracanã - Rio de Janeiro/RJ',
+            'rodada': '25ª Rodada',
+            'data_geracao': '25/10/2024 18:30:00',
+            'sistema_nome': 'Sistema Oficial da Liga',
+            
+            'time_mandante': {
+                'nome': 'CR FLAMENGO',
+                'tecnico': 'TITE',
+                'gols': 2,
+                'jogadores': [
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 1,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 9}]
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23},{'tempo': 9}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 3,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 21}]
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 10},{'tempo': 9}]
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 2,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+
+                    # ... mais jogadores
+                ],
+                'gols_detalhes': [
+                    {'atleta': 'GABRIEL BARBOSA', 'tempo': 23},
+                    {'atleta': 'PEDRO', 'tempo': 89}
+                ]
+            },
+            
+            'time_visitante': {
+                'nome': 'SE PALMEIRAS', 
+                'tecnico': 'ABEL FERREIRA',
+                'gols': 1,
+                'jogadores': [
+                    {
+                        'numero': 7, 
+                        'nome': 'RAPHAEL VEIGA', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 67}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    {
+                        'numero': 1, 
+                        'nome': 'SANTOS', 
+                        'cartoes_amarelos': 0, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': []
+                    },
+                    {
+                        'numero': 10, 
+                        'nome': 'GABRIEL BARBOSA', 
+                        'cartoes_amarelos': 1, 
+                        'cartoes_vermelhos': 0,
+                        'gols_tempo': [{'tempo': 23}]
+                    },
+                    # ... mais jogadores
+                ],
+                'gols_detalhes': [
+                    {'atleta': 'RAPHAEL VEIGA', 'tempo': 67}
+                ]
+            },
+            
+            'substituicoes': [
+                {
+                    'tempo': 78, 
+                    'time': 'mandante', 
+                    'saiu': 'PEDRO', 
+                    'numero_saiu': 9, 
+                    'entrou': 'CEBOLINHA', 
+                    'numero_entrou': 11
+                },
+                {
+                    'tempo': 78, 
+                    'time': 'mandante', 
+                    'saiu': 'PEDRO', 
+                    'numero_saiu': 9, 
+                    'entrou': 'CEBOLINHA', 
+                    'numero_entrou': 11
+                },
+                {
+                    'tempo': 78, 
+                    'time': 'mandante', 
+                    'saiu': 'PEDRO', 
+                    'numero_saiu': 9, 
+                    'entrou': 'CEBOLINHA', 
+                    'numero_entrou': 11
+                },
+                {
+                    'tempo': 78, 
+                    'time': 'mandante', 
+                    'saiu': 'PEDRO', 
+                    'numero_saiu': 9, 
+                    'entrou': 'CEBOLINHA', 
+                    'numero_entrou': 11
+                },
+                {
+                    'tempo': 78, 
+                    'time': 'mandante', 
+                    'saiu': 'PEDRO', 
+                    'numero_saiu': 9, 
+                    'entrou': 'CEBOLINHA', 
+                    'numero_entrou': 11
+                }
+            ],
+            
+            'arbitragem': [
+                {'funcao': 'Árbitro Principal', 'nome': 'WILTON SAMPAIO', 'matricula': 'CB-1234'},
+                {'funcao': 'Assistente 1', 'nome': 'BRUNO PIRES', 'matricula': 'CB-5678'},
+                {'funcao': 'Assistente 2', 'nome': 'FABRÍCIO VILARINHO', 'matricula': 'CB-9012'},
+                {'funcao': 'Quarto Árbitro', 'nome': 'BRÁULIO MACHADO', 'matricula': 'CB-3456'},
+            ],
+            
+            'observacoes': 'Partida realizada com portões abertos ao público. Temperatura: 28°C.'
+        }
+        dados.update(context)
+        print(context)
+        html_string = render_to_string('generator/sumula.html', dados)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="sumula-{authenticity.number}.pdf"'
+        #response['Content-Disposition'] = f'attachment; filename="sumula.pdf"'
+
+        HTML(string=html_string).write_pdf(response)
+
+        return response
+    return redirect('games')
+
+def generate_authenticity(name, event):
+    list = []
+    possibilidade = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+    for i in range(4):
+        number = random.randint(1, 8)
+        chars = ''.join(random.sample(possibilidade, number))
+        list.append(chars)
+        if i == 3: list.append(f"-{number}")
+        else: list.append(f"-{number}-")
+    result = str(''.join(list))
+    number = str(random.randint(1111111,9999999))
+    authenticity = Authenticity.objects.create(name=name, event=event, code=result, number=number)
+    authenticity.save()
+    return authenticity
+
+def authenticate_file(request):
+    context = {}
+    if 'code' in request.GET and request.GET.get('code') != '':
+        code = str(request.GET.get('code'))
+        if Authenticity.objects.filter(code=code):
+            context['authenticity'] = Authenticity.objects.filter(code=code)[0]
+        context['status'] = True
+        print("code")
+        
+    return render(request, 'public/authenticate.html', context)
 
 @login_required(login_url="login")
 def get_teams(request):
@@ -1129,6 +1577,21 @@ def get_teams(request):
     teams = Team_sport.objects.filter(sport__id=sport_id, sexo=sexo)
     data = {"teams": [{"id": t.team.id, "name": t.team.name} for t in teams]}
     return JsonResponse(data)
+
+@login_required(login_url="login")
+def get_groups(request):
+    sport_id = request.GET.get('sport')
+    groups = Group_phase.objects.filter(phase__event__id=sport_id).order_by('phase__name','phase__event','phase__sexo')
+    data = [
+        {
+            "id": g.id,
+            "name": g.name,
+            "phase_name": g.phase.get_name_display(),
+            "sexo": g.phase.get_sexo_display(),
+        }
+        for g in groups
+    ]
+    return JsonResponse({"groups": data})
 
 @login_required(login_url="login")
 def get_sexos(request):
@@ -1890,11 +2353,14 @@ def enrollment_register(request):
 @permission_required('app.add_penalties', raise_exception=True)
 def scoreboard(request, event_id):  
     match_event = Event.objects.get(id=event_id)
+    referee = Voluntary.objects.filter(event=match_event, type_voluntary=6)
+    types_referee = Type_referee.choices
     time_now = time.strftime("%H:%M:%S", time.localtime())
     
     if Match.objects.filter(status=1, event=match_event):
         time_now2 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         match = Match.objects.get(status=1, event=match_event)
+        match_referee = Match_referee.objects.filter(match=match)
         matches = Match.objects.filter(status=0, event=match_event)
         team_match_all = Team_match.objects.filter(team__event=match_event)
         team_matchs = Team_match.objects.filter(match=match)
@@ -1943,6 +2409,9 @@ def scoreboard(request, event_id):
             'matches': matches,
             'team_match_all': team_match_all,
             'detailed': Detailed.choices,
+            'referee': referee,
+            'types_referee': types_referee,
+            'match_referee': match_referee,
 
         }
         print("context")
@@ -1995,10 +2464,18 @@ def scoreboard(request, event_id):
 
         elif 'replacement_init' in request.POST:
             player_init = get_object_or_404(Player_match, id=request.POST.get("replacement_init"))
-            player_init.activity = 0
             player_end = get_object_or_404(Player_match, id=request.POST.get("replacement_end"))
+            player_init.activity = int(player_end.activity)
             player_end.activity = 1
+            Replacement.objects.create(team_match=player_init.team_match, player_entry=player_init, player_exit=player_end)
             player_init.save(), player_end.save()
+        elif 'referee' in request.POST:
+            referee = Voluntary.objects.get(id=request.POST.get("referee"))
+            referee_type = int(request.POST.get("type_referee"))
+            Match_referee.objects.create(match=match, referee=referee, role=referee_type)
+        elif 'observations' in request.POST:
+            match.observations = request.POST.get("observations")
+            match.save()
         elif 'penalties' in request.POST:
             penalties_type = request.POST.get('penalties')
             player_match = Player_match.objects.get(id=request.POST.get('player_penalties'))
@@ -2060,15 +2537,21 @@ def scoreboard(request, event_id):
             if match.volley_match and match.status == 1:
                 volley_match = Volley_match.objects.get(status=1)
                 match.status = 2
-                match.save()
                 if point_a > point_b:
+                    match.Winner_team = team_match_a.team
                     volley_match.sets_team_a += 1
                 elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                     volley_match.sets_team_b += 1
+                match.save()
                 volley_match.save()
                 print("CRIANDO NOVO SET")
                 print("1:: ",volley_match)
                 new_match = Match.objects.create(sport=1, sexo=match.sexo, event=match.event, status=5, volley_match=volley_match, time_match=time_now2)
+                if match.location:
+                    new_match.location = match.location
+                if match.group_phase:
+                    new_match.group_phase = match.group_phase
                 print(new_match)
                 new_match.save()
                 team_a_match = Team_match.objects.create(match=new_match, team=team_match_a.team)
@@ -2101,12 +2584,23 @@ def scoreboard(request, event_id):
                 volley_match = get_object_or_404(Volley_match, status=1)
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                    volley_match.sets_team_a += 1
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
+                    volley_match.sets_team_b += 1
                 match.save()
                 volley_match.status= 2 
                 volley_match.save()
             else:
                 match.status = 2
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                 match.save()
+
             return redirect('games')
         elif 'match_new' in request.POST:
             if match.time_start and not match.time_end:
@@ -2122,6 +2616,12 @@ def scoreboard(request, event_id):
                 print("mudando estatus da partida")
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                    volley_match.sets_team_a += 1
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
+                    volley_match.sets_team_b += 1
                 match.save()
                 print("mUdeii:")
                 print(volley_match.status)
@@ -2132,6 +2632,10 @@ def scoreboard(request, event_id):
                 print("A partida anterios é qualquer uma")
                 match.status = 2
                 match.detailed = 3
+                if point_a > point_b:
+                    match.Winner_team = team_match_a.team
+                elif point_b > point_a:
+                    match.Winner_team = team_match_b.team
                 match.save()
                 print("Foi finalizada!", match.get_status_display())
             if next_match.volley_match:

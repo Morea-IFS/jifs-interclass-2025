@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -47,6 +47,21 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ('id','name','logo')
     search_fields = ('id','name','logo')
 
+@admin.register(Phase)
+class PhaseAdmin(admin.ModelAdmin):
+    list_display = ('id','name','event','sexo')
+    search_fields = ('id','name','event','sexo')
+
+@admin.register(Authenticity)
+class AuthenticityAdmin(admin.ModelAdmin):
+    list_display = ('id','name','event','number','date_time')
+    search_fields = ('id','name','event','number','date_time')
+
+@admin.register(Group_phase)
+class Group_phaseAdmin(admin.ModelAdmin):
+    list_display = ('id','name')
+    search_fields = ('id','name')
+
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ('id','name','sexo','registration','date_nasc','bulletin','photo')
@@ -62,6 +77,16 @@ class AttachmentsvAdmin(admin.ModelAdmin):
 class StatementAdmin(admin.ModelAdmin):
     list_display = ('id','name','image')
     search_fields = ('id','name','image')
+
+@admin.register(Match_referee)
+class Match_refereeAdmin(admin.ModelAdmin):
+    list_display = ('id','referee','role','match')
+    search_fields = ('id','referee','role','match')
+
+@admin.register(Replacement)
+class ReplacementAdmin(admin.ModelAdmin):
+    list_display = ('id','team_match','player_exit','player_entry','date_time')
+    search_fields = ('id','team_match','player_exit','player_entry','date_time')
 
 @admin.register(Statement_user)
 class Statement_userAdmin(admin.ModelAdmin):
