@@ -209,6 +209,7 @@ class Player(models.Model):
     instagram = models.CharField(max_length=100, blank=True, null=True)
     classroom = models.CharField(max_length=100, blank=True, null=True)
     photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
+    photo_goal = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     bulletin = models.FileField(upload_to='bulletins/', blank=True, null=True)
     rg = models.FileField(upload_to='rg/', blank=True, null=True)
     sexo = models.IntegerField(choices=Sexo_types.choices, blank=True, null=True)
@@ -235,6 +236,7 @@ class Voluntary(models.Model):
 class Team(models.Model):
     name = models.CharField(max_length=100, blank=True)
     description = models.TextField(max_length=200, blank=True, null=True)
+    color = models.TextField(max_length=7, default="#02007a",blank=True, null=True)
     photo = models.ImageField(upload_to='logo_team/', default='defaults/team.png', blank=True, null=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     status = models.BooleanField(default=True)

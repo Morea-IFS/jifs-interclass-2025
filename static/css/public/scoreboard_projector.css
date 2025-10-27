@@ -6,7 +6,7 @@
     src: url('./fonts/FlickDemo-vmrYL.ttf') format('truetype');
 }
 
-:root {
+:root { 
     --white: #fff;
     --white-border: #404040;
     --gray-background-cards: #6060604f;

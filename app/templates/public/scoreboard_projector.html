@@ -7,7 +7,7 @@
     <link rel="shortcut icon" href="{% static 'images/morea-sports.png' %}" type="image/x-icon" />
     <link rel="stylesheet" href="{% static 'css/public/scoreboard_projector.css' %}">
     <link rel="stylesheet" href="{% static 'css/public/goal.css' %}">
-    <title>ATUM PLACAR - {{event.id}}</title>
+    <title>ATUM PLACAR</title>
 </head>
 <body data-event-id="{{event.id}}">
     <div>
@@ -340,8 +340,8 @@
     <script src="{% static 'js/scoreboard.js' %}"></script>
     <script>
         let teamColors = {
-            teamA: '#030a70ff',
-            teamB: '#74744aff' 
+            teamA: '{{team_match_a.team.color}}',
+            teamB: '{{team_match_b.team.color}}' 
         };
 
         function isLightColor(color) {
@@ -413,7 +413,11 @@
             const imageDecorations = goalCard.querySelectorAll('.image-decoration');
             const primaryColor = team === 'A' ? teamColors.teamA : teamColors.teamB;
             const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
-
+            console.log('--- DISPARANDO GOL ---');
+            console.log('Time que marcou:', team);
+            console.log('Cor (Time A) recebida do Django:', '"' + teamColors.teamA + '"');
+            console.log('Cor (Time B) recebida do Django:', '"' + teamColors.teamB + '"');
+            console.log('Cor final escolhida (primaryColor):', '"' + primaryColor + '"');
             goalCard.style.setProperty('--primary-color', primaryColor);
             goalCard.style.setProperty('--text-color', textColor);
 

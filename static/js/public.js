@@ -35,6 +35,10 @@ socket.onmessage = function(e) {
             const photo_b = document.querySelectorAll(".photo-team-b");
             const point_a = document.getElementById('points-a');
             const point_b = document.getElementById('points-b');
+            const color_a = document.querySelectorAll(".color-a");
+            const color_b = document.querySelectorAll(".color-b");
+            const border_a = document.querySelectorAll(".border-a");
+            const border_b = document.querySelectorAll(".border-b");
 
             const ball_sport = document.getElementById('ball-sport');
             const status_game = document.getElementById('status-game');
@@ -54,6 +58,26 @@ socket.onmessage = function(e) {
             photo_b.forEach((i) => {
                 i.src = match.photoB;
             });
+            if(color_a){
+                color_a.forEach((i) => {
+                    i.style.backgroundColor = match.colorA;
+                });
+            }
+            if(color_b){
+                color_b.forEach((i) => {
+                    i.style.backgroundColor = match.colorB;
+                });
+            }
+            if(border_a){
+                border_a.forEach((i) => {
+                    i.style.borderColor = match.colorA;
+                });
+            }
+            if(border_b){
+                border_b.forEach((i) => {
+                    i.style.borderColor = match.colorB;
+                });
+            }
             if(status_game) status_game.textContent = match.detailed;
             updatePlayerList("teamAList", match.players_a); 
             updatePlayerList("teamBList", match.players_b); 
@@ -156,6 +180,59 @@ socket.onmessage = function(e) {
             console.log("occurrence", data.data);
             const occurrence = data.data;
             updateOccurrenceList(occurrence.occurrence)
+            
+            break;
+
+        case "team":
+            console.log("team", data.data);
+            const team = data.data;
+            const team_a_team = document.getElementById('team-a');
+            const team_b_team = document.getElementById('team-b');
+            const photo_a_team = document.querySelectorAll(".photo-team-a");
+            const photo_b_team = document.querySelectorAll(".photo-team-b");
+            const color_a_team = document.querySelectorAll(".color-a");
+            const color_b_team = document.querySelectorAll(".color-b");
+            const border_a_team = document.querySelectorAll(".border-a");
+            const border_b_team = document.querySelectorAll(".border-b");
+
+            if(team_a_team) team_a_team.textContent = team.team_name_a;
+            if(team_b_team) team_b_team.textContent = team.team_name_b;
+            if(photo_a_team){
+                photo_a_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.src = team.photoA;
+                });
+            }
+            if(photo_b_team){
+                photo_b_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.src = team.photoB;
+                });
+            }
+            if(color_a_team){
+                color_a_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.style.backgroundColor = team.colorA;
+                });
+            }
+            if(color_b_team){
+                color_b_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.style.backgroundColor = team.colorB;
+                });
+            }
+            if(border_a_team){
+                border_a_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.style.borderColor = team.colorA;
+                });
+            }
+            if(border_b_team){
+                border_b_team.forEach((i) => {
+                    console.log(i, team.colorA)
+                    i.style.borderColor = team.colorB;
+                });
+            }
             
             break;
 

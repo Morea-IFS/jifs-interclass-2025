@@ -620,13 +620,16 @@ def team_manage(request):
         print(request.POST)
         if 'add-team' in request.POST:
             name = request.POST.get("name")
+            color = request.POST.get("color")
             description = request.POST.get("description")
             photo = request.FILES.get("photo")
             event = Event.objects.get(id=request.POST.get("add-team"))
             if not name or not photo or not event:
                 messages.error(request,"Você precisa cadastrar todos os dados obrigatórios.")
             else:
-                Team.objects.create(name=name, description=description, photo=photo, event=event)
+                team = Team.objects.create(name=name, description=description, photo=photo, event=event)
+                if color: team.color = str(color)
+                team.save()
         elif 'add-team-sport' in request.POST:
             team = Team.objects.get(id=request.POST.get("add-team-sport"))
             sport = Event_sport.objects.get(id=request.POST.get("sport_adm_id"))
@@ -645,6 +648,7 @@ def team_manage(request):
         elif 'edit-team' in request.POST:
             team = Team.objects.get(id=request.POST.get("edit-team"))
             team.name = request.POST.get("edit-name")
+            team.color = request.POST.get("edit-color")
             if request.FILES.get("edit-logo"):
                 team.photo = request.FILES.get("edit-logo")
             team.description = request.POST.get("edit-description")
@@ -797,6 +801,9 @@ def team_players_manage(request, id):
                 if team_sport.team.event.player_need_photo:
                     if request.FILES.get("edit-photo"):
                         player.photo = request.FILES.get("edit-photo")
+                if team_sport.team.event.player_need_photo:
+                    if request.FILES.get("edit-photo-goal"):
+                        player.photo_goal = request.FILES.get("edit-photo-goal")
                 if team_sport.team.event.player_need_bulletin:
                     if request.FILES.get("edit-bulletin"):
                         player.bulletin = request.FILES.get("edit-bulletin")
@@ -857,6 +864,12 @@ def team_players_manage(request, id):
                         status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
                         if status: return redirect('team_players_manage', team_sport.id)
 
+                if team_sport.team.event.player_need_photo:
+                    photo_goal = request.FILES.get('photo_goal')
+                    if photo_goal:
+                        status = type_file(request, ['.png','.jpg','.jpeg'], photo_goal, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
+                        if status: return redirect('team_players_manage', team_sport.id)
+
                 if team_sport.team.event.player_need_bulletin:
                     bulletin = request.FILES.get('bulletin')
                     if bulletin: 
@@ -886,6 +899,8 @@ def team_players_manage(request, id):
                     player.cpf = cpf.replace("-","").replace(".","")
                 if team_sport.team.event.player_need_photo:
                     player.photo = photo
+                if team_sport.team.event.player_need_photo:
+                    player.photo_goal = photo_goal
                 if team_sport.team.event.player_need_bulletin:
                     player.bulletin = bulletin
                 if team_sport.team.event.player_need_sexo:
@@ -2671,15 +2686,12 @@ def scoreboard_projector(request, event_id):
         url = request.get_host()
         print(url)
 
-        # Gera o QR Code
         qr = qrcode.make(url)
 
-        # Salva o QR em memória
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         buffer.seek(0)
 
-        # Codifica em base64
         img_base64 = base64.b64encode(buffer.getvalue()).decode()
 
         if Volley_match.objects.filter(status=1, event=event):
@@ -2813,8 +2825,6 @@ def scoreboard_projector(request, event_id):
                 'qrcode': img_base64,
                 'url': url,
                 'event': event,
-                
-                
             }
             return render(request, 'public/scoreboard_projector.html', context)
         else:

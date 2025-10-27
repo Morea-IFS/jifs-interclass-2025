@@ -311,7 +311,7 @@
             <div class="subtitle-buttons">
                 <span class="subtitle-button-span" onclick="openTimeModal('{{ team.id }}')" style="background-color: var(--global-header-color);"><p>Novo esporte</p></span>
                 <form method="POST" class="subtitle-button-file" style="background-color: #004ba0;">{% csrf_token %}<button style="margin: 0;" name="team-data" value="{{team.id}}" type="submit"><i class="fa-solid fa-file"></i></button></form>
-                <span class="subtitle-button-gear" onclick="openEditModal('{{ team.id }}','{{ team.name }}','{{ team.description }}','{{ team.photo.url }}','{{ team.status }}')"><i class="fa-solid fa-gear"></i></span>
+                <span class="subtitle-button-gear" onclick="openEditModal('{{ team.id }}','{{ team.name }}','{{ team.color }}','{{ team.description }}','{{ team.photo.url }}','{{ team.status }}')"><i class="fa-solid fa-gear"></i></span>
             </div>
         </div>
         <p class="description-team">{{team.description}}</p>
@@ -435,6 +435,9 @@
             <label for="name">Nome</label>
             <input type="text" name="name" id="name" maxlength="100" required>
 
+            <label for="color">Cor</label>
+            <input type="color" name="color" maxlength="7" value="#ffffff" required style="height: 50px;">
+
             <label for="description">Descrição</label>
             <textarea name="description" id="description" maxlength="200"></textarea>
 
@@ -458,6 +461,9 @@
 
             <label for="name">Nome</label>
             <input type="text" name="edit-name" id="editTimeName" required>
+
+            <label for="color">Cor</label>
+            <input type="color" name="edit-color" id="editColor" maxlength="7" required style="height: 50px;">
 
             <label for="logo">Logo</label>
             <input type="file" name="edit-logo" id="editTimePhoto" onchange="previewFoto()">
@@ -500,7 +506,7 @@
 
     let originalPhotoUrl = '';
 
-    function openEditModal(id, name, description, photoUrl, active) {
+    function openEditModal(id, name, color, description, photoUrl, active) {
         originalPhotoUrl = photoUrl || '';
         
         // Resetar o input de foto
@@ -510,6 +516,7 @@
         // Preencher os campos do formulário
         document.getElementById("editTimeId").value = id;
         document.getElementById("editTimeName").value = name;
+        document.getElementById("editColor").value = color;
         document.getElementById("editTimeDescription").value = description;
         if (active == 'True'){
             document.getElementById("editTimeStatus").checked = true;

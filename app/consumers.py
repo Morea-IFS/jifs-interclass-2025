@@ -100,6 +100,14 @@ class PublicConsumer(AsyncWebsocketConsumer):
             "data": match_public
         }))
 
+    async def team_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do public: team")
+        match_public = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "team",
+            "data": match_public
+        }))
+
     async def occurrence_new(self, event):
         if settings.DEBUG: print("Canal de comunicação do public: occurrence")
         match_public = event['match']

@@ -55,9 +55,68 @@ def serialize_occurrence(occurrence):
 
 @receiver([post_save, post_delete], sender=Team)
 def team_updated(sender, instance, using, **kwargs):
-    if settings.DEBUG: print("hmm, mudanças nos times :)")
-    pass
+    if settings.DEBUG: print("hmm, mudanças nos team :)")
+    channel_layer = get_channel_layer()
+    if Match.objects.filter(status=1, event=instance.event):
+        match_public = send_scoreboard_team(instance)
+        async_to_sync(channel_layer.group_send)(
+            f'public_{instance.event.id}',
+            {
+                'type': 'team_new',
+                'match': match_public,
+            }
+        )
 
+def send_scoreboard_team(instance):
+    event = instance.event
+    if settings.DEBUG: print("eita, mudanças (team) sendo preparadas. :)")
+    if Match.objects.filter(status=1, event=event):
+        match = Match.objects.get(status=1, event=event)
+        if Team_match.objects.filter(team=instance, match__status=1, team__event=match.event):
+            match = Match.objects.get(status=1, event=event)
+            team_matchs = Team_match.objects.filter(match=match)
+            if len(team_matchs) < 2:
+                return None
+            if match.volley_match:
+                if (match.volley_match.sets_team_a + match.volley_match.sets_team_b) % 2 == 0:
+                    team_match_a = team_matchs[0]
+                    team_match_b = team_matchs[1]
+                else:
+                    team_match_a = team_matchs[1]
+                    team_match_b = team_matchs[0]
+            else:
+                team_match_a = team_matchs[0]
+                team_match_b = team_matchs[1]
+            match_public = {
+                'photoA': team_match_a.team.photo.url if team_match_a.team.photo else default_photo_url,
+                'photoB': team_match_b.team.photo.url if team_match_b.team.photo else default_photo_url,
+                'team_name_a': team_match_a.team.name,
+                'team_name_b': team_match_b.team.name,
+                'colorA': team_match_a.team.color,
+                'colorB': team_match_b.team.color,
+            }
+        else:
+            match_public = {
+                'team_name_a': "TEAM A",
+                'team_name_b': "TEAM B",
+                'colorA': "#000ed3",
+                'colorB': "#ff0000",
+                'photoA': default_photo_url,
+                'photoB': default_photo_url,
+            }
+    else:
+        match_public = {
+            'team_name_a': "TEAM A",
+            'team_name_b': "TEAM B",
+            'colorA': "#000ed3",
+            'colorB': "#ff0000",
+            'photoA': default_photo_url,
+            'photoB': default_photo_url,
+        }
+
+    if settings.DEBUG: print("eita, saindo signals (team) sendo preparadas. :)")
+    if settings.DEBUG: print(match_public)
+    return match_public
 
 @receiver([post_save, post_delete], sender=Point)
 def point_changed(sender, instance, using, **kwargs):
@@ -78,6 +137,8 @@ def point_changed(sender, instance, using, **kwargs):
             'match': match_public,
         }
     )
+
+
 
 def send_scoreboard_point(instance):
     event = instance.team_match.match.event
@@ -377,6 +438,8 @@ def send_scoreboard_match(instance):
             'lack_b': lack_b,
             'card_a': card_a,
             'card_b': card_b,
+            'colorA': team_match_a.team.color,
+            'colorB': team_match_b.team.color,
             'detailed': match.get_detailed_display(),
             'photoA': team_match_a.team.photo.url if team_match_a.team.photo else default_photo_url,
             'photoB': team_match_b.team.photo.url if team_match_b.team.photo else default_photo_url,

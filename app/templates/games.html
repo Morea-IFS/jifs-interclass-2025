@@ -341,7 +341,6 @@
       const response = await fetch(`/get_sexos/?sport=${sport}`);
       const data = await response.json();
 
-      // Limpa e preenche select de sexo_phase
       sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
       data.sexos.forEach(s => {
         const opt = document.createElement("option");
