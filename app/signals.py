@@ -128,10 +128,10 @@ def send_scoreboard_team(instance):
     return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Point)
-def point_changed(sender, instance, using, **kwargs):
+def point_changed(sender, instance, created=False, using=None, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos pontos :)")
     channel_layer = get_channel_layer()
-    match_data, match_public = send_scoreboard_point(instance)
+    match_data, match_public = send_scoreboard_point(instance, created)
     async_to_sync(channel_layer.group_send)(
         f'scoreboard_{instance.team_match.match.event.id}',
         {
@@ -147,7 +147,7 @@ def point_changed(sender, instance, using, **kwargs):
         }
     )
 
-def send_scoreboard_point(instance):
+def send_scoreboard_point(instance, created):
     event = instance.team_match.match.event
     if settings.DEBUG: print("eita, mudanças (pontos) sendo preparadas. :)")
     if Match.objects.filter(status=1, event=event):
@@ -183,12 +183,15 @@ def send_scoreboard_point(instance):
             match_data['aces_b'] = Point.objects.filter(point_types=2, team_match=team_match_b).count()
 
         #if point.player and point.team_match and point.point_types == 0:
-        if point:
+        if point and created:
             if point.player and point.team_match:
                 match_data['team_name'] = point.team_match.team.name if point.team_match.team.name else "TEAM",
                 match_data['team_img'] = point.team_match.team.photo.url if point.team_match.team.photo.url else default_photo_url,
                 match_data['player_name'] = point.player.name if point.player.name else "PLAYER",
-                match_data['player_img'] = point.player.photo.url if point.player.photo.url else default_photo_url,
+                if point.player.photo_goal.url:
+                    match_data['player_img'] = point.player.photo_goal.url if point.player.photo_goal.url else default_photo_url,
+                else:
+                    match_data['player_img'] = point.player.photo.url if point.player.photo.url else default_photo_url,
     
     else:
         match_data = {
@@ -321,8 +324,8 @@ def send_scoreboard_penalties(instance):
         if instance.player:
             print(instance.type_penalties)
             match_data['penalties_player'] = instance.player.name
-            if instance.type_penalties == '0': match_data['penalties_url'] = static('images/card-red.png')
-            elif instance.type_penalties == '1': match_data['penalties_url'] = static('images/card-yellow.png')
+            if instance.type_penalties == 0: match_data['penalties_url'] = static('images/card-red.png')
+            elif instance.type_penalties == 1: match_data['penalties_url'] = static('images/card-yellow.png')
             else: match_data['penalties_url'] = static('images/whistle.png')
     else:
         match_data = {
