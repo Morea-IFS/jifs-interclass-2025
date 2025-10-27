@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -16,9 +15,13 @@
     </div>
 
     <div class="container-quadra" id="container-volleyball" style="display: none;">
+        <div class="team-names-volleyball">
+            <div class="team-name-volleyball" id="volleyball-team-a">{{team_match_a.team.name|default:'TEAM A'}}</div>
+            <div class="team-name-volleyball">X</div>
+            <div class="team-name-volleyball" id="volleyball-team-b">{{team_match_b.team.name|default:'TEAM B'}}</div>
+        </div>
         <div class="quadra-volei">
             <div class="linha-central"></div>
-
             <div class="lado-quadra casa">
                 <div class="zona defesa">
                     <div class="jogador-container" id="casa-defesa-1">
@@ -61,7 +64,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="lado-quadra fora">
                 <div class="zona ataque">
                     <div class="jogador-container" id="fora-ataque-1">
@@ -108,6 +110,10 @@
     </div>
 
     <div class="quadra-futsal" id="container-futsal" style="display: none;">
+        <div class="team-names-futsal">
+            <div class="team-name-futsal" id="futsal-team-a">{{team_match_a.team.name|default:'TEAM A'}}</div>
+            <div class="team-name-futsal" id="futsal-team-b">{{team_match_b.team.name|default:'TEAM B'}}</div>
+        </div>
         <div class="field-lines"></div>
         <div class="half-line"></div>
         <div class="center-circle"></div>
@@ -351,6 +357,20 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             applyTextColorBasedOnBackground();
+            
+            // Aplicar cores para os nomes das equipes do vôlei
+            const volleyballTeamA = document.getElementById('volleyball-team-a');
+            const volleyballTeamB = document.getElementById('volleyball-team-b');
+            
+            if (volleyballTeamA) {
+                volleyballTeamA.style.color = '#4d4de5';
+                volleyballTeamA.style.fontWeight = 'bold';
+            }
+            
+            if (volleyballTeamB) {
+                volleyballTeamB.style.color = '#e54d4d';
+                volleyballTeamB.style.fontWeight = 'bold';
+            }
         });
     </script>
     <script>

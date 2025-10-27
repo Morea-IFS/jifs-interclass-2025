@@ -16,9 +16,24 @@
     --green-title-time-or-set: #1fd625;
     --red-live: #FF3232;
     --pink-feminine: #FF32AA;
+    --primary-color: #750b0b;
+    --accent-color: #1a1a1a;
+    --text-color: #000000;
+    --font-header: 'Anton', sans-serif;
+    --font-body: 'Montserrat', sans-serif;
+    --bg-gradient-start: #10141f;
+    --bg-gradient-end: #1f2a40;
+    --court-center: #265179;
+    --court-edge: #265179;
+    --court-green: #265179;
+    --court-orange: #265179;
+    --line-color: white;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --casa-border: #4d4de5;
+    --fora-border: #e54d4d;
 }
 
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -36,7 +51,7 @@ body {
 }
 
 .info-overlay {
-    position: fixed;    
+    position: fixed;
     min-width: 1200px;
     width: 70vw;
     min-height: 300px;
@@ -55,7 +70,7 @@ body {
     flex-direction: column;
 }
 
-.info-image{
+.info-image {
     width: 100%;
     height: 100%;
     background-color: transparent;
@@ -64,13 +79,13 @@ body {
     gap: 50px;
 }
 
-.info-image p{
+.info-image p {
     font-size: 4em;
     font-weight: 700;
     color: rgb(0, 0, 0);
 }
 
-.info-image img{
+.info-image img {
     width: 250px;
 }
 
@@ -87,46 +102,52 @@ body {
     display: none;
     background-color: red;
 }
-.moments-left{
+
+.moments-left {
     width: 1420px;
     height: 100%;
-    background-color: #003f47; 
+    background-color: #003f47;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding-inline: 8em;
 }
-.moments-left p{
+
+.moments-left p {
     font-size: 7em;
     font-weight: 700;
-    color: #ffffff;  
-    padding-left: 0.35em; 
+    color: #ffffff;
+    padding-left: 0.35em;
     padding-top: 0.5em;
 }
-.img-atum{
+
+.img-atum {
     height: 14em;
 }
-.img-morea{
+
+.img-morea {
     padding: 0;
     padding-right: 75px;
     height: 18em;
 }
-.moments-right{
+
+.moments-right {
     width: 700px;
     height: 100%;
-    background-color: #ffffff; 
-    display: flex;  
+    background-color: #ffffff;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 5em;
 }
-.moments-right img{
+
+.moments-right img {
     width: 18em;
 }
-.moments-right p{
+
+.moments-right p {
     font-size: 3em;
-    
     font-weight: 500;
 }
 
@@ -233,12 +254,12 @@ body {
     height: 100px;
 }
 
-.team-b .scout{
+.team-b .scout {
     display: flex;
     justify-content: flex-end;
 }
 
-.team-b .scout ul li{
+.team-b .scout ul li {
     flex-direction: row-reverse;
 }
 
@@ -356,11 +377,6 @@ body {
     margin: 0px;
 }
 
-.ball-sport img {
-    width: 100%;
-    max-width: 255px;
-}
-
 footer {
     display: flex;
     align-items: center;
@@ -396,7 +412,7 @@ footer p {
     height: 50px;
 }
 
-.logo-morea{
+.logo-morea {
     height: 128px;
 }
 
@@ -410,19 +426,6 @@ footer p {
     bottom: 30px;
 }
 
-:root {
-    --primary-color: #8f0000;
-    --accent-color: #1a1a1a;
-    --text-color: #000000;
-    --font-header: 'Anton', sans-serif;
-    --font-body: 'Montserrat', sans-serif;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-/* --- CONTAINER PRINCIPAL --- */
 .card-container {
     width: 100vw;
     height: 100vh;
@@ -440,7 +443,6 @@ footer p {
     background: var(--primary-color);
 }
 
-/* --- ELEMENTOS DECORATIVOS NOS CANTOS MELHORADOS --- */
 .corner-decoration {
     position: absolute;
     width: 120px;
@@ -489,7 +491,6 @@ footer p {
     border-top: none;
 }
 
-/* Elementos de canto internos */
 .corner-inner {
     position: absolute;
     width: 60px;
@@ -534,7 +535,6 @@ footer p {
     border-top: none;
 }
 
-/* Novos elementos decorativos adicionais */
 .corner-dot {
     position: absolute;
     width: 16px;
@@ -564,7 +564,6 @@ footer p {
     right: 8px;
 }
 
-/* Linhas decorativas diagonais */
 .corner-line {
     position: absolute;
     width: 80px;
@@ -597,7 +596,6 @@ footer p {
     transform: rotate(45deg);
 }
 
-/* --- CABEÇALHO --- */
 .card-header {
     background-color: var(--primary-color);
     color: var(--text-color);
@@ -630,7 +628,6 @@ footer p {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Animação do texto GOOOOOOL! */
 .gol-text {
     display: inline-block;
 }
@@ -641,7 +638,6 @@ footer p {
     transform-origin: center bottom;
 }
 
-/* Criando delays diferentes para cada letra */
 .gol-text span:nth-child(1) { animation-delay: 0.0s; }
 .gol-text span:nth-child(2) { animation-delay: 0.2s; }
 .gol-text span:nth-child(3) { animation-delay: 0.3s; }
@@ -667,7 +663,6 @@ footer p {
     }
 }
 
-/* --- CONTEÚDO PRINCIPAL (IMAGEM) --- */
 .card-main {
     position: relative;
     flex: 1;
@@ -675,8 +670,9 @@ footer p {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    z-index: 1; 
+    z-index: 1;
 }
+
 .player-image {
     width: 100%;
     height: 100%;
@@ -687,7 +683,6 @@ footer p {
     position: relative;
 }
 
-/* Elementos decorativos na imagem */
 .image-decoration {
     position: absolute;
     background-color: var(--primary-color);
@@ -716,7 +711,7 @@ footer p {
     height: 200px;
     object-fit: contain;
     position: absolute;
-    bottom: -60px; 
+    bottom: -60px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 9999;
@@ -727,14 +722,13 @@ footer p {
     border: 4px solid var(--text-color);
 }
 
-/* --- RODAPÉ --- */
 .card-footer {
     background-color: var(--primary-color);
     color: var(--text-color);
     text-align: center;
     padding: 100px 30px 40px 30px;
     position: relative;
-    z-index: 100; 
+    z-index: 100;
     flex-shrink: 0;
 }
 
@@ -755,7 +749,6 @@ footer p {
     text-transform: uppercase;
 }
 
-/* Container para as linhas no rodapé */
 .line-container {
     display: flex;
     align-items: center;
@@ -777,7 +770,446 @@ footer p {
     font-size: 1.8rem;
 }
 
-/* Ajustes para telas menores */
+@keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.container-quadra {
+    background-color: var(--court-green);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.8s ease-out 0.4s both;
+    position: relative;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.team-names-volleyball {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 100px;
+    width: 100%;
+    z-index: 1000;
+}
+
+.team-name-volleyball {
+    font-family: 'Flick', sans-serif;
+    font-size: 48px;
+    color: white;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 10px;
+    min-width: 300px;
+}
+
+#volleyball-team-a {
+    color: #4d4de5;
+    font-weight: bold;
+}
+
+#volleyball-team-b {
+    color: #e54d4d;
+    font-weight: bold;
+}
+
+#volleyball-team-a,
+#volleyball-team-b {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.team-name-center {
+    text-align: center;
+}
+
+.quadra-volei {
+    position: relative;
+    width: 1750px;
+    height: 820px;
+    background-color: var(--court-orange);
+    display: flex;
+    border: 3px solid var(--line-color);
+}
+
+.linha-central {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    border-left: 10px dashed var(--line-color);
+    transform: translateX(-50%);
+}
+
+.lado-quadra {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    position: relative;
+}
+
+.lado-quadra::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background-color: var(--line-color);
+    width: 3px;
+}
+
+.lado-quadra.casa::before {
+    right: 0;
+}
+
+.lado-quadra.fora::before {
+    left: 0;
+}
+
+.zona {
+    width: 50%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, 1fr);
+    justify-items: center;
+    align-items: center;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.zona.defesa .jogador-container:nth-child(1) { grid-row: 1; }
+.zona.defesa .jogador-container:nth-child(2) { grid-row: 2; }
+.zona.defesa .jogador-container:nth-child(3) { grid-row: 3; }
+
+.zona.ataque .jogador-container:nth-child(1) { grid-row: 1; }
+.zona.ataque .jogador-container:nth-child(2) { grid-row: 2; }
+.zona.ataque .jogador-container:nth-child(3) { grid-row: 3; }
+
+.jogador-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    opacity: 0;
+    animation: playerAppear 0.6s ease-out forwards;
+}
+
+@keyframes playerAppear {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.jogador-foto {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 6px solid;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    margin-bottom: 12px;
+}
+
+.jogador-foto.casa {
+    border-color: var(--casa-border);
+}
+
+.jogador-foto.fora {
+    border-color: var(--fora-border);
+}
+
+.jogador-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+}
+
+.jogador-nome {
+    font-weight: 700;
+    font-size: 20px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(0,0,0,0.7);
+    padding: 6px 12px;
+    border-radius: 12px;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    width: 100%;
+}
+
+.jogador-container:nth-child(1) { animation-delay: 0.5s; }
+.jogador-container:nth-child(2) { animation-delay: 1s; }
+.jogador-container:nth-child(3) { animation-delay: 1.5s; }
+
+.team-names-futsal {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 100px;
+    width: 100%;
+    z-index: 1000;
+}
+
+.team-name-futsal {
+    font-family: 'Flick', sans-serif;
+    font-size: 48px;
+    color: white;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 10px;
+    min-width: 300px;
+}
+
+#futsal-team-a {
+    color: #4d4de5;
+    font-weight: bold;
+}
+
+#futsal-team-b {
+    color: #e54d4d;
+    font-weight: bold;
+}
+
+#futsal-team-a,
+#futsal-team-b {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.quadra-futsal {
+    position: relative;
+    width: 1800px;
+    height: 900px;
+    margin: 50px auto 0 auto;
+    background: 
+        radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 70% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        linear-gradient(135deg, var(--court-center) 0%, var(--court-edge) 100%);
+    border-radius: 12px;
+    box-shadow: 
+        0 15px 40px var(--shadow-color), 
+        inset 0 0 80px rgba(0,0,0,0.4),
+        0 0 0 4px rgba(255,255,255,0.1);
+    border: 2px solid var(--line-color);
+    overflow: visible;
+    animation: scaleIn 0.8s ease-out 0.4s both;
+}
+
+.field-lines, .half-line, .center-circle, .goal-area-left, .goal-area-right, 
+.goal-area-left::before, .goal-area-right::before, .goal-left, .goal-right,
+.center-dot, .penalty-dot-left, .penalty-dot-right {
+    border-color: var(--line-color);
+    background: var(--line-color);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.field-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-width: 2px;
+    border-radius: 10px;
+    background: none;
+}
+
+.half-line {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.center-circle {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-width: 2px;
+    border-radius: 50%;
+    background: none;
+}
+
+.center-dot, .penalty-dot-left, .penalty-dot-right {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.center-dot {
+    left: 50%;
+}
+
+.goal-area-left, .goal-area-right {
+    position: absolute;
+    width: 220px;
+    height: 400px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 2px;
+    border-radius: 6px;
+    background: none;
+}
+
+.goal-area-left {
+    left: 0;
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.goal-area-right {
+    right: 0;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.goal-left, .goal-right {
+    position: absolute;
+    width: 6px;
+    height: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.goal-left {
+    left: -2px;
+}
+
+.goal-right {
+    right: -2px;
+}
+
+.penalty-dot-left {
+    left: 80px;
+}
+
+.penalty-dot-right {
+    right: 80px;
+    transform: translate(50%, -50%);
+}
+
+.jogador {
+    position: absolute;
+    text-align: center;
+    opacity: 0;
+    animation: playerAppearFutsal 0.6s ease-out forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes playerAppearFutsal {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.player-photo {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+}
+
+.time-a .player-photo {
+    border-color: var(--casa-border);
+}
+
+.time-b .player-photo {
+    border-color: var(--fora-border);
+}
+
+.player-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+}
+
+.nome {
+    margin-top: 12px;
+    font-weight: 700;
+    font-size: 20px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(0,0,0,0.7);
+    padding: 6px 12px;
+    border-radius: 12px;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    width: 100%;
+}
+
+.time-a#goleiro-a { left: 10%; top: 50%; animation-delay: 0.5s; }
+.time-a#fixo-a    { left: 30%; top: 50%; animation-delay: 1s; }
+.time-a#ala1-a    { left: 55%; top: 28%; animation-delay: 1.5s; }
+.time-a#ala2-a    { left: 55%; top: 72%; animation-delay: 2s; }
+.time-a#pivo-a    { left: 80%; top: 50%; animation-delay: 2.5s; }
+
+.time-b#goleiro-b { left: 90%; top: 50%; animation-delay: 0.5s; }
+.time-b#fixo-b    { left: 70%; top: 50%; animation-delay: 1s; }
+.time-b#ala1-b    { left: 45%; top: 28%; animation-delay: 1.5s; }
+.time-b#ala2-b    { left: 45%; top: 72%; animation-delay: 2s; }
+.time-b#pivo-b    { left: 20%; top: 50%; animation-delay: 2.5s; }
+
 @media (max-width: 1200px) {
     .card-header h1 {
         font-size: 3.5rem;
@@ -811,6 +1243,33 @@ footer p {
     .corner-dot {
         width: 12px;
         height: 12px;
+    }
+}
+
+@media (max-width: 900px) {
+    body { padding: 20px; }
+    .container-quadra { padding: 20px; }
+    .quadra-volei { 
+        width: 600px; 
+        height: 300px; 
+    }
+    .jogador-foto { 
+        width: 80px; 
+        height: 80px; 
+        border-width: 3px;
+    }
+    .jogador-nome { 
+        font-size: 12px; 
+        max-width: 100px;
+    }
+    .team-names-volleyball,
+    .team-names-futsal {
+        gap: 50px;
+    }
+    .team-name-volleyball,
+    .team-name-futsal {
+        font-size: 32px;
+        min-width: 200px;
     }
 }
 
@@ -877,404 +1336,6 @@ footer p {
     }
 }
 
-/* Variáveis de Cores e Estilos */
-:root {
-    --bg-gradient-start: #10141f;
-    --bg-gradient-end: #1f2a40;
-    --court-center: #2a9e55ff;
-    --court-edge: #1c6e39ff;
-    --court-green: #1a6a35;
-    --court-orange: #167abd;
-    --line-color: white;
-    --text-color: #f0f0f0;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --casa-border: #4d4de5;
-    --fora-border: #e54d4d;
-}
-
-@keyframes fadeIn {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.8rem;
-    font-weight: 700;
-    text-shadow: 0 3px 6px var(--shadow-color);
-    animation: slideDown 0.8s ease-out 0.2s both;
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.wrap {
-    max-width: 900px;
-    margin: 0 auto;
-    text-align: center;
-}
-
-/* Container principal que representa a área verde ao redor - VÔLEI */
-.container-quadra {
-    background-color: var(--court-green);
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: scaleIn 0.8s ease-out 0.4s both;
-}
-
-@keyframes scaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-/* A quadra de voleibol (área laranja) */
-.quadra-volei {
-    position: relative;
-    width: 1500px;
-    height: 700px;
-    background-color: var(--court-orange);
-    display: flex;
-    border: 3px solid var(--line-color);
-}
-
-/* Linha central pontilhada */
-.linha-central {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    border-left: 10px dashed var(--line-color);
-    transform: translateX(-50%);
-}
-
-/* Cada lado da quadra (time da casa e time visitante) */
-.lado-quadra {
-    width: 50%;
-    height: 100%;
-    display: flex;
-    position: relative;
-}
-
-/* Linha dos 3 metros */
-.lado-quadra::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    background-color: var(--line-color);
-    width: 3px;
-}
-
-/* Posição da linha dos 3 metros para o lado esquerdo (casa) */
-.lado-quadra.casa::before {
-    right: 0;
-}
-
-/* Posição da linha dos 3 metros para o lado direito (fora) */
-.lado-quadra.fora::before {
-    left: 0;
-}
-
-/* Zona de ataque e zona de defesa */
-.zona {
-    width: 50%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(3, 1fr);
-    justify-items: center;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-/* Posicionamento correto dos jogadores no vôlei */
-.zona.defesa .jogador-container:nth-child(1) { grid-row: 1; }
-.zona.defesa .jogador-container:nth-child(2) { grid-row: 2; }
-.zona.defesa .jogador-container:nth-child(3) { grid-row: 3; }
-
-.zona.ataque .jogador-container:nth-child(1) { grid-row: 1; }
-.zona.ataque .jogador-container:nth-child(2) { grid-row: 2; }
-.zona.ataque .jogador-container:nth-child(3) { grid-row: 3; }
-
-/* Container do jogador com foto e nome */
-.jogador-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    opacity: 0;
-    animation: playerAppear 0.6s ease-out forwards;
-}
-
-@keyframes playerAppear {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-/* Círculo para as fotos dos jogadores - VÔLEI */
-.jogador-foto {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    border: 4px solid;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    margin-bottom: 8px;
-}
-
-/* Time da casa com borda azul */
-.jogador-foto.casa {
-    border-color: var(--casa-border);
-}
-
-/* Time visitante com borda vermelha */
-.jogador-foto.fora {
-    border-color: var(--fora-border);
-}
-
-.jogador-foto img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    display: block;
-}
-
-/* Nome do jogador - VÔLEI */
-.jogador-nome {
-    font-weight: 700;
-    font-size: 14px;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: rgba(0,0,0,0.7);
-    padding: 4px 8px;
-    border-radius: 12px;
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Delays de animação para cada jogador - VÔLEI */
-.jogador-container:nth-child(1) { animation-delay: 0.5s; }
-.jogador-container:nth-child(2) { animation-delay: 1s; }
-.jogador-container:nth-child(3) { animation-delay: 1.5s; }
-
-/* ========== FUTSAL ========== */
-
-/* Quadra Futsal */
-.quadra-futsal {
-    width: 1500px;
-    height: 906px;
-    margin: 0 auto;
-    background: 
-        radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-        radial-gradient(circle at 70% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-        linear-gradient(135deg, var(--court-center) 0%, var(--court-edge) 100%);
-    position: relative;
-    border-radius: 12px;
-    box-shadow: 
-        0 15px 40px var(--shadow-color), 
-        inset 0 0 80px rgba(0,0,0,0.4),
-        0 0 0 4px rgba(255,255,255,0.1);
-    border: 2px solid var(--line-color);
-    overflow: hidden;
-    animation: scaleIn 0.8s ease-out 0.4s both;
-}
-
-/* Linhas do Campo Futsal */
-.field-lines, .half-line, .center-circle, .goal-area-left, .goal-area-right, 
-.goal-area-left::before, .goal-area-right::before, .goal-left, .goal-right,
-.center-dot, .penalty-dot-left, .penalty-dot-right {
-    border-color: var(--line-color);
-    background: var(--line-color);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-}
-
-.field-lines {
-    position: absolute; 
-    top: 0; 
-    left: 0;
-    width: 100%; 
-    height: 100%;
-    border-width: 2px; 
-    border-radius: 10px; 
-    background: none;
-}
-
-.half-line {
-    position: absolute; 
-    width: 2px; 
-    height: 100%;
-    left: 50%; 
-    transform: translateX(-50%);
-}
-
-.center-circle {
-    position: absolute; 
-    width: 110px; 
-    height: 110px;
-    left: 50%; 
-    top: 50%;
-    transform: translate(-50%, -50%);
-    border-width: 2px; 
-    border-radius: 50%; 
-    background: none;
-}
-
-.center-dot, .penalty-dot-left, .penalty-dot-right {
-    position: absolute; 
-    width: 10px; 
-    height: 10px;
-    top: 50%; 
-    transform: translate(-50%, -50%); 
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-}
-
-.center-dot { 
-    left: 50%; 
-}
-
-.goal-area-left, .goal-area-right {
-    position: absolute; 
-    width: 110px; 
-    height: 200px;
-    top: 50%; 
-    transform: translateY(-50%);
-    border-width: 2px; 
-    border-radius: 6px; 
-    background: none;
-}
-
-.goal-area-left { 
-    left: 0; 
-    border-left: none; 
-    border-top-left-radius: 0; 
-    border-bottom-left-radius: 0;
-}
-
-.goal-area-right { 
-    right: 0; 
-    border-right: none; 
-    border-top-right-radius: 0; 
-    border-bottom-right-radius: 0;
-}
-
-.goal-left, .goal-right {
-    position: absolute; 
-    width: 6px; 
-    height: 60px;
-    top: 50%; 
-    transform: translateY(-50%);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-}
-
-.goal-left { 
-    left: -2px; 
-}
-
-.goal-right { 
-    right: -2px; 
-}
-
-.penalty-dot-left { 
-    left: 80px; 
-}
-
-.penalty-dot-right { 
-    right: 80px; 
-    transform: translate(50%, -50%);
-}
-
-/* Jogadores Futsal */
-.jogador {
-    position: absolute;
-    width: 180px;
-    text-align: center;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    animation: playerAppearFutsal 0.6s ease-out forwards;
-}
-
-@keyframes playerAppearFutsal {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-.player-photo {
-    width: 150px;
-    height: 150px;
-    margin: 0 auto;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.player-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    display: block;
-}
-
-.nome {
-    margin-top: 8px;
-    font-weight: 700;
-    font-size: 16px;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Posições Futsal - Time A (Esquerda) */
-.time-a#goleiro-a { left: 10%; top: 50%; animation-delay: 0.5s; }
-.time-a#fixo-a    { left: 30%; top: 50%; animation-delay: 1s; }
-.time-a#ala1-a    { left: 55%; top: 28%; animation-delay: 1.5s; }
-.time-a#ala2-a    { left: 55%; top: 72%; animation-delay: 2s; }
-.time-a#pivo-a    { left: 80%; top: 50%; animation-delay: 2.5s; }
-
-/* Posições Futsal - Time B (Direita) */
-.time-b#goleiro-b { left: 90%; top: 50%; animation-delay: 0.5s; }
-.time-b#fixo-b    { left: 70%; top: 50%; animation-delay: 1s; }
-.time-b#ala1-b    { left: 45%; top: 28%; animation-delay: 1.5s; }
-.time-b#ala2-b    { left: 45%; top: 72%; animation-delay: 2s; }
-.time-b#pivo-b    { left: 20%; top: 50%; animation-delay: 2.5s; }
-
-/* ========== RESPONSIVIDADE ========== */
-
-/* Responsividade - VÔLEI */
-@media (max-width: 900px) {
-    body { padding: 20px; }
-    .container-quadra { padding: 20px; }
-    .quadra-volei { 
-        width: 600px; 
-        height: 300px; 
-    }
-    .jogador-foto { 
-        width: 60px; 
-        height: 60px; 
-        border-width: 3px;
-    }
-    .jogador-nome { 
-        font-size: 12px; 
-        max-width: 100px;
-    }
-    h1 { font-size: 2.2rem; }
-}
-
 @media (max-width: 650px) {
     body { padding: 15px; }
     .container-quadra { padding: 15px; }
@@ -1283,8 +1344,8 @@ h1 {
         height: 225px; 
     }
     .jogador-foto { 
-        width: 50px; 
-        height: 50px; 
+        width: 60px; 
+        height: 60px; 
         border-width: 2px;
     }
     .jogador-nome { 
@@ -1292,8 +1353,15 @@ h1 {
         max-width: 80px;
         padding: 2px 6px;
     }
-    h1 { font-size: 1.8rem; }
-    .zona { padding: 10px; }
+    .team-names-volleyball,
+    .team-names-futsal {
+        gap: 30px;
+    }
+    .team-name-volleyball,
+    .team-name-futsal {
+        font-size: 24px;
+        min-width: 150px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1302,17 +1370,25 @@ h1 {
         height: 175px; 
     }
     .jogador-foto { 
-        width: 40px; 
-        height: 40px; 
+        width: 50px; 
+        height: 50px; 
     }
     .jogador-nome { 
         font-size: 9px; 
         max-width: 70px;
     }
-    h1 { font-size: 1.5rem; margin-bottom: 20px; }
+    .team-names-volleyball,
+    .team-names-futsal {
+        gap: 20px;
+    }
+    .team-name-volleyball,
+    .team-name-futsal {
+        font-size: 20px;
+        min-width: 120px;
+        padding: 8px 12px;
+    }
 }
 
-/* Responsividade - FUTSAL */
 @media (max-width: 920px) {
     .quadra-futsal { width: 100%; height: 420px; }
     .jogador { width: 100px; }
