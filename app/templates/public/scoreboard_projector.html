@@ -14,16 +14,13 @@
     <div>
         <img class="banner-scoreboard" src="{{banner_score}}" alt="Banner" style="width: 100vw; height: 100vh; display: none;">
     </div>
-    
-    <!-- VÔLEI - Estrutura Corrigida -->
+
     <div class="container-quadra" id="container-volleyball" style="display: none;">
         <div class="quadra-volei">
             <div class="linha-central"></div>
-            
-            <!-- Time Casa (A) -->
+
             <div class="lado-quadra casa">
                 <div class="zona defesa">
-                    <!-- 3 jogadores na defesa -->
                     <div class="jogador-container" id="casa-defesa-1">
                         <div class="jogador-foto casa">
                             <img src="" alt="">
@@ -44,7 +41,6 @@
                     </div>
                 </div>
                 <div class="zona ataque">
-                    <!-- 3 jogadores no ataque -->
                     <div class="jogador-container" id="casa-ataque-1">
                         <div class="jogador-foto casa">
                             <img src="" alt="">
@@ -65,11 +61,9 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Time Fora (B) -->
+
             <div class="lado-quadra fora">
                 <div class="zona ataque">
-                    <!-- 3 jogadores no ataque -->
                     <div class="jogador-container" id="fora-ataque-1">
                         <div class="jogador-foto fora">
                             <img src="" alt="">
@@ -90,7 +84,6 @@
                     </div>
                 </div>
                 <div class="zona defesa">
-                    <!-- 3 jogadores na defesa -->
                     <div class="jogador-container" id="fora-defesa-1">
                         <div class="jogador-foto fora">
                             <img src="" alt="">
@@ -114,7 +107,6 @@
         </div>
     </div>
 
-    <!-- FUTSAL - Estrutura Corrigida -->
     <div class="quadra-futsal" id="container-futsal" style="display: none;">
         <div class="field-lines"></div>
         <div class="half-line"></div>
@@ -127,7 +119,6 @@
         <div class="penalty-dot-left"></div>
         <div class="penalty-dot-right"></div>
 
-        <!-- Jogadores Time A (Casa) -->
         <div class="jogador time-a" id="goleiro-a">
             <div class="player-photo">
                 <img src="" alt="">
@@ -162,8 +153,6 @@
             </div>
             <div class="nome"></div>
         </div>
-
-        <!-- Jogadores Time B (Fora) -->
         <div class="jogador time-b" id="goleiro-b">
             <div class="player-photo">
                 <img src="" alt="">
@@ -222,9 +211,7 @@
     </div>
 
     <section class="section-project scoreboard score-ban" id="scoreboard" style="display: flex;">
-        <!-- ... (restante do código do placar permanece igual) ... -->
         <div class="card-container" id="card-goal">
-            <!-- Elementos decorativos nos cantos -->
             <div class="corner-decoration corner-top-left"></div>
             <div class="corner-decoration corner-top-right"></div>
             <div class="corner-decoration corner-bottom-left"></div>
@@ -347,34 +334,21 @@
     <script src="{% static 'js/scoreboard.js' %}"></script>
     <script>
         function isLightColor(color) {
-            // Remove o # se presente
             color = color.replace('#', '');
-            
-            // Converte hex para RGB
             const r = parseInt(color.substr(0, 2), 16);
             const g = parseInt(color.substr(2, 2), 16);
             const b = parseInt(color.substr(4, 2), 16);
-            
-            // Fórmula para calcular luminosidade (percepção humana)
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            
-            // Retorna true se for clara, false se for escura
             return luminance > 0.5;
         }
 
-        // Função para aplicar a cor do texto baseada na cor de fundo
         function applyTextColorBasedOnBackground() {
             const root = document.documentElement;
             const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
-            
-            // Define a cor do texto baseada na luminosidade da cor primária
             const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
-            
-            // Aplica a cor do texto
             root.style.setProperty('--text-color', textColor);
         }
 
-        // Executa quando a página carrega
         document.addEventListener('DOMContentLoaded', function() {
             applyTextColorBasedOnBackground();
         });

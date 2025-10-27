@@ -411,7 +411,7 @@ footer p {
 }
 
 :root {
-    --primary-color: #0e2572;
+    --primary-color: #8f0000;
     --accent-color: #1a1a1a;
     --text-color: #000000;
     --font-header: 'Anton', sans-serif;
@@ -424,126 +424,210 @@ footer p {
 
 /* --- CONTAINER PRINCIPAL --- */
 .card-container {
-    width: 100%;
-    max-width: 1920px;
-    min-width: 1080px; 
-    z-index: 500;
-    position: fixed;   
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    min-width: auto;
+    z-index: 1000;
+    position: fixed;
     overflow: hidden;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    top: 0;
+    left: 0;
+    transform: none;
+    box-shadow: none;
     display: none;
     flex-direction: column;
+    background: var(--primary-color);
 }
 
-/* --- ELEMENTOS DECORATIVOS NOS CANTOS --- */
+/* --- ELEMENTOS DECORATIVOS NOS CANTOS MELHORADOS --- */
 .corner-decoration {
     position: absolute;
-    width: 80px;
-    height: 80px;
-    z-index: 5;
+    width: 120px;
+    height: 120px;
+    z-index: 100;
+    border: 4px solid var(--primary-color);
 }
 
 .corner-top-left {
     top: 0;
     left: 0;
-    border-top: 4px solid var(--primary-color);
-    border-left: 4px solid var(--primary-color);
-    border-top-left-radius: 15px;
+    border-top: 6px solid var(--text-color);
+    border-left: 6px solid var(--text-color);
+    border-top-left-radius: 20px;
+    border-right: none;
+    border-bottom: none;
 }
 
 .corner-top-right {
     top: 0;
     right: 0;
-    border-top: 4px solid var(--primary-color);
-    border-right: 4px solid var(--primary-color);
-    border-top-right-radius: 15px;
+    border-top: 6px solid var(--text-color);
+    border-right: 6px solid var(--text-color);
+    border-top-right-radius: 20px;
+    border-left: none;
+    border-bottom: none;
 }
 
 .corner-bottom-left {
     bottom: 0;
     left: 0;
-    border-bottom: 4px solid var(--primary-color);
-    border-left: 4px solid var(--primary-color);
-    border-bottom-left-radius: 15px;
+    border-bottom: 6px solid var(--text-color);
+    border-left: 6px solid var(--text-color);
+    border-bottom-left-radius: 20px;
+    border-right: none;
+    border-top: none;
 }
 
 .corner-bottom-right {
     bottom: 0;
     right: 0;
-    border-bottom: 4px solid var(--primary-color);
-    border-right: 4px solid var(--primary-color);
-    border-bottom-right-radius: 15px;
+    border-bottom: 6px solid var(--text-color);
+    border-right: 6px solid var(--text-color);
+    border-bottom-right-radius: 20px;
+    border-left: none;
+    border-top: none;
 }
 
 /* Elementos de canto internos */
 .corner-inner {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    z-index: 6;
+    width: 60px;
+    height: 60px;
+    z-index: 101;
+    border: 3px solid var(--text-color);
 }
 
 .corner-inner-top-left {
-    top: 10px;
-    left: 10px;
-    border-top: 2px solid var(--text-color);
-    border-left: 2px solid var(--text-color);
+    top: 15px;
+    left: 15px;
+    border-top: 3px solid var(--text-color);
+    border-left: 3px solid var(--text-color);
+    border-right: none;
+    border-bottom: none;
 }
 
 .corner-inner-top-right {
-    top: 10px;
-    right: 10px;
-    border-top: 2px solid var(--text-color);
-    border-right: 2px solid var(--text-color);
+    top: 15px;
+    right: 15px;
+    border-top: 3px solid var(--text-color);
+    border-right: 3px solid var(--text-color);
+    border-left: none;
+    border-bottom: none;
 }
 
 .corner-inner-bottom-left {
-    bottom: 10px;
-    left: 10px;
-    border-bottom: 2px solid var(--text-color);
-    border-left: 2px solid var(--text-color);
+    bottom: 15px;
+    left: 15px;
+    border-bottom: 3px solid var(--text-color);
+    border-left: 3px solid var(--text-color);
+    border-right: none;
+    border-top: none;
 }
 
 .corner-inner-bottom-right {
-    bottom: 10px;
-    right: 10px;
-    border-bottom: 2px solid var(--text-color);
-    border-right: 2px solid var(--text-color);
+    bottom: 15px;
+    right: 15px;
+    border-bottom: 3px solid var(--text-color);
+    border-right: 3px solid var(--text-color);
+    border-left: none;
+    border-top: none;
+}
+
+/* Novos elementos decorativos adicionais */
+.corner-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--text-color);
+    border-radius: 50%;
+    z-index: 102;
+}
+
+.corner-dot-top-left {
+    top: 8px;
+    left: 8px;
+}
+
+.corner-dot-top-right {
+    top: 8px;
+    right: 8px;
+}
+
+.corner-dot-bottom-left {
+    bottom: 8px;
+    left: 8px;
+}
+
+.corner-dot-bottom-right {
+    bottom: 8px;
+    right: 8px;
+}
+
+/* Linhas decorativas diagonais */
+.corner-line {
+    position: absolute;
+    width: 80px;
+    height: 4px;
+    background: var(--text-color);
+    transform: rotate(45deg);
+    z-index: 99;
+}
+
+.corner-line-tl {
+    top: 20px;
+    left: 20px;
+}
+
+.corner-line-tr {
+    top: 20px;
+    right: 20px;
+    transform: rotate(-45deg);
+}
+
+.corner-line-bl {
+    bottom: 20px;
+    left: 20px;
+    transform: rotate(-45deg);
+}
+
+.corner-line-br {
+    bottom: 20px;
+    right: 20px;
+    transform: rotate(45deg);
 }
 
 /* --- CABEÇALHO --- */
 .card-header {
     background-color: var(--primary-color);
     color: var(--text-color);
-    padding: 15px 20px;
+    padding: 25px 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     position: relative;
-    z-index: 2;
+    z-index: 1002;
+    flex-shrink: 0;
 }
 
 .card-header h1 {
     font-family: var(--font-header);
-    font-size: 3rem;
-    margin: 0 20px;
-    letter-spacing: 2px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 4.5rem;
+    margin: 0 30px;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .card-header .line {
-    height: 3px;
+    height: 4px;
     flex-grow: 1;
-    max-width: 150px;
+    max-width: 200px;
     background-color: var(--text-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Animação do texto GOOOOOOL! */
@@ -586,12 +670,18 @@ footer p {
 /* --- CONTEÚDO PRINCIPAL (IMAGEM) --- */
 .card-main {
     position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1; 
 }
-
 .player-image {
-    height: 450px;
-    background-size: cover;
-    background-position: center 20%;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center center;
     background-repeat: no-repeat;
     background-color: #ddd;
     position: relative;
@@ -606,30 +696,35 @@ footer p {
 }
 
 .decoration-1 {
-    width: 120px;
-    height: 120px;
-    top: 20px;
-    left: 20px;
+    width: 200px;
+    height: 200px;
+    top: 50px;
+    left: 50px;
     border-radius: 50%;
 }
 
 .decoration-2 {
-    width: 80px;
-    height: 80px;
-    bottom: 30px;
-    right: 30px;
+    width: 150px;
+    height: 150px;
+    bottom: 50px;
+    right: 50px;
     transform: rotate(45deg);
 }
 
 .club-logo {
-    width: 120px;
-    height: 120px;
+    width: 200px;
+    height: 200px;
     object-fit: contain;
     position: absolute;
-    bottom: -60px;
+    bottom: -60px; 
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 9999;
+    background: white;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    border: 4px solid var(--text-color);
 }
 
 /* --- RODAPÉ --- */
@@ -637,25 +732,26 @@ footer p {
     background-color: var(--primary-color);
     color: var(--text-color);
     text-align: center;
-    padding: 80px 20px 30px 20px;
+    padding: 100px 30px 40px 30px;
     position: relative;
-    z-index: 2;
+    z-index: 100; 
+    flex-shrink: 0;
 }
 
 .card-footer h2 {
     font-family: var(--font-body);
     font-weight: 900;
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     margin: 0;
     text-transform: uppercase;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .card-footer p {
     font-family: var(--font-body);
     font-weight: 700;
-    font-size: 1.5rem;
-    margin: 5px 0 0 0;
+    font-size: 2rem;
+    margin: 10px 0 0 0;
     text-transform: uppercase;
 }
 
@@ -664,91 +760,120 @@ footer p {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .line-container .line {
-    height: 2px;
+    height: 3px;
     flex-grow: 1;
-    max-width: 100px;
+    max-width: 150px;
     background-color: var(--text-color);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .line-container p {
-    margin: 0 15px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    margin: 0 20px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    font-size: 1.8rem;
 }
 
-/* --- AJUSTES PARA CELULARES (RESPONSIVIDADE) --- */
-@media (max-width: 600px) {
+/* Ajustes para telas menores */
+@media (max-width: 1200px) {
+    .card-header h1 {
+        font-size: 3.5rem;
+        margin: 0 20px;
+    }
+    
+    .card-footer h2 {
+        font-size: 2.8rem;
+    }
+    
+    .card-footer p {
+        font-size: 1.6rem;
+    }
+    
+    .club-logo {
+        width: 150px;
+        height: 150px;
+        bottom: -75px;
+    }
+    
+    .corner-decoration {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .corner-inner {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .corner-dot {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-header {
+        padding: 20px;
+    }
+    
+    .card-header h1 {
+        font-size: 2.5rem;
+        margin: 0 15px;
+        letter-spacing: 2px;
+    }
+    
+    .card-footer {
+        padding: 80px 20px 30px 20px;
+    }
+    
+    .card-footer h2 {
+        font-size: 2.2rem;
+    }
+    
+    .card-footer p {
+        font-size: 1.3rem;
+    }
+    
+    .line-container .line {
+        max-width: 80px;
+    }
+    
+    .line-container p {
+        margin: 0 15px;
+        font-size: 1.3rem;
+    }
+    
+    .club-logo {
+        width: 120px;
+        height: 120px;
+        bottom: -60px;
+    }
+    
+    .decoration-1 {
+        width: 120px;
+        height: 120px;
+        top: 30px;
+        left: 30px;
+    }
+    
+    .decoration-2 {
+        width: 100px;
+        height: 100px;
+        bottom: 30px;
+        right: 30px;
+    }
+    
     .corner-decoration {
         width: 60px;
         height: 60px;
     }
-
+    
     .corner-inner {
         width: 30px;
         height: 30px;
-    }
-
-    .corner-inner-top-left,
-    .corner-inner-top-right,
-    .corner-inner-bottom-left,
-    .corner-inner-bottom-right {
-        top: 8px;
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-    }
-
-    .decoration-1 {
-        width: 80px;
-        height: 80px;
-        top: 15px;
-        left: 15px;
-    }
-
-    .decoration-2 {
-        width: 60px;
-        height: 60px;
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .card-header h1 {
-        font-size: 2rem;
-        margin: 0 10px;
-    }
-
-    .player-image {
-        height: 300px;
-    }
-
-    .club-logo {
-        width: 90px;
-        height: 90px;
-        bottom: -45px;
-    }
-
-    .card-footer {
-        padding-top: 60px;
-    }
-
-    .card-footer h2 {
-        font-size: 1.8rem;
-    }
-
-    .card-footer p {
-        font-size: 1.1rem;
-    }
-    
-    .line-container .line {
-        max-width: 70px;
-    }
-    
-    .line-container p {
-        margin: 0 10px;
     }
 }
 
