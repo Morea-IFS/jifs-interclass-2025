@@ -428,7 +428,6 @@ def send_scoreboard_match(instance):
         match_public = match_data
 
     if settings.DEBUG: print("eita, saindo signals (partidas) sendo preparadas. :)")
-    if settings.DEBUG: print(match_data)
     return match_data, match_public
 
 @receiver(post_save, sender=User)

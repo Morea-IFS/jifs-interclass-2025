@@ -49,15 +49,16 @@
                     <h3>{{team_match_a.team.name}} x {{team_match_b.team.name}}</h3>
                     <br>
                     <p>PARTIDA DE {{match.get_sport_display|upper}} {{match.get_sexo_display|upper}}</p>
-                    <p><i class="fa-regular fa-clock"></i> INICIO: {{match.time_start|default:'-'}}</p>
-                    <p><i class="fa-regular fa-clock"></i> FIM: {{match.time_end|default:'-'}}</p>
+                    <p>{{match.group_phase.phase.get_name_display|upper}} | {{match.group_phase.name|upper}}</p>
                     <br>
-                    <p><i class="fa-regular fa-clock"></i> ACRÉSCIMO: {{match.add|default:'-'}}</p>
+                    <form action="" method="post">{% csrf_token %}
+                    <button name="sumula" class="button-match-settings" style="background-color: rgb(19, 0, 129); color: white;">SÚMULA</button>
+                    </form>
                 </div>
             </div>
         </div>
         <ul class="nav-list">
-            {% with active_tab=request.GET.tab|default:"atletas" %}
+            {% with active_tab=request.GET.tab|default:"gerais" %}
             <li class="{% if active_tab == 'tempo' %}nav-item-show{% endif %}">
                 <a href="?tab=tempo">Tempo</a>
             </li>
@@ -73,10 +74,16 @@
             <li class="{% if active_tab == 'atletas' %}nav-item-show{% endif %}">
                 <a href="?tab=atletas">Atletas</a>
             </li>
+            <li class="{% if active_tab == 'arbitros' %}nav-item-show{% endif %}">
+                <a href="?tab=arbitros">Árbitros</a>
+            </li>
+            <li class="{% if active_tab == 'gerais' %}nav-item-show{% endif %}">
+                <a href="?tab=gerais">Gerais</a>
+            </li>
             {% endwith %}
         </ul>
         <div class="tab-content">
-            {% with active_tab=request.GET.tab|default:"atletas" %}
+            {% with active_tab=request.GET.tab|default:"gerais" %}
             
             {% if active_tab == 'tempo' %}
             <div class="content-tempo item-content">
@@ -465,6 +472,151 @@
                 </section>
                 </div>
                 {% endif %}
+            {% endif %}
+            {% if active_tab == 'arbitros' %}
+            <div class="content-tempo item-content">
+                {% if perms.app.view_match %}
+                <div class="accordion">
+                    <div class="accordion-header " onclick="minhaFuncao('accordion-header-8','accordion-content-8')" id="accordion-header-8">
+                        <p>Árbitros</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <div class="accordion-content" id="accordion-content-8">
+                        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+                            <table id="search-table" style="width: 100%;">
+                                <tr class="hidden">
+                                    <th>ID</th>
+                                    <th>NOME</th>
+                                    <th>FUNÇÃO</th>
+                                    {% if perms.app.delete_match_referee %}
+                                    <th>DELETAR</th>
+                                    {% endif %}
+                                </tr>
+
+                                {% for i in match_referee %}
+                                <tr>
+                                    <td>{{ i.id }}</td>
+                                    <td>{{ i.referee.name }}</td>
+                                    <td>{{ i.get_role_display }}</td>
+                                    {% if perms.app.delete_match_referee %}
+                                    <td>
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <button data-confirm="Você realmente deseja excluir?"
+                                                name="referee_delete" value="{{i.id}}"
+                                                style="background-color: transparent; border: none; margin: 0;">
+                                                <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUMA PAUSAS.</td></tr>
+                                {% endfor %}
+                            </table>
+                        </section>
+                    </div>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if active_tab == 'gerais' %}
+            <div class="content-tempo item-content">
+                {% if perms.app.view_match and perms.app.change_match %}
+                <div class="accordion">
+                    <div class="accordion-header accordion-header-show" onclick="minhaFuncao('accordion-header-9','accordion-content-9')" id="accordion-header-9">
+                        <p>Gerais</p><i class="fa-solid fa-angle-down"></i>
+                    </div>
+                    <form method="post" class="accordion-content accordion-show" id="accordion-content-9" style="flex-direction: column; padding-inline: 25px;">{% csrf_token %}
+                        <label><strong>Esporte:</strong></label>
+                        <select name="sport" id="">
+                            {% for i in sports %}
+                            <option value="{{i.sport}}" {% if match.sport == i.sport %} selected {% endif %}>{{i.get_sport_display}}</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>Status</strong></label>
+                        <select name="status" id="">
+                            {% for i, j in status %}
+                            <option value="{{i}}" {% if match.status == i %} selected {% endif %}>{{j}}</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>Detalhes:</strong></label>
+                        <select name="detailed" id="">
+                            {% for i, j in detailed %}
+                            <option value="{{i}}" {% if match.detailed == i %} selected {% endif %}>{{j}}</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>MVP (atleta):</strong></label>
+                        <select name="mvp" id="">
+                            <option value="" {% if not match.mvp_player_player.id %} selected {% endif %}>Selecione o atleta mvp</option>
+                            {% for i in players_match %}
+                            <option value="{{i.player.id}}" {% if match.mvp_player_player.id == i.player.id %} selected {% endif %}>{{i.player.name}} ({{i.team_match.team.name}})</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>Vencedor (time):</strong></label>
+                        <select name="winner" id="">
+                            <option value="" {% if not match.Winner_team.id %} selected {% endif %}>Selecione o time vencedor</option>
+                            {% for i in teams_match %}
+                            <option value="{{i.team.id}}" {% if match.Winner_team.id == i.team.id %} selected {% endif %}>{{i.team.name}}</option>
+                            {% empty %}
+                            {% endfor %}
+                        </select>
+                        {% if volley_matchs %}
+                        <label><strong>Volei:</strong></label>
+                        <select name="volley_match" id="">
+                            {% for i in sports %}
+                            <option value="{{i.sport}}" {% if match.sport == i.sport %} selected {% endif %}>{{i.get_sport_display}}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        <label><strong>Sexo</strong></label>
+                        <select name="sexo" id="">
+                            {% for i, j in sexos %}
+                            <option value="{{i}}" {% if match.sexo == i %} selected {% endif %}>{{j}}</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>Grupo/Fase:</strong></label>
+                        <select name="group_phase" id="">
+                            {% for i in group_phases %}
+                            <option value="{{i.id}}" {% if match.group_phase.id == i.id %} selected {% endif %}>{{i}}</option>
+                            {% endfor %}
+                        </select>
+                        <label><strong>Horário programado:</strong></label>
+                        <input type="datetime-local" name="time_match" value="{{ match.time_match|date:'Y-m-d\\TH:i' }}">
+                        <label><strong>Horário início:</strong></label>
+                        <input type="time" name="time_start" value="{{ match.time_start|time:'H:i' }}">
+                        <label><strong>Horário fim:</strong></label>
+                        <input type="time" name="time_end" value="{{ match.time_end|time:'H:i' }}">
+                        <label><strong>Acréscimo:</strong></label>
+                        <input type="time" name="add" value="{{ match.add|time:'H:i' }}">
+                        <label><strong>Local:</strong></label>
+                        <input type="text" name="location" {% if match.location %} value="{{match.location}}" {% else %} placeholder="Local" {% endif %}>
+                        <label><strong>Observações:</strong></label>
+                        <textarea name="observations" rows="4" maxlength="600">{% if match.observations %}{{match.observations}}{% else %}Local{% endif %}</textarea>
+                        <br>
+                        <button class="button-match-settings" style="background-color: #0066ff; color: white;" type="submit">Salvar alterações</button>
+                    </form>
+                </div>
+                {% else %}
+                <section class="alert-page">
+                    <div class="alert-img">
+                    <i class="fa-solid fa-circle-exclamation"></i> 
+                    </div>
+                    <div class="alert-text">
+                        <p>VOCÊ NÃO TEM PERMISSÃO PARA VIZUALIZAR ESSE CAMPO.</p>
+                    </div>
+                </section>
+                {% endif %}
+            </div>
             {% endif %}
 
             {% endwith %}
