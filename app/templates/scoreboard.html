@@ -546,6 +546,15 @@
         <button class="button-modal" type="submit">Confirmar</button>
       </form>
       <hr>
+      <p>Cores dos time</p>
+      <form method="post">{% csrf_token %}
+        <label for="color">{{team_match_a.team.name}}</label>
+        <input type="color" name="color_a" maxlength="7" value="{{team_match_a.team.color}}" required style="height: 50px;">
+        <label for="color">{{team_match_b.team.name}}</label>
+        <input type="color" name="color_b" maxlength="7" value="{{team_match_b.team.color}}" required style="height: 50px;">
+        <button class="button-modal" type="submit">Confirmar</button>
+      </form>
+      <hr>
       <p>Observações</p>
       <form method="post">{% csrf_token %}
         <textarea name="observations" {% if not match.observations %} placeholder="Escreva aqui as observações da partida. máximo 500 caracter." {% endif %}  maxlength="500">{{match.observations}}</textarea>

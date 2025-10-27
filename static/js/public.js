@@ -205,7 +205,7 @@ socket.onmessage = function(e) {
             }
             if(photo_b_team){
                 photo_b_team.forEach((i) => {
-                    console.log(i, team.colorA)
+                    console.log(i, team.colorB)
                     i.src = team.photoB;
                 });
             }
@@ -217,7 +217,7 @@ socket.onmessage = function(e) {
             }
             if(color_b_team){
                 color_b_team.forEach((i) => {
-                    console.log(i, team.colorA)
+                    console.log(i, team.colorB)
                     i.style.backgroundColor = team.colorB;
                 });
             }
@@ -229,7 +229,7 @@ socket.onmessage = function(e) {
             }
             if(border_b_team){
                 border_b_team.forEach((i) => {
-                    console.log(i, team.colorA)
+                    console.log(i, team.colorB)
                     i.style.borderColor = team.colorB;
                 });
             }

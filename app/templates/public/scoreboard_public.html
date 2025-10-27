@@ -64,7 +64,7 @@
         <main>
             <section class="scoreboard">
                 <div class="teams">
-                    <div id="team_a_color" style=" background-color: {{team_match_a.team.color}}" class="team-a">
+                    <div id="team_a_color" style=" background-color: {{team_match_a.team.color}}" class="team-a color-a">
                         <div class="title-team">
                             <img class="photo-team-a" {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;"alt="foto time a"/>
                             <h2 id="team-a">{% if team_match_a.team.name %} {{team_match_a.team.name}} {% else %} TEAM A {% endif %}</h2>
@@ -73,7 +73,7 @@
                             <p class="score"><span id="points-a">{% if point_a %} {{point_a}} {% else %} 0 {% endif %}</span></p>
                         </div>
                     </div>
-                    <div id="team_b_color" style=" background-color: {{team_match_b.team.color}}" class="team-b">
+                    <div id="team_b_color" style=" background-color: {{team_match_b.team.color}}" class="team-b color-b">
                         <div class="title-team">
                             <h2 id="team-b" style="text-align: right;">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %} </h2>
                             <img class="photo-team-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt="foto time b"/>
@@ -122,26 +122,26 @@
                         <div class="aces" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">
                             <span id="aces-a"
                                 style="background-color: {{team_match_a.team.color}}"
-                                class="aces-team-a"
+                                class="aces-team-a color-a"
                                 >{% if aces_a %} {{aces_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Aces</p>
                             <span id="aces-b"
                                 style="background-color: {{team_match_b.team.color}}"
-                                class="aces-team-b"
+                                class="aces-team-b color-b"
                                 >{% if aces_b %} {{aces_b}} {% else %} 0 {% endif %}</span>
                         </div>
 
                         <div class="foul">
                             <span id="lack-a"
                             style=" background-color: {{team_match_a.team.color}}"
-                                class="foul-team-a"
+                                class="foul-team-a color-a"
                                 >{% if lack_a %} {{lack_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Faltas</p>
                             <span id="lack-b"
                                 style=" background-color: {{team_match_b.team.color}}"
-                                class="foul-team-b"
+                                class="foul-team-b color-b"
                                 >{% if lack_b %} {{lack_b}} {% else %} 0 {% endif %}</span
                             >
                         </div>
@@ -149,13 +149,13 @@
                         <div class="card">
                             <span id="card-a"
                                 style="background-color: {{team_match_a.team.color}}"
-                                class="aces-team-a"
+                                class="aces-team-a color-a"
                                 >{% if card_a %} {{card_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Cartões</p>
                             <span id="card-b"
                                 style="background-color: {{team_match_b.team.color}}"
-                                class="aces-team-b"
+                                class="aces-team-b color-b"
                                 >{% if card_b %} {{card_b}} {% else %} 0 {% endif %}</span>
                         </div>
                     </div>
@@ -171,7 +171,7 @@
                                 
                                 {% for i in players_match_a %}
 
-                                <li id="team_a4_color" style="border: 2px solid {{team_match_a.team.color}}">
+                                <li id="team_a4_color" style="border: 2px solid {{team_match_a.team.color}}" class="border-a">
                                     <div class="player-photo">
                                         <img
                                             {% if i.player.photo %} src="{{ i.player.photo.url }}" {% else %} src="{% static 'images/person.png' %}" {% endif %}
@@ -201,7 +201,7 @@
                             
                             <ul class="list-team-b" id="teamBList">
                                 {% for i in players_match_b %}
-                                <li id="team_b4_color" style="border: 2px solid {{team_match_b.team.color}}">
+                                <li id="team_b4_color" style="border: 2px solid {{team_match_b.team.color}}" class="border-b">
                                     <div class="player-photo">
                                         <img {% if i.player.photo %} src="{{i.player.photo.url}}" {% else %} src="{% static 'images/person.png' %}" {% endif %} alt="" aria-hidden="true" class="photo"/>
                                     </div>
@@ -233,186 +233,6 @@
                         </ul>
                     </div>
                     <div class="lineup-content">
-                        <div class="container-quadra" id="container-volleyball" style="display: none;">
-                            <div class="team-names-volleyball">
-                                <div class="team-name-volleyball" id="volleyball-team-a">{{team_match_a.team.name|default:'TEAM A'}}</div>
-                                <div class="team-name-volleyball">X</div>
-                                <div class="team-name-volleyball" id="volleyball-team-b">{{team_match_b.team.name|default:'TEAM B'}}</div>
-                            </div>
-                            <div class="quadra-volei">
-                                <div class="linha-central"></div>
-                                <div class="lado-quadra casa">
-                                    <div class="zona defesa">
-                                        <div class="jogador-container" id="casa-defesa-1">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="casa-defesa-2">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="casa-defesa-3">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                    </div>
-                                    <div class="zona ataque">
-                                        <div class="jogador-container" id="casa-ataque-1">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="casa-ataque-2">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="casa-ataque-3">
-                                            <div class="jogador-foto casa">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="lado-quadra fora">
-                                    <div class="zona ataque">
-                                        <div class="jogador-container" id="fora-ataque-1">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="fora-ataque-2">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="fora-ataque-3">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                    </div>
-                                    <div class="zona defesa">
-                                        <div class="jogador-container" id="fora-defesa-1">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="fora-defesa-2">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                        <div class="jogador-container" id="fora-defesa-3">
-                                            <div class="jogador-foto fora">
-                                                <img src="" alt="">
-                                            </div>
-                                            <div class="jogador-nome"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="quadra-futsal" id="container-futsal" style="display: none;">
-                            <div class="team-names-futsal">
-                                <div class="team-name-futsal" id="futsal-team-a">{{team_match_a.team.name|default:'TEAM A'}}</div>
-                                <div class="team-name-futsal" id="futsal-team-b">{{team_match_b.team.name|default:'TEAM B'}}</div>
-                            </div>
-                            <div class="field-lines"></div>
-                            <div class="half-line"></div>
-                            <div class="center-circle"></div>
-                            <div class="center-dot"></div>
-                            <div class="goal-area-left"></div>
-                            <div class="goal-area-right"></div>
-                            <div class="goal-left"></div>
-                            <div class="goal-right"></div>
-                            <div class="penalty-dot-left"></div>
-                            <div class="penalty-dot-right"></div>
-
-                            <div class="jogador time-a" id="goleiro-a">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-a" id="fixo-a">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-a" id="ala1-a">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-a" id="ala2-a">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-a" id="pivo-a">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-                            <div class="jogador time-b" id="goleiro-b">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-b" id="fixo-b">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-b" id="ala1-b">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-b" id="ala2-b">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-
-                            <div class="jogador time-b" id="pivo-b">
-                                <div class="player-photo">
-                                    <img src="" alt="">
-                                </div>
-                                <div class="nome"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>

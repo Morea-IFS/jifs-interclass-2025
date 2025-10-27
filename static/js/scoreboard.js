@@ -68,6 +68,8 @@ socket.onmessage = function(e) {
             if (point_b_match) point_b_match.textContent = match.point_b;
             if (photoB_match) photoB_match.src = match.photoB;
 
+            applyTeamColors(match.colorA, match.colorB);
+        
             if(match.aces_a && match.aces_b){
                 if (aces_a_match) aces_a_match.textContent = match.aces_a;
                 if (aces_b_match) aces_b_match.textContent = match.aces_b;
@@ -212,12 +214,6 @@ socket.onmessage = function(e) {
             const aces_a_point = document.getElementById('aces-a');
             const aces_b_point = document.getElementById('aces-b');
 
-            const card_goal = document.getElementById('card-goal');
-            const player_name = document.getElementById('card-player-name');
-            const player = document.getElementById('card-player-img')
-            const team_name = document.getElementById('card-team-name');
-            const team = document.getElementById('card-team-img')
-
             if (point_a_point) point_a_point.textContent = point.point_a;
             if (point_b_point) point_b_point.textContent = point.point_b;
 
@@ -226,21 +222,24 @@ socket.onmessage = function(e) {
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
             }
 
-            if (point.player_name && point.team_name){
-                if(card_goal) card_goal.style.display = "flex";
-
-                setTimeout(() => {
-                if (card_goal) card_goal.style.display = "none";
-                }, 8000);
-
-                if (player_name) player_name.textContent = point.player_name;
-                if (player) player.style.backgroundImage = `url(${point.player_img})`;
-                if (team_name) team_name.textContent = point.team_name;
-                if (team) team.src = point.team_img;
+            // CORREÇÃO: Usar a função showGoalCard em vez de manipular o card manualmente
+            if (point.player_name && point.team_name && point.sport === "Voleibol"){
+                // Determinar qual time marcou o gol baseado no jogador
+                const team = point.team_name === document.getElementById('team-name-a').textContent ? 'A' : 'B';
+                
+                showGoalCard(
+                    team,
+                    point.player_name,
+                    point.player_img,
+                    point.team_img,
+                    point.team_name,
+                    point.colorA,
+                    point.colorB,
+                );
             }
 
             break;
-
+            
         case "penalties":
             console.log("penalties");
             const penalties = data.data;
@@ -270,6 +269,23 @@ socket.onmessage = function(e) {
             if (infor_over) infor_over.style.display = "none";
             }, 8000);
 
+            break;
+
+        case "team":
+            console.log("team", data.data);
+            const team = data.data;
+            const team_a_team = document.getElementById('team-name-a');
+            const team_b_team = document.getElementById('team-name-b');
+            const photo_a_team = document.getElementById("team-photo-a");
+            const photo_b_team = document.getElementById("team-photo-b");
+
+            if(team_a_team) team_a_team.textContent = team.team_name_a;
+            if(team_b_team) team_b_team.textContent = team.team_name_b;
+            if(photo_a_team) photo_a_team.src = team.photoA;
+            if(photo_b_team) photo_b_team.src = team.photoB;
+
+            applyTeamColors(team.colorA, team.colorB);
+            
             break;
 
         case "time":
@@ -488,3 +504,121 @@ window.addEventListener('beforeunload', function() {
         clearInterval(futsalCycleInterval);
     }
 });
+
+function isLightColor(color) {
+    color = color.replace('#', '');
+    const r = parseInt(color.length === 3 ? color[0] + color[0] : color.substr(0, 2), 16);
+    const g = parseInt(color.length === 3 ? color[1] + color[1] : color.substr(2, 2), 16);
+    const b = parseInt(color.length === 3 ? color[2] + color[2] : color.substr(4, 2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
+}
+
+function applyTeamColors(ColorA, ColorB) {
+    const teamAContainer = document.getElementById('team-a-container');
+    const teamBContainer = document.getElementById('team-b-container');
+    
+    if (teamAContainer) {
+        teamAContainer.style.backgroundColor = ColorA;
+        const textColorA = isLightColor(ColorA) ? '#000000' : '#ffffff';
+        teamAContainer.style.color = textColorA;
+        const titleTeamA = teamAContainer.querySelector('.title-team');
+        const scoreTeamA = teamAContainer.querySelector('.score-team');
+        if (titleTeamA) titleTeamA.style.color = textColorA;
+        if (scoreTeamA) scoreTeamA.style.color = textColorA;
+    }
+    
+    if (teamBContainer) {
+        teamBContainer.style.backgroundColor = ColorB;
+        const textColorB = isLightColor(ColorB) ? '#000000' : '#ffffff';
+        teamBContainer.style.color = textColorB;
+        const titleTeamB = teamBContainer.querySelector('.title-team');
+        const scoreTeamB = teamBContainer.querySelector('.score-team');
+        if (titleTeamB) titleTeamB.style.color = textColorB;
+        if (scoreTeamB) scoreTeamB.style.color = textColorB;
+    }
+    const volleyballTeamA = document.getElementById('volleyball-team-a');
+    const volleyballTeamB = document.getElementById('volleyball-team-b');
+    
+    if (volleyballTeamA) {
+        volleyballTeamA.style.color = ColorA;
+        volleyballTeamA.style.fontWeight = 'bold';
+    }
+    
+    if (volleyballTeamB) {
+        volleyballTeamB.style.color = ColorB;
+        volleyballTeamB.style.fontWeight = 'bold';
+    }
+    const futsalTeamA = document.getElementById('futsal-team-a');
+    const futsalTeamB = document.getElementById('futsal-team-b');
+    
+    if (futsalTeamA) {
+        futsalTeamA.style.color = ColorA;
+        futsalTeamA.style.fontWeight = 'bold';
+    }
+    
+    if (futsalTeamB) {
+        futsalTeamB.style.color = ColorB;
+        futsalTeamB.style.fontWeight = 'bold';
+    }
+    document.documentElement.style.setProperty('--casa-border', ColorA);
+    document.documentElement.style.setProperty('--fora-border', ColorB);
+}
+
+function showGoalCard(team, playerName, playerImage, teamLogo, teamName, teamColorA, teamColorB) {
+    const goalCard = document.getElementById('card-goal');
+    const cardHeader = goalCard.querySelector('.card-header');
+    const cardFooter = goalCard.querySelector('.card-footer');
+    const cornerDecorations = goalCard.querySelectorAll('.corner-decoration');
+    const cornerInners = goalCard.querySelectorAll('.corner-inner');
+    const imageDecorations = goalCard.querySelectorAll('.image-decoration');
+    const primaryColor = team === 'A' ? teamColorA : teamColorB;
+    const textColor = isLightColor(primaryColor) ? '#000000' : '#ffffff';
+    console.log('--- DISPARANDO GOL ---');
+    console.log('Time que marcou:', team);
+    console.log('Cor (Time A) recebida do Django:', '"' + teamColorA + '"');
+    console.log('Cor (Time B) recebida do Django:', '"' + teamColorB + '"');
+    console.log('Cor final escolhida (primaryColor):', '"' + primaryColor + '"');
+    goalCard.style.setProperty('--primary-color', primaryColor);
+    goalCard.style.setProperty('--text-color', textColor);
+
+    goalCard.style.backgroundColor = primaryColor;
+    cardHeader.style.backgroundColor = primaryColor;
+    cardHeader.style.color = textColor;
+    cardFooter.style.backgroundColor = primaryColor;
+    cardFooter.style.color = textColor;
+
+    cornerDecorations.forEach(corner => {
+        corner.style.borderColor = primaryColor;
+    });
+    
+    cornerInners.forEach(corner => {
+        corner.style.borderColor = textColor;
+    });
+
+    const lines = goalCard.querySelectorAll('.line');
+    lines.forEach(line => {
+        line.style.backgroundColor = textColor;
+    });
+
+    imageDecorations.forEach(decoration => {
+        decoration.style.backgroundColor = primaryColor;
+        decoration.style.opacity = '0.1';
+    });
+
+    document.getElementById('card-player-name').textContent = playerName;
+    document.getElementById('card-player-name').style.color = textColor;
+    document.getElementById('card-team-name').textContent = teamName;
+    document.getElementById('card-team-name').style.color = textColor;
+    document.getElementById('card-player-img').style.backgroundImage = `url('${playerImage}')`;
+    document.getElementById('card-team-img').src = teamLogo;
+
+    const teamImg = document.getElementById('card-team-img');
+    teamImg.style.borderColor = textColor;
+
+    goalCard.style.display = 'flex';
+
+    setTimeout(() => {
+        goalCard.style.display = 'none';
+    }, 5000);
+}

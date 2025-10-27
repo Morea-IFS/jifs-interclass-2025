@@ -2359,6 +2359,14 @@ def scoreboard(request, event_id):
             referee = Voluntary.objects.get(id=request.POST.get("referee"))
             referee_type = int(request.POST.get("type_referee"))
             Match_referee.objects.create(match=match, referee=referee, role=referee_type)
+        elif 'color_a' in request.POST or 'color_b' in request.POST:
+            print(request)
+            if request.POST.get("color_a"):
+                team_match_a.team.color = str(request.POST.get("color_a"))
+                team_match_a.team.save()
+            if request.POST.get("color_b"):
+                team_match_b.team.color = str(request.POST.get("color_b"))
+                team_match_a.team.save()
         elif 'observations' in request.POST:
             match.observations = request.POST.get("observations")
             match.save()
@@ -2758,6 +2766,8 @@ def scoreboard_projector(request, event_id):
                 'aces_b': aces_b,
                 'card_a':card_a,
                 'card_b':card_b,
+                'colorA': teammatch1.team.color,
+                'colorB': teammatch2.team.color,
                 'events': occurrence,
                 'banner_score':banner_score,
                 'banner_bol':banner_bol,
@@ -2816,6 +2826,8 @@ def scoreboard_projector(request, event_id):
                 'ball_sport': ball_sport,
                 'aces_a': 0,
                 'aces_b': 0,
+                'colorA': team_match_a.team.color,
+                'colorB': team_match_b.team.color,
                 'banner_score':banner_score,
                 'banner_bol':banner_bol,
                 'card_a': card_a,
@@ -2828,7 +2840,7 @@ def scoreboard_projector(request, event_id):
             }
             return render(request, 'public/scoreboard_projector.html', context)
         else:
-            return render(request, 'public/scoreboard_projector.html', {'qrcode': img_base64, 'event': event, 'url': url})
+            return render(request, 'public/scoreboard_projector.html', {'qrcode': img_base64, 'event': event, 'url': url, 'colorA': "#FF0000", 'colorB': "#0000FF"})
     except Exception as e:
         messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return render(request, 'public/scoreboard_projector.html')

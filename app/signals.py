@@ -58,7 +58,14 @@ def team_updated(sender, instance, using, **kwargs):
     if settings.DEBUG: print("hmm, mudanças nos team :)")
     channel_layer = get_channel_layer()
     if Match.objects.filter(status=1, event=instance.event):
-        match_public = send_scoreboard_team(instance)
+        match_data, match_public = send_scoreboard_team(instance)
+        async_to_sync(channel_layer.group_send)(
+            f'scoreboard_{instance.event.id}',
+            {
+                'type': 'team_new',
+                'match': match_data,
+            }
+        )
         async_to_sync(channel_layer.group_send)(
             f'public_{instance.event.id}',
             {
@@ -114,9 +121,11 @@ def send_scoreboard_team(instance):
             'photoB': default_photo_url,
         }
 
+    match_data = match_public
+
     if settings.DEBUG: print("eita, saindo signals (team) sendo preparadas. :)")
     if settings.DEBUG: print(match_public)
-    return match_public
+    return match_data, match_public
 
 @receiver([post_save, post_delete], sender=Point)
 def point_changed(sender, instance, using, **kwargs):
@@ -137,8 +146,6 @@ def point_changed(sender, instance, using, **kwargs):
             'match': match_public,
         }
     )
-
-
 
 def send_scoreboard_point(instance):
     event = instance.team_match.match.event
@@ -167,6 +174,9 @@ def send_scoreboard_point(instance):
         match_data = {
             'point_a': point_a,
             'point_b': point_b,
+            'colorA': team_match_a.team.color,
+            'colorB': team_match_b.team.color,
+            'sport': match.get_sport_display(),
         }
         if match.volley_match:
             match_data['aces_a'] = Point.objects.filter(point_types=2, team_match=team_match_a).count()
@@ -184,6 +194,9 @@ def send_scoreboard_point(instance):
         match_data = {
             'point_a': 0,
             'point_b': 0,
+            'colorA': team_match_a.team.color,
+            'colorB': team_match_b.team.color,
+            'sport': "Nenhum",
         }   
     match_public = match_data
     if settings.DEBUG: print("eita, saindo signals (pontos) sendo preparadas. :)")
@@ -484,6 +497,8 @@ def send_scoreboard_match(instance):
             'lack_b': 0,
             'card_a': 0,
             'card_b': 0,
+            'colorA': "#FF0000",
+            'colorB': "#0000FF",
             'photoA': default_photo_url,
             'photoB': default_photo_url,
         }   
