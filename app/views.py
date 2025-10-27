@@ -2366,7 +2366,7 @@ def scoreboard(request, event_id):
                 team_match_a.team.save()
             if request.POST.get("color_b"):
                 team_match_b.team.color = str(request.POST.get("color_b"))
-                team_match_a.team.save()
+                team_match_b.team.save()
         elif 'observations' in request.POST:
             match.observations = request.POST.get("observations")
             match.save()
@@ -2379,29 +2379,33 @@ def scoreboard(request, event_id):
             details = f"{player_match.player.name} recebeu {penalties.get_type_penalties_display().lower()}"
             Occurrence.objects.create(name=penalties.get_type_penalties_display(), details=details, match=match)
         elif 'team-a-point' in request.POST:
+            if match.sport == 0: type = 0
+            else: type = 1
             if request.POST.get("team-a-point") == "+1":
                 if request.POST.get("player-a-point"):
                     player = Player.objects.get(id=request.POST.get("player-a-point"))
-                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=1)
+                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=type)
                     details = f"{player.name} fez um {point.get_point_types_display().lower()}"
                     Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
                 else: 
-                    point = Point.objects.create(team_match=team_match_a, point_types=1)
+                    point = Point.objects.create(team_match=team_match_a, point_types=type)
                 point.save()
-            elif Point.objects.filter(team_match=team_match_a, point_types=1).exists(): 
-                point = Point.objects.filter(team_match=team_match_a, point_types=1).last().delete()
+            elif Point.objects.filter(team_match=team_match_a, point_types=type).exists(): 
+                point = Point.objects.filter(team_match=team_match_a, point_types=type).last().delete()
         elif 'team-b-point' in request.POST:
+            if match.sport == 0: type = 0
+            else: type = 1
             if request.POST.get("team-b-point") == "+1":
                 if request.POST.get("player-b-point"):
                     player = Player.objects.get(id=request.POST.get("player-b-point"))
-                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=1)
+                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=type)
                     details = f"{player.name} fez um {point.get_point_types_display().lower()}"
                     Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
                 else: 
-                    point = Point.objects.create(team_match=team_match_b, point_types=1)
+                    point = Point.objects.create(team_match=team_match_b, point_types=type)
                 point.save()
-            elif Point.objects.filter(team_match=team_match_b, point_types=1).exists(): 
-                point = Point.objects.filter(team_match=team_match_b, point_types=1).last().delete()
+            elif Point.objects.filter(team_match=team_match_b, point_types=type).exists(): 
+                point = Point.objects.filter(team_match=team_match_b, point_types=type).last().delete()
         elif 'team-a-aces' in request.POST:
             if request.POST.get("team-a-aces") == "+1":
                 if request.POST.get("player-a-point"):
