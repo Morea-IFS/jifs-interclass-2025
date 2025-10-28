@@ -64,7 +64,7 @@
         <main>
             <section class="scoreboard">
                 <div class="teams">
-                    <div id="team_a_color" style=" background-color: #0000ff" class="team-a">
+                    <div id="team_a_color" style=" background-color: {{team_match_a.team.color|default:'#0000ff' }}" class="team-a color-a">
                         <div class="title-team">
                             <img class="photo-team-a" {% if team_match_a.team.photo %} src="{{team_match_a.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;"alt="foto time a"/>
                             <h2 id="team-a">{% if team_match_a.team.name %} {{team_match_a.team.name}} {% else %} TEAM A {% endif %}</h2>
@@ -73,7 +73,7 @@
                             <p class="score"><span id="points-a">{% if point_a %} {{point_a}} {% else %} 0 {% endif %}</span></p>
                         </div>
                     </div>
-                    <div id="team_b_color" style=" background-color: #ff0000" class="team-b">
+                    <div id="team_b_color" style=" background-color: {{team_match_b.team.color|default:'#ff0000' }}" class="team-b color-b">
                         <div class="title-team">
                             <h2 id="team-b" style="text-align: right;">{% if team_match_b.team.name %} {{team_match_b.team.name}} {% else %} TEAM B {% endif %} </h2>
                             <img class="photo-team-b" {% if team_match_b.team.photo %} src="{{team_match_b.team.photo.url}}" {% else %} src="{% static 'images/team.svg' %}" {% endif %} style="border-radius: 50%;" alt="foto time b"/>
@@ -121,41 +121,41 @@
                     <div class="stats-content">
                         <div class="aces" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">
                             <span id="aces-a"
-                                style="background-color: #0000ff"
-                                class="aces-team-a"
+                                style="background-color: {{team_match_a.team.color|default:'#0000ff' }}"
+                                class="aces-team-a color-a"
                                 >{% if aces_a %} {{aces_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Aces</p>
                             <span id="aces-b"
-                                style="background-color: #ff0000"
-                                class="aces-team-b"
+                                style="background-color: {{team_match_b.team.color|default:'#ff0000' }}"
+                                class="aces-team-b color-b"
                                 >{% if aces_b %} {{aces_b}} {% else %} 0 {% endif %}</span>
                         </div>
 
                         <div class="foul">
                             <span id="lack-a"
-                            style=" background-color: #0000ff"
-                                class="foul-team-a"
+                            style=" background-color: {{team_match_a.team.color|default:'#0000ff' }}"
+                                class="foul-team-a color-a"
                                 >{% if lack_a %} {{lack_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Faltas</p>
                             <span id="lack-b"
-                                style=" background-color: #ff0000"
-                                class="foul-team-b"
+                                style=" background-color: {{team_match_b.team.color|default:'#ff0000' }}"
+                                class="foul-team-b color-b"
                                 >{% if lack_b %} {{lack_b}} {% else %} 0 {% endif %}</span
                             >
                         </div>
 
                         <div class="card">
                             <span id="card-a"
-                                style="background-color: #0000ff"
-                                class="aces-team-a"
+                                style="background-color: {{team_match_a.team.color|default:'#0000ff' }}"
+                                class="aces-team-a color-a"
                                 >{% if card_a %} {{card_a}} {% else %} 0 {% endif %}</span
                             >
                             <p>Cartões</p>
                             <span id="card-b"
-                                style="background-color: #ff0000"
-                                class="aces-team-b"
+                                style="background-color: {{team_match_b.team.color|default:'#ff0000' }}"
+                                class="aces-team-b color-b"
                                 >{% if card_b %} {{card_b}} {% else %} 0 {% endif %}</span>
                         </div>
                     </div>
@@ -171,7 +171,7 @@
                                 
                                 {% for i in players_match_a %}
 
-                                <li id="team_a4_color" style="border: 2px solid #0000ff">
+                                <li id="team_a4_color" style="border: 2px solid {{team_match_a.team.color|default:'#0000ff' }}" class="border-a">
                                     <div class="player-photo">
                                         <img
                                             {% if i.player.photo %} src="{{ i.player.photo.url }}" {% else %} src="{% static 'images/person.png' %}" {% endif %}
@@ -201,7 +201,7 @@
                             
                             <ul class="list-team-b" id="teamBList">
                                 {% for i in players_match_b %}
-                                <li id="team_b4_color" style="border: 2px solid #ff0000">
+                                <li id="team_b4_color" style="border: 2px solid {{team_match_b.team.color|default:'#ff0000' }}" class="border-b">
                                     <div class="player-photo">
                                         <img {% if i.player.photo %} src="{{i.player.photo.url}}" {% else %} src="{% static 'images/person.png' %}" {% endif %} alt="" aria-hidden="true" class="photo"/>
                                     </div>
@@ -233,9 +233,6 @@
                         </ul>
                     </div>
                     <div class="lineup-content">
-                        <div class="lineup-info">
-                            <img src="{% static 'images/lineup.png' %}" alt="Ag">
-                        </div>
                     </div>
                 </div>
             </section>

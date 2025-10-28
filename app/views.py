@@ -620,13 +620,16 @@ def team_manage(request):
         print(request.POST)
         if 'add-team' in request.POST:
             name = request.POST.get("name")
+            color = request.POST.get("color")
             description = request.POST.get("description")
             photo = request.FILES.get("photo")
             event = Event.objects.get(id=request.POST.get("add-team"))
             if not name or not photo or not event:
                 messages.error(request,"Você precisa cadastrar todos os dados obrigatórios.")
             else:
-                Team.objects.create(name=name, description=description, photo=photo, event=event)
+                team = Team.objects.create(name=name, description=description, photo=photo, event=event)
+                if color: team.color = str(color)
+                team.save()
         elif 'add-team-sport' in request.POST:
             team = Team.objects.get(id=request.POST.get("add-team-sport"))
             sport = Event_sport.objects.get(id=request.POST.get("sport_adm_id"))
@@ -645,6 +648,7 @@ def team_manage(request):
         elif 'edit-team' in request.POST:
             team = Team.objects.get(id=request.POST.get("edit-team"))
             team.name = request.POST.get("edit-name")
+            team.color = request.POST.get("edit-color")
             if request.FILES.get("edit-logo"):
                 team.photo = request.FILES.get("edit-logo")
             team.description = request.POST.get("edit-description")
@@ -797,6 +801,9 @@ def team_players_manage(request, id):
                 if team_sport.team.event.player_need_photo:
                     if request.FILES.get("edit-photo"):
                         player.photo = request.FILES.get("edit-photo")
+                if team_sport.team.event.player_need_photo:
+                    if request.FILES.get("edit-photo-goal"):
+                        player.photo_goal = request.FILES.get("edit-photo-goal")
                 if team_sport.team.event.player_need_bulletin:
                     if request.FILES.get("edit-bulletin"):
                         player.bulletin = request.FILES.get("edit-bulletin")
@@ -857,6 +864,12 @@ def team_players_manage(request, id):
                         status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
                         if status: return redirect('team_players_manage', team_sport.id)
 
+                if team_sport.team.event.player_need_photo:
+                    photo_goal = request.FILES.get('photo_goal')
+                    if photo_goal:
+                        status = type_file(request, ['.png','.jpg','.jpeg'], photo_goal, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
+                        if status: return redirect('team_players_manage', team_sport.id)
+
                 if team_sport.team.event.player_need_bulletin:
                     bulletin = request.FILES.get('bulletin')
                     if bulletin: 
@@ -886,6 +899,8 @@ def team_players_manage(request, id):
                     player.cpf = cpf.replace("-","").replace(".","")
                 if team_sport.team.event.player_need_photo:
                     player.photo = photo
+                if team_sport.team.event.player_need_photo:
+                    player.photo_goal = photo_goal
                 if team_sport.team.event.player_need_bulletin:
                     player.bulletin = bulletin
                 if team_sport.team.event.player_need_sexo:
@@ -1045,10 +1060,6 @@ def games(request):
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
             context['teams'] = Team.objects.filter(event=selected_event)
 
-        if 'sport' in request.POST and request.POST.get('sport') != '':
-            filter = f'sport={int(request.POST.get('sport'))}'
-        if 'genre' in request.POST and request.POST.get('genre') != '':
-            filter += f'sexo={int(request.POST.get('genre'))}'
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
         else:
@@ -2344,6 +2355,14 @@ def scoreboard(request, event_id):
             referee = Voluntary.objects.get(id=request.POST.get("referee"))
             referee_type = int(request.POST.get("type_referee"))
             Match_referee.objects.create(match=match, referee=referee, role=referee_type)
+        elif 'color_a' in request.POST or 'color_b' in request.POST:
+            print(request)
+            if request.POST.get("color_a"):
+                team_match_a.team.color = str(request.POST.get("color_a"))
+                team_match_a.team.save()
+            if request.POST.get("color_b"):
+                team_match_b.team.color = str(request.POST.get("color_b"))
+                team_match_b.team.save()
         elif 'observations' in request.POST:
             match.observations = request.POST.get("observations")
             match.save()
@@ -2356,29 +2375,33 @@ def scoreboard(request, event_id):
             details = f"{player_match.player.name} recebeu {penalties.get_type_penalties_display().lower()}"
             Occurrence.objects.create(name=penalties.get_type_penalties_display(), details=details, match=match)
         elif 'team-a-point' in request.POST:
+            if match.sport == 0: type = 0
+            else: type = 1
             if request.POST.get("team-a-point") == "+1":
                 if request.POST.get("player-a-point"):
                     player = Player.objects.get(id=request.POST.get("player-a-point"))
-                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=1)
+                    point = Point.objects.create(team_match=team_match_a, player=player, point_types=type)
                     details = f"{player.name} fez um {point.get_point_types_display().lower()}"
                     Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
                 else: 
-                    point = Point.objects.create(team_match=team_match_a, point_types=1)
+                    point = Point.objects.create(team_match=team_match_a, point_types=type)
                 point.save()
-            elif Point.objects.filter(team_match=team_match_a, point_types=1).exists(): 
-                point = Point.objects.filter(team_match=team_match_a, point_types=1).last().delete()
+            elif Point.objects.filter(team_match=team_match_a, point_types=type).exists(): 
+                point = Point.objects.filter(team_match=team_match_a, point_types=type).last().delete()
         elif 'team-b-point' in request.POST:
+            if match.sport == 0: type = 0
+            else: type = 1
             if request.POST.get("team-b-point") == "+1":
                 if request.POST.get("player-b-point"):
                     player = Player.objects.get(id=request.POST.get("player-b-point"))
-                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=1)
+                    point = Point.objects.create(team_match=team_match_b, player=player, point_types=type)
                     details = f"{player.name} fez um {point.get_point_types_display().lower()}"
                     Occurrence.objects.create(name=point.get_point_types_display(), details=details, match=match)
                 else: 
-                    point = Point.objects.create(team_match=team_match_b, point_types=1)
+                    point = Point.objects.create(team_match=team_match_b, point_types=type)
                 point.save()
-            elif Point.objects.filter(team_match=team_match_b, point_types=1).exists(): 
-                point = Point.objects.filter(team_match=team_match_b, point_types=1).last().delete()
+            elif Point.objects.filter(team_match=team_match_b, point_types=type).exists(): 
+                point = Point.objects.filter(team_match=team_match_b, point_types=type).last().delete()
         elif 'team-a-aces' in request.POST:
             if request.POST.get("team-a-aces") == "+1":
                 if request.POST.get("player-a-point"):
@@ -2671,15 +2694,12 @@ def scoreboard_projector(request, event_id):
         url = request.get_host()
         print(url)
 
-        # Gera o QR Code
         qr = qrcode.make(url)
 
-        # Salva o QR em memória
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         buffer.seek(0)
 
-        # Codifica em base64
         img_base64 = base64.b64encode(buffer.getvalue()).decode()
 
         if Volley_match.objects.filter(status=1, event=event):
@@ -2746,6 +2766,8 @@ def scoreboard_projector(request, event_id):
                 'aces_b': aces_b,
                 'card_a':card_a,
                 'card_b':card_b,
+                'colorA': teammatch1.team.color,
+                'colorB': teammatch2.team.color,
                 'events': occurrence,
                 'banner_score':banner_score,
                 'banner_bol':banner_bol,
@@ -2804,6 +2826,8 @@ def scoreboard_projector(request, event_id):
                 'ball_sport': ball_sport,
                 'aces_a': 0,
                 'aces_b': 0,
+                'colorA': team_match_a.team.color,
+                'colorB': team_match_b.team.color,
                 'banner_score':banner_score,
                 'banner_bol':banner_bol,
                 'card_a': card_a,
@@ -2813,12 +2837,10 @@ def scoreboard_projector(request, event_id):
                 'qrcode': img_base64,
                 'url': url,
                 'event': event,
-                
-                
             }
             return render(request, 'public/scoreboard_projector.html', context)
         else:
-            return render(request, 'public/scoreboard_projector.html', {'qrcode': img_base64, 'event': event, 'url': url})
+            return render(request, 'public/scoreboard_projector.html', {'qrcode': img_base64, 'event': event, 'url': url, 'colorA': "#FF0000", 'colorB': "#0000FF"})
     except Exception as e:
         messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
         return render(request, 'public/scoreboard_projector.html')

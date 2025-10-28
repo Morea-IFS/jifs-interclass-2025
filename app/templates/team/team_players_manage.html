@@ -144,7 +144,7 @@
 
                     {% if perms.app.change_player_team_sport and perms.app.change_player %}
                     <td>
-                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{{ i.player.classroom|default:"" }}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
+                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{{ i.player.classroom|default:"" }}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
                     </td>
                     {% endif %}
 
@@ -220,6 +220,11 @@
             <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
             {% endif %}
 
+            {% if team_sport.team.event.player_need_photo %}
+            <label for="Fotografia">Fotografia gol (JPG, JPEG ou PNG)</label>
+            <input type="file" name="photo_goal" id="fotos" accept=".jpg, .jpeg, .png" required>
+            {% endif %}
+
             {% if team_sport.team.event.player_need_rg %}
             <label for="Rg">RG (PDF, JPG, JPEG ou PNG)</label>
             <input type="file" name="rg" id="general-register" required>
@@ -273,6 +278,14 @@
             <img id="preview" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
             {% endif %}
 
+            {% if team_sport.team.event.player_need_photo %}
+            <label for="edit-photo-goal">Foto gol</label>
+            <input type="file" name="edit-photo-goal" id="edit-photo-goal" accept=".jpg, .jpeg, .png" onchange="previewGoalFoto()" />
+            <p style="color: #6d6c6c; font-size: 15px;">*Anexe uma nova Fotografia apenas se quiser trocá-la.</p>
+            <p id="preview-goal-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
+            <img id="preview-goal" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
+            {% endif %}
+
             {% if team_sport.team.event.player_need_bulletin %}
             <label for="editPlayerBulletin">Boletim</label>
             <input type="file" name="edit-bulletin" id="editPlayerBulletin" accept=".jpg, .jpeg, .png" />
@@ -301,8 +314,9 @@
 
 let originalPhotoUrl = '';
 
-function openEditModal(id, name, classroom, registration, sexo, data_nasc, photoUrl, bulletinUrl, rgUrl) {
+function openEditModal(id, name, classroom, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl) {
     originalPhotoUrl = photoUrl || '';
+    originalPhotoUrlgol = photoGoalUrl || '';
     const form = document.getElementById('editForm');
     form.reset();
 
@@ -339,6 +353,20 @@ function openEditModal(id, name, classroom, registration, sexo, data_nasc, photo
         }
     }
 
+    const previewgoal = document.getElementById('preview-goal');
+    const previewNamegoal = document.getElementById('preview-goal-name');
+    if (previewgoal) {
+        if (originalPhotoUrlgol) {
+            previewgoal.src = originalPhotoUrlgol;
+            previewgoal.style.display = 'block';
+            previewNamegoal.textContent = "Fotografia atual:";
+        } else {
+            previewgoal.src = '';
+            previewgoal.style.display = 'none';
+            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
+        }
+    }
+
     document.getElementById("editModal").style.display = "block";
 }
 
@@ -364,6 +392,45 @@ function previewFoto() {
             preview.src = '';
             preview.style.display = 'none';
             previewName.textContent = "Nenhuma fotografia cadastrada";
+        }
+    }
+}
+
+function previewGoalFoto() {
+    const inputgoal = document.getElementById('edit-photo-goal');
+    const previewgoal = document.getElementById('preview-goal');
+    const previewNamegoal = document.getElementById('preview-goal-name');
+
+    if(inputgoal && inputgoal.files && inputgoal.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewgoal.src = e.target.result;
+            previewgoal.style.display = 'block';
+            previewNamegoal.textContent = "Nova fotografia:";
+        };
+        reader.readAsDataURL(inputgoal.files[0]);
+    } else {
+        if (originalPhotoUrlgol) {
+            previewgoal.src = originalPhotoUrlgol;
+            previewgoal.style.display = 'block';
+            previewNamegoal.textContent = "Fotografia atual:";
+        } else {
+            previewgoal.src = '';
+            previewgoal.style.display = 'none';
+            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
+        }
+    }
+
+
+    if (previewgoal) {
+        if (originalPhotoUrlgol) {
+            previewgoal.src = originalPhotoUrlgol;
+            previewgoal.style.display = 'block';
+            previewNamegoal.textContent = "Fotografia atual:";
+        } else {
+            previewgoal.src = '';
+            previewgoal.style.display = 'none';
+            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
         }
     }
 }

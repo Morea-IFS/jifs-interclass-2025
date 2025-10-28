@@ -241,37 +241,6 @@ socket.onmessage = function(e) {
 
             break;
 
-        case "penalties":
-            console.log("penalties");
-            const penalties = data.data;
-
-            
-            const card_a_penalties = document.getElementById('card-a');
-            const lack_a_penalties = document.getElementById('lack-a');
-            
-            const card_b_penalties = document.getElementById('card-b');
-            const lack_b_penalties = document.getElementById('lack-b');
-            
-            const alert_penalties = document.getElementById('alert-penalties');
-            const alert_img = document.getElementById('alert-penalties-img');
-            const infor_over = document.getElementById('info-overlay');
-
-            if (card_a_penalties) card_a_penalties.textContent = penalties.card_a;
-            if (lack_a_penalties) lack_a_penalties.textContent = penalties.lack_a;
-
-            if (card_b_penalties) card_b_penalties.textContent = penalties.card_b;
-            if (lack_b_penalties) lack_b_penalties.textContent = penalties.lack_b;
-
-            if (alert_penalties) alert_penalties.textContent = penalties.penalties_player;
-            if (alert_img) alert_img.src = penalties.penalties_url;
-            if (infor_over) infor_over.style.display = "flex";
-
-            setTimeout(() => {
-            if (infor_over) infor_over.style.display = "none";
-            }, 8000);
-
-            break;
-
         case "time":
             console.log("time");
             const time = data.data;
@@ -280,32 +249,6 @@ socket.onmessage = function(e) {
 
             break;
 
-        case "banner":
-            console.log("banner");
-            const image = data.data;
-
-            const banner = document.querySelectorAll(".banner-scoreboard");
-            const score = document.querySelectorAll('.score-ban');
-
-            if (image.status === 1){
-                banner.forEach((i) => {
-                    i.style.display = 'flex';
-                    i.src = image.banner;
-                });
-                score.forEach((j) => {
-                    j.style.display = 'none';
-                });
-            }else{
-                banner.forEach((i) => {
-                    i.style.display = 'none';
-                    i.src = "";
-                });
-                score.forEach((j) => {
-                    j.style.display = 'flex';
-                });
-            }
-
-            break;
         default:
             console.warn("Tipo de mensagem não reconhecido:", data.type);
     }

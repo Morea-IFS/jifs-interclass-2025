@@ -49,6 +49,14 @@ class ScoreboardConsumer(AsyncWebsocketConsumer):
             "data": match_data
         }))
 
+    async def team_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do scoreboard: team")
+        match_data = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "team",
+            "data": match_data
+        }))
+
     async def banner_new(self, event):
         if settings.DEBUG: print("Canal de comunicação do scoreboard: banner")
         match_data = event['match']
@@ -97,6 +105,14 @@ class PublicConsumer(AsyncWebsocketConsumer):
         match_public = event['match']
         await self.send(text_data=json.dumps({
             "type": "match",
+            "data": match_public
+        }))
+
+    async def team_new(self, event):
+        if settings.DEBUG: print("Canal de comunicação do public: team")
+        match_public = event['match']
+        await self.send(text_data=json.dumps({
+            "type": "team",
             "data": match_public
         }))
 
