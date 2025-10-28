@@ -221,23 +221,17 @@ socket.onmessage = function(e) {
                 if (aces_a_point) aces_a_point.textContent = point.aces_a;
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
             }
-
-            // CORREÇÃO: Usar a função showGoalCard em vez de manipular o card manualmente
-            if (point.player_name && point.team_name && point.sport === "Voleibol"){
-                // Determinar qual time marcou o gol baseado no jogador
-                const team = point.team_name === document.getElementById('team-name-a').textContent ? 'A' : 'B';
-                
+            if (point.player_name && point.team_name && point.sport === "Futsal" && point.team){
                 showGoalCard(
-                    team,
+                    point.team,  
                     point.player_name,
                     point.player_img,
-                    point.team_img,
+                    point.team_img, 
                     point.team_name,
                     point.colorA,
                     point.colorB,
                 );
             }
-
             break;
             
         case "penalties":
