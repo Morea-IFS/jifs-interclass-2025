@@ -1060,10 +1060,6 @@ def games(request):
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
             context['teams'] = Team.objects.filter(event=selected_event)
 
-        if 'sport' in request.POST and request.POST.get('sport') != '':
-            filter = f'sport={int(request.POST.get('sport'))}'
-        if 'genre' in request.POST and request.POST.get('genre') != '':
-            filter += f'sexo={int(request.POST.get('genre'))}'
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
         else:
