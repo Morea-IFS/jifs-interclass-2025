@@ -30,11 +30,12 @@ def serialize_players(players_qs):
 def serialize_players_match(players_qs):
     result = []
     for i in players_qs:
-        result.append({
-            "name": i.player.name,
-            "photo_url": i.player.photo.url if i.player.photo else default_photo_url,
-            "funcao": i.get_activity_display(),
-        })
+        if not i.activity in [0, 1]:
+            result.append({
+                "name": i.player.name,
+                "photo_url": i.player.photo.url if i.player.photo else default_photo_url,
+                "funcao": i.get_activity_display(),
+            })
     return result
 
 def serialize_occurrence(occurrence):

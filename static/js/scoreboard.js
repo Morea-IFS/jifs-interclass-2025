@@ -127,6 +127,7 @@ socket.onmessage = function(e) {
             const cvolleyball = document.getElementById('container-volleyball')
             const cfutsal = document.getElementById('container-futsal')
             const moments = document.getElementById('moments')
+            const end = document.getElementById('end')
             
             if(match.detailed == "Escalação" && match.match_sport === "Voleibol"){
                 scorematch.forEach((k) => {
@@ -135,9 +136,10 @@ socket.onmessage = function(e) {
                 if(cvolleyball) cvolleyball.style.display = "flex";
                 if(cfutsal) cfutsal.style.display = "none";
                 if(moments) moments.style.display = "none";
+                if(end) end.style.display = "none";
                 
                 // Preencher escalação do vôlei
-                preencherEscalacaoVolei(match.players_a, match.players_b);
+                preencherEscalacaoVolei(match.lineup.players_a, match.lineup.players_b);
 
             }else if(match.detailed == "Em instantes"){
                 scorematch.forEach((k) => {
@@ -146,6 +148,7 @@ socket.onmessage = function(e) {
                 if(cvolleyball) cvolleyball.style.display = "none";
                 if(cfutsal) cfutsal.style.display = "none";
                 if(moments) moments.style.display = "flex";
+                if(end) end.style.display = "none";
 
                 const team_name_a_mat = document.getElementById('moments-team-name-a');
                 const team_photo_a_mat = document.getElementById('moments-team-photo-a');
@@ -159,6 +162,28 @@ socket.onmessage = function(e) {
                 // Preencher escalação do vôlei
                 preencherEscalacaoVolei(match.players_a, match.players_b);
 
+            }else if(match.detailed == "Finalizada"){
+                scorematch.forEach((k) => {
+                    k.style.display = 'none';
+                });
+                if(cvolleyball) cvolleyball.style.display = "none";
+                if(cfutsal) cfutsal.style.display = "none";
+                if(moments) moments.style.display = "none";
+                if(end) end.style.display = "flex";
+
+                const team_end = document.getElementById('end-team-name-b');
+                const photo_end = document.getElementById('end-team-photo-b');
+                if(match.point_a > match.point_b){
+                    if (team_end) team_end.textContent = match.team_name_a;
+                    if (photo_end) photo_end.src = match.photoA;
+                }else if(match.point_a > match.point_b){
+                    if (team_end) team_end.textContent = match.team_name_b;
+                    if (photo_end) photo_end.src = match.photoB;                   
+                }
+                
+                // Preencher escalação do vôlei
+                preencherEscalacaoVolei(match.players_a, match.players_b);
+
             }else if(match.detailed == "Escalação" && match.match_sport === "Futsal"){
                 scorematch.forEach((k) => {
                     k.style.display = 'none';
@@ -166,6 +191,7 @@ socket.onmessage = function(e) {
                 if(cvolleyball) cvolleyball.style.display = "none";
                 if(cfutsal) cfutsal.style.display = "flex";
                 if(moments) moments.style.display = "none";
+                if(end) end.style.display = "none";
 
                 // Parar qualquer ciclo anterior
                 if (futsalCycleInterval) {
@@ -193,6 +219,7 @@ socket.onmessage = function(e) {
                 if(cvolleyball) cvolleyball.style.display = "none";
                 if(cfutsal) cfutsal.style.display = "none";
                 if(moments) moments.style.display = "none";
+                if(end) end.style.display = "none";
                 
                 // Parar o ciclo do futsal se estiver ativo
                 if (futsalCycleInterval) {
