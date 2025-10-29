@@ -267,6 +267,7 @@ def home_public(request, event_id):
             for match in matchs_queimado_masc
         ]
         event_sports = Event_sport.objects.filter(event=event)
+        attachments = Attachments.objects.filter(public=True, event=event)
 
         if request.method == "GET":
             context = {
@@ -281,6 +282,7 @@ def home_public(request, event_id):
                 'context_games_day':context_games_day,
                 'event':event,
                 'event_sports':event_sports,
+                'attachments':attachments,
                 'Phase_types': Phase_types,
             }
             

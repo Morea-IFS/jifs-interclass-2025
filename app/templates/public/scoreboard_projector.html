@@ -125,69 +125,69 @@
         <div class="penalty-dot-left"></div>
         <div class="penalty-dot-right"></div>
 
-        <div class="jogador" id="goleiro-a">
+        <div class="jogador time-a" id="goleiro-a">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="fixo-a">
+        <div class="jogador time-a" id="fixo-a">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="ala1-a">
+        <div class="jogador time-a" id="ala1-a">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="ala2-a">
+        <div class="jogador time-a" id="ala2-a">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="pivo-a">
+        <div class="jogador time-a" id="pivo-a">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
-        <div class="jogador" id="goleiro-b">
-            <div class="player-photo">
-                <img src="" alt="">
-            </div>
-            <div class="nome"></div>
-        </div>
-
-        <div class="jogador" id="fixo-b">
+        <div class="jogador time-b" id="goleiro-b">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="ala1-b">
+        <div class="jogador time-b" id="fixo-b">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="ala2-b">
+        <div class="jogador time-b" id="ala1-b">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
             <div class="nome"></div>
         </div>
 
-        <div class="jogador" id="pivo-b">
+        <div class="jogador time-b" id="ala2-b">
+            <div class="player-photo">
+                <img src="" alt="">
+            </div>
+            <div class="nome"></div>
+        </div>
+
+        <div class="jogador time-b" id="pivo-b">
             <div class="player-photo">
                 <img src="" alt="">
             </div>
@@ -212,6 +212,22 @@
             <div style="width: auto; display: flex; flex-direction: column; align-items: center;">
                 <img id="moments-team-photo-b" src="{{ team_match_b.team.photo.url }}" alt="Logo MOREA">
                 <p id="moments-team-name-b">{{ team_match_b.team.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="in-moments" id="end">
+        <div class="moments-left">
+            <div style="width: 100%; height: auto; display: flex; align-items: center;">
+                <img class="img-morea" src="{% static 'images/morea-sports-white.svg'%}" alt="Logo MOREA">
+                <img class="img-atum" src="{% static 'images/logo_atum_white.png'%}" alt="Logo ATUM">
+            </div>
+            <p>VENCEDOR</p>
+        </div>
+        <div class="moments-right">
+            <div style="width: auto; display: flex; flex-direction: column; align-items: center;">
+                <img id="end-team-photo-b" src="{{ match.Winner_team.photo.url }}" alt="Logo MOREA">
+                <p id="end-team-name-b">{{ match.Winner_team.name }}</p>
             </div>
         </div>
     </div>

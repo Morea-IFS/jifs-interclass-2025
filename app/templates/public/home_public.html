@@ -136,7 +136,7 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_volei_masc %}
-                        <h3>JOGO #{{i.volley_match.id}} ( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
+                        <h3>( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
                             {% for match in i.matches %}
                                 <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
@@ -156,7 +156,7 @@
                     </div>
                     <div class="games-of-block">
                         {% for i in context_volei_fem %}
-                        <h3>JOGO #{{i.volley_match.id}} ( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
+                        <h3>( {{i.volley_match.sets_team_a}} - {{i.volley_match.sets_team_b}} )</h3>
                             {% for match in i.matches %}
                                 <div {% if not forloop.last %} class="game" {% else %}  class="game row-bottom" {% endif %}>
                                     <p class="team-a">{{ match.times.0.name }} <img class="logo-time" src="{{ match.times.0.photo_url }}" alt="Logo time"></p>
@@ -203,6 +203,34 @@
                     </div>
                 </div>
                 {% endif %}
+                <h2 style="color: white;">BOLETINS</h2>
+                <div id="confirmModal" class="confirm-modal">
+                    <div class="modal-content">
+                        <h3>Confirmar Download</h3>
+                        <p id="modalText">Você está prestes a baixar o arquivo. Deseja continuar?</p>
+                        <div class="modal-buttons">
+                            <button id="cancelDownload" class="modal-btn cancel-btn">Cancelar</button>
+                            <button id="confirmDownload" class="modal-btn confirm-btn">Baixar</button>
+                        </div>
+                    </div>
+                </div>
+                <section class="downloads-section">
+                    <div class="downloads-container">
+                        {% for i in attachments %}
+                        <div class="download-card">
+                            <div class="file-info">
+                                <p class="file-name">{{ i.name }}</p>
+                                {% if i.file.size %}
+                                <span class="file-size">{{ i.file.size|filesizeformat }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="download-btn" data-url="{{ i.file.url }}" data-filename="{{ i.name }}">
+                                <i class="fas fa-file-download"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
             </div>
 
         </section>
@@ -247,6 +275,48 @@
         </ul>
     </nav>
     <script src="{% static 'js/home.js' %}"></script>
+    <script>
+        // ===== DOWNLOAD COM CONFIRMAÇÃO =====
+const downloadButtons = document.querySelectorAll('.download-btn');
+const confirmModal = document.getElementById('confirmModal');
+const modalText = document.getElementById('modalText');
+const confirmBtn = document.getElementById('confirmDownload');
+const cancelBtn = document.getElementById('cancelDownload');
 
+let currentDownloadUrl = '';
+
+downloadButtons.forEach(button => {
+    button.addEventListener('click', function () {
+        const filename = this.getAttribute('data-filename');
+        currentDownloadUrl = this.getAttribute('data-url');
+
+        modalText.textContent = `Você está prestes a baixar "${filename}". Deseja continuar?`;
+        confirmModal.style.display = 'flex';
+    });
+});
+
+confirmBtn.addEventListener('click', () => {
+    if (currentDownloadUrl) {
+        const link = document.createElement('a');
+        link.href = currentDownloadUrl;
+        link.download = currentDownloadUrl.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    confirmModal.style.display = 'none';
+});
+
+cancelBtn.addEventListener('click', () => {
+    confirmModal.style.display = 'none';
+});
+
+confirmModal.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+        confirmModal.style.display = 'none';
+    }
+});
+
+    </script>
 </body>
 </html>

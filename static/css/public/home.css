@@ -249,6 +249,174 @@ body{
 .mobile-menu-functions{
     display: none;
 }
+/* ===== SEÇÃO DE DOWNLOADS ===== */
+.downloads-section {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.downloads-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.downloads-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.downloads-header p {
+    color: hsla(0, 0%, 100%, 0.7);
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+}
+
+.downloads-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.download-card {
+    background-color: #2A2A2A;
+    border-radius: 12px;
+    padding: 25px;
+    position: relative;
+    transition: all 0.3s ease;
+    border-left: 4px solid #0026ff;
+    min-height: 120px;
+}
+
+.file-info {
+    padding-right: 60px;
+}
+
+.file-name {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.file-size {
+    color: hsla(0, 0%, 100%, 0.7);
+    font-size: 0.9rem;
+}
+
+.download-btn {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 163, 255, 0.1);
+    color: #00A3FF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+    color: #fff;
+    background: rgba(0, 163, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* ===== MODAL DE CONFIRMAÇÃO ===== */
+.confirm-modal {
+    display: none; /* começa invisível */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #2A2A2A;
+    padding: 30px;
+    border-radius: 16px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border-top: 4px solid #00A3FF;
+}
+
+.modal-content h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    color: hsla(0, 0%, 100%, 0.7);
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-btn {
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 1rem;
+}
+
+.confirm-btn {
+    background-color: #00A3FF;
+    color: #1E1E1E;
+}
+
+.cancel-btn {
+    background-color: transparent;
+    color: hsla(0, 0%, 100%, 0.7);
+    border: 1px solid hsla(0, 0%, 100%, 0.7);
+}
+
+.confirm-btn:hover {
+    background-color: #00d9ff;
+}
+
+.cancel-btn:hover {
+    color: #fff;
+    border-color: #fff;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+    .downloads-container {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-btn {
+        width: 100%;
+    }
+}
+
 header {
     height: 80px;
     margin: 0 auto;

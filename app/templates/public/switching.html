@@ -118,7 +118,7 @@
 
                             <div class="match-info">
                                 <span>{{ match.location }}</span>
-                                <span>{{ match.time_match|timesince }}</span>
+                                <span>{{ match.get_detailed_display }}</span>
                             </div>
                         </div>
                     {% empty %}
