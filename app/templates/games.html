@@ -147,27 +147,34 @@
                     </div>
                 </div>
 
-                <div class="game-actions">  
+                <div class="game-actions"> 
+
                     <a {% if i.match.status == 1 and user.type != 2 %} href="{% url 'scoreboard' i.match.event.id %}" {% endif %}>
-                        <button {% if i.match.status == 1 %} class="action-btn action-btn-active" {% else %} class="action-btn action-btn-desactive"{% endif %}>
+                        <button {% if i.match.status == 1 and user.type != 2 %} class="action-btn action-btn-active" {% else %} class="action-btn action-btn-desactive"{% endif %}>
                             <i class="fa-solid fa-gamepad"></i>
                         </button>
                     </a>
+                    {% if perms.app.change_match %}
                     <form method="post">{% csrf_token %}
                         <button class="action-btn" name="change_match" value="{{ i.match.id }}" type="submit" style="margin: 0; background-color: #282828;">
                             <i class="fa-solid fa-gear"></i>
                         </button>
                     </form>
-                    <a href="{% url 'match_settings' i.match.sport i.match.id %}">  
+                    {% endif %}
+                    {% if perms.app.add_match and perms.app.view_match and perms.app.change_match %}
+                    <a  href="{% url 'match_settings' i.match.sport i.match.id %}" >  
                         <button class="action-btn" style="background-color: red;">
                             <i class="fa-solid fa-chart-line"></i>
                         </button>
                     </a>
+                    {% endif %}
+                    {% if perms.app.add_match and perms.app.view_match and perms.app.change_match %}
                     <form method="post">{% csrf_token %}
                         <button class="action-btn" name="sumula" value="{{ i.match.id }}" style="margin: 0; background-color: #0289f7;">
                             <i class="fa-solid fa-file-text"></i>
                         </button>
                     </form>
+                    {% endif %}
                 </div>
             </section>
             {% empty %}
