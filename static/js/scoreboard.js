@@ -162,6 +162,20 @@ socket.onmessage = function(e) {
                 // Preencher escalação do vôlei
                 preencherEscalacaoVolei(match.players_a, match.players_b);
 
+            }else if(match.detailed == "Penaltis" && match.match_sport !== "Voleibol"){
+                aces.forEach((t) => {
+                    t.style.display = 'none';
+                });
+                sets.forEach((i) => {
+                    i.style.display = 'flex';
+                });
+                timer.forEach((j) => {
+                    j.style.display = 'none';
+                });
+                if (sets_a_match) sets_a_match.textContent = match.penalties_a;
+                if (sets_b_match) sets_b_match.textContent = match.penalties_b;
+
+                if (namescore) namescore.textContent = "Penaltis";
             }else if(match.detailed == "Finalizada"){
                 scorematch.forEach((k) => {
                     k.style.display = 'none';
@@ -238,6 +252,9 @@ socket.onmessage = function(e) {
             const point_a_point = document.getElementById('point-a');
             const point_b_point = document.getElementById('point-b');
 
+            const sets_a_point = document.getElementById('sets-a');
+            const sets_b_point = document.getElementById('sets-b');
+
             const aces_a_point = document.getElementById('aces-a');
             const aces_b_point = document.getElementById('aces-b');
 
@@ -247,6 +264,10 @@ socket.onmessage = function(e) {
             if(point.aces_a || point.aces_b){
                 if (aces_a_point) aces_a_point.textContent = point.aces_a;
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
+            }
+            if(point.penalties_a >= 0  || point.penalties_b >= 0){
+                if (sets_a_point) sets_a_point.textContent = point.penalties_a;
+                if (sets_b_point) sets_b_point.textContent = point.penalties_b;
             }
             if (point.player_name && point.team_name && point.sport === "Futsal" && point.team){
                 showGoalCard(

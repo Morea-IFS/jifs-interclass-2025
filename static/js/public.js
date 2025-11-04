@@ -105,6 +105,20 @@ socket.onmessage = function(e) {
                 if (namescore) namescore.textContent = "Sets";
                 if(ball_sport) ball_sport.src = '/static/images/ball-of-volley.png';
 
+            }else if(match.detailed == "Penaltis"){
+                aces.forEach((t) => {
+                    t.style.display = 'none';
+                });
+                sets.forEach((i) => {
+                    i.style.display = 'flex';
+                });
+                timer.forEach((j) => {
+                    j.style.display = 'none';
+                });
+                if (sets_a) sets_a.textContent = match.penalties_a;
+                if (sets_b) sets_b.textContent = match.penalties_b;
+
+                if (namescore) namescore.textContent = "Penaltis";
             }else{
                 console.log("utro spor");
                 aces.forEach((t) => {
@@ -139,13 +153,19 @@ socket.onmessage = function(e) {
             const point_b_point = document.getElementById('points-b');
             const aces_a_point = document.getElementById('aces-a');
             const aces_b_point = document.getElementById('aces-b');
+            const sets_a_point = document.getElementById('sets-a');
+            const sets_b_point = document.getElementById('sets-b');
 
             if(point_a_point) point_a_point.textContent = point.point_a;
             if(point_b_point) point_b_point.textContent = point.point_b;
 
-            if(point.aces_a >= 0  && point.aces_b >= 0){
+            if(point.aces_a >= 0  || point.aces_b >= 0){
                 if (aces_a_point) aces_a_point.textContent = point.aces_a;
                 if (aces_b_point) aces_b_point.textContent = point.aces_b;
+            }
+            if(point.penalties_a >= 0  || point.penalties_b >= 0){
+                if (sets_a_point) sets_a_point.textContent = point.penalties_a;
+                if (sets_b_point) sets_b_point.textContent = point.penalties_b;
             }
 
             break;

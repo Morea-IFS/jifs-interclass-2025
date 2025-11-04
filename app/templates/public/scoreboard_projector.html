@@ -332,10 +332,10 @@
         </div>
         <div class="sets-or-time">
             <div class="title-set">
-                <p style="color: black;" id="name-scoreboard">{% if match.volley_match %} Sets {% else %} Placar {% endif %}</p>
+                <p style="color: black;" id="name-scoreboard">{% if match.volley_match %} Sets {% elif match.detailed == 4 %} Penaltis {% else %} Placar {% endif %}</p>
             </div>
             <p class="time">
-                <span class="sets" id="sets-a" {% if match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% endif %}</span> <span class="sets" id="sets-b" {% if match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% endif %}</span> <span class="timer" id="timer" {% if not match.volley_match %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if not match.volley_match %} 00:00 {% endif %}</span>
+                <span class="sets" id="sets-a" {% if match.volley_match or match.detailed == 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% else %} {{penalties_a}} {% endif %}</span> <span class="sets" id="sets-b" {% if match.volley_match or match.detailed == 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% else %} {{penalties_b}} {% endif %}</span> <span class="timer" id="timer" {% if not match.volley_match and match.detailed != 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if not match.volley_match %} 00:00 {% endif %}</span>
             </p>
         </div>
         <div class="ball-sport">
