@@ -28,7 +28,7 @@ User = get_user_model()
 
 def events_list(request):
     if request.method == 'GET':
-        events = Event.objects.all()
+        events = Event.objects.all().order_by('-id')
         if len(events) == 1:
             return redirect('home_public', events[0].id)
         return render(request, 'public/events_list.html', {'events': events})
