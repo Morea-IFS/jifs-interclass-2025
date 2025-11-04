@@ -12,9 +12,9 @@
     <div class="block1">
         <div class="title-adm">
             <h1>GERENCIAMENTO DE PARTIDAS</h1>
-            {% if perms.app.add_match or perms.app.add_phase or perms.app.add_groupphase %}
+            {% if perms.app.add_match or perms.app.add_phase or perms.app.add_group_phase %}
             <div class="title-buttons">
-                {% if select_event %}
+                {% if select_event or user.event_user %}
                 <span onclick="openOptionsModal()"><p>Novo</p></span>
                 {% endif %}
                 {% if user.type == 0 %}
@@ -29,7 +29,7 @@
                 {% else %}
                 <h3>{{ user.event_user.name }}</h3>
                 {% endif %}
-                {% if not select_event %}
+                {% if not select_event and not user.event_user %}
                 <h2>ADMIN</h2>
                 {% endif %}
             </div>
@@ -191,7 +191,7 @@
     </div>
 </div>
 
-{% if perms.app.add_match or perms.app.add_phase or perms.app.add_groupphase %}
+{% if perms.app.add_match or perms.app.add_phase or perms.app.add_group_phase %}
 
 <!-- ================= MODAL DE OPÇÕES ================= -->
 <div id="optionsModal" class="modal">
@@ -211,7 +211,7 @@
             <i class="fa-solid fa-layer-group" style="position: static;"></i>
         </span>
         {% endif %}
-        {% if perms.app.add_groupphase %}
+        {% if perms.app.add_group_phase %}
         <span class="button-op-2" style="background:#FF9800; display: flex; justify-content: space-evenly; align-items: center;" onclick="openModal('group')">
             <p style="color:white;">Grupo</p>
             <i class="fa-solid fa-people-group" style="position: static;"></i>
@@ -305,7 +305,7 @@
 {% endif %}
 
 <!-- ================= MODAL GRUPO ================= -->
-{% if perms.app.add_groupphase %}
+{% if perms.app.add_group_phase %}
 <div id="modal-group" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('group')">&times;</span>

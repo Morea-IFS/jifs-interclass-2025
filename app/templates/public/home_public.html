@@ -40,7 +40,7 @@
                 <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                 <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
                 <li><a href="{% url 'switching' event.id %}" class="about-us-link">Chave</a></li>
-                <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
+                <li><a href="{% url 'events' %}" class="games-link">Sair</a></li>
                 <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
             </ul>
             <img
@@ -203,6 +203,7 @@
                     </div>
                 </div>
                 {% endif %}
+                {% if attachments %}
                 <h2 style="color: white;">BOLETINS</h2>
                 <div id="confirmModal" class="confirm-modal">
                     <div class="modal-content">
@@ -231,6 +232,7 @@
                         {% endfor %}
                     </div>
                 </section>
+                {% endif %}
             </div>
 
         </section>

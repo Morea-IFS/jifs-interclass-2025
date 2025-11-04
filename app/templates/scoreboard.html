@@ -289,8 +289,10 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-a-point" value="+1" class="points-btn" data-team="A" data-delta="1">+1</button>
                 <button name="team-a-point" value="-1" class="points-btn" data-team="A" data-delta="-1">-1</button>
+                {% if match.volley_match or match.detailed == 4 %}
                 <button name="team-a-aces" value="+1" class="points-btn" style="background-color: #008000;" data-team="A" data-delta="1">+1</button>
                 <button name="team-a-aces" value="-1" class="points-btn" style="background-color: #008000;" data-team="A" data-delta="-1">-1</button>
+                {% endif %}
                 <select name="player-a-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_a %}
@@ -305,8 +307,10 @@
               <form method="post" class="points-controls">{% csrf_token %}
                 <button name="team-b-point" value="+1" class="points-btn" data-team="B" data-delta="1">+1</button>
                 <button name="team-b-point" value="-1" class="points-btn" data-team="B" data-delta="-1">-1</button>
+                {% if match.volley_match or match.detailed == 4 %}
                 <button name="team-b-aces" value="+1" class="points-btn" data-team="B" style="background-color: #008000;" data-delta="1">+1</button>
                 <button name="team-b-aces" value="-1" class="points-btn" data-team="B" style="background-color: #008000;" data-delta="-1">-1</button>
+                {% endif %}
                 <select name="player-b-point" id="">
                   <option selected value="">Atletas</option>
                   {% for i in players_match_b %}

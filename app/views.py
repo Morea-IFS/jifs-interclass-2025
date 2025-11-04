@@ -28,7 +28,7 @@ User = get_user_model()
 
 def events_list(request):
     if request.method == 'GET':
-        events = Event.objects.all()
+        events = Event.objects.all().order_by('-id')
         if len(events) == 1:
             return redirect('home_public', events[0].id)
         return render(request, 'public/events_list.html', {'events': events})
@@ -138,7 +138,7 @@ def event_sport_edit(request):
 
 def home_public(request, event_id):
         event = Event.objects.get(id=event_id)
-        hoje = date.today()
+        hoje = timezone.localdate()
         games_day = Match.objects.filter(time_match__date=hoje, event=event).prefetch_related('teams__team').order_by('time_match')
         context_games_day = [
             {
@@ -1052,15 +1052,18 @@ def games(request):
 
         selected_event = None
 
-        if request.user.type in [1, 2] and request.user.event_user:
-            selected_event = request.user.event_user
-        elif 'e' in request.GET and request.GET['e'] != '':
+        if 'e' in request.GET and request.GET['e'] != '':
             selected_event = Event.objects.get(id=request.GET['e'])
             context['select_event'] = request.GET['e']
             context['phases'] = Phase.objects.filter(event__event__id=request.GET['e']).order_by('name','event','sexo')
             context['groups'] = Group_phase.objects.filter(phase__event__event__id=request.GET['e']).order_by('phase__name','phase__event','phase__sexo')
             context['event_sports'] = Event_sport.objects.filter(event=selected_event)
             context['teams'] = Team.objects.filter(event=selected_event)
+        elif request.user.event_user:
+            selected_event = request.user.event_user
+            context['event_sports'] = Event_sport.objects.filter(event=request.user.event_user)
+            context['phases'] = Phase.objects.filter(event__event=request.user.event_user).order_by('name','event','sexo')
+            context['groups'] = Group_phase.objects.filter(phase__event__event=request.user.event_user).order_by('phase__name','phase__event','phase__sexo')
 
         if selected_event:
             matches = Match.objects.filter(event__id=selected_event.id).prefetch_related('teams__team').order_by('time_match')
@@ -2270,8 +2273,12 @@ def scoreboard(request, event_id):
         for i in players_match_b:
             if not Player_team_sport.objects.filter(player=i.player, team_sport=team_sport_b).exists():
                 i.delete()
-        point_a = Point.objects.filter(team_match=team_match_a).count()
-        point_b = Point.objects.filter(team_match=team_match_b).count()
+        if match.sport == 0:
+            point_a = Point.objects.filter(team_match=team_match_a).count() - Point.objects.filter(point_types=2,team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count() - Point.objects.filter(point_types=2,team_match=team_match_b).count()
+        else:      
+            point_a = Point.objects.filter(team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count()
     if request.method == "GET":
         context = {
             'event': match_event,
@@ -2645,8 +2652,12 @@ def scoreboard_public(request, event_id):
 
             players_match_a = Player_match.objects.filter(team_match=team_match_a)
             players_match_b = Player_match.objects.filter(team_match=team_match_b)
-            point_a = Point.objects.filter(team_match=team_match_a).count()
-            point_b = Point.objects.filter(team_match=team_match_b).count()
+            if match.sport == 0:
+                point_a = Point.objects.filter(team_match=team_match_a).count() - Point.objects.filter(point_types=2,team_match=team_match_a).count()
+                point_b = Point.objects.filter(team_match=team_match_b).count() - Point.objects.filter(point_types=2,team_match=team_match_b).count()
+            else:
+                point_a = Point.objects.filter(team_match=team_match_a).count()
+                point_b = Point.objects.filter(team_match=team_match_b).count()
             card_a = Penalties.objects.filter(type_penalties=0, team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_a).count()
             card_b = Penalties.objects.filter(type_penalties=0, team_match=team_match_b).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_b).count()
             lack_a = Penalties.objects.filter(type_penalties=2,team_match=team_match_a).count()
@@ -2678,6 +2689,9 @@ def scoreboard_public(request, event_id):
             else:
                 context['seconds'] = seconds
                 context['status'] = status
+            if match.sport == 0:
+                context['penalties_a'] = Point.objects.filter(point_types=2,team_match=team_match_a).count()
+                context['penalties_b'] = Point.objects.filter(point_types=2,team_match=team_match_b).count()
             return render(request, 'public/scoreboard_public.html', context)
         else:
             print("match não")
@@ -2793,8 +2807,10 @@ def scoreboard_projector(request, event_id):
             team_match_b = team_matchs[1]
             players_match_a = Player_match.objects.filter(team_match=team_match_a)
             players_match_b = Player_match.objects.filter(team_match=team_match_b)
-            point_a = Point.objects.filter(team_match=team_match_a).count()
-            point_b = Point.objects.filter(team_match=team_match_b).count()
+            point_a = Point.objects.filter(team_match=team_match_a).count() - Point.objects.filter(point_types=2,team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count() - Point.objects.filter(point_types=2,team_match=team_match_b).count()
+            penalties_a = Point.objects.filter(point_types=2,team_match=team_match_a).count()
+            penalties_b = Point.objects.filter(point_types=2,team_match=team_match_b).count()
             lack_a = Penalties.objects.filter(type_penalties=2,team_match=team_match_a).count()
             lack_b = Penalties.objects.filter(type_penalties=2,team_match=team_match_b).count()
             card_a = Penalties.objects.filter(type_penalties=0,team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1,team_match=team_match_a).count()
@@ -2823,6 +2839,8 @@ def scoreboard_projector(request, event_id):
                 'players_match_b':players_match_b,
                 'point_a':point_a,
                 'point_b':point_b,
+                'penalties_a':penalties_a,
+                'penalties_b':penalties_b,
                 'lack_a':lack_a,
                 'lack_b':lack_b,
                 'ball_sport': ball_sport,

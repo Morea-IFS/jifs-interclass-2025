@@ -51,7 +51,7 @@
                     <li><a href="{% url 'home_public' event.id %}" class="home-link">Home</a></li>
                     <li><a href="{% url 'scoreboard_public' event.id %}" class="scoreboard-link">Placar</a></li>
                     <li><a href="{% url 'switching' event.id %}" class="home-link">Chave</a></li>
-                    <li><a href="{% url 'events' %}" class="games-link">Eventos</a></li>
+                    <li><a href="{% url 'events' %}" class="games-link">Sair</a></li>
                     <li><a href="{% url 'login' %}" class="about-us-link">Login</a></li>
                 </ul>
                 <img
@@ -97,9 +97,9 @@
                         <p id="name-scoreboard">{% if match.volley_match %} Sets {% else %} Tempo {% endif %}</p>
                     </div>
                     <p class="time-and-sets-counter">
-                        <span class="timer" id="timer" style="{% if not match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if not match.volley_match %} 00:00 {% endif %}</span>
-                        <span class="sets" id="sets-a" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% else %} 0 {% endif %}</span>
-                        <span class="sets" id="sets-b" style="{% if match.volley_match %}display: flex;{% else %}display: none;{% endif %}">{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% else %} 0 {% endif %}</span>
+                        <span class="timer" id="timer" {% if not match.volley_match and match.detailed != 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if not match.volley_match %} 00:00 {% endif %}</span>
+                        <span class="sets" id="sets-a" {% if match.volley_match or match.detailed == 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if match.volley_match %} {{match.volley_match.sets_team_a}} {% else %} {{penalties_a}} {% endif %}</span>
+                        <span class="sets" id="sets-b" {% if match.volley_match or match.detailed == 4 %} style="display: flex;" {% else %} style="display: none;" {% endif %}>{% if match.volley_match %} {{match.volley_match.sets_team_b}} {% else %} {{penalties_b}} {% endif %}</span>
                 </div>
                 <div class="ball-sport">
                     <img id="ball-sport" src="{{ball_sport}}" alt="" />

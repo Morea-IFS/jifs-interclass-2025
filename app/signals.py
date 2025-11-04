@@ -167,8 +167,13 @@ def send_scoreboard_point(instance, created):
             team_match_a = team_matchs[0]
             team_match_b = team_matchs[1]
 
-        point_a = Point.objects.filter(team_match=team_match_a).count()
-        point_b = Point.objects.filter(team_match=team_match_b).count()
+
+        if match.sport == 0:
+            point_a = Point.objects.filter(team_match=team_match_a).count() - Point.objects.filter(point_types=2, team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count() - Point.objects.filter(point_types=2, team_match=team_match_b).count()
+        else:
+            point_a = Point.objects.filter(team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count()
 
         point = Point.objects.filter(team_match__match=match).last()
 
@@ -182,6 +187,10 @@ def send_scoreboard_point(instance, created):
         if match.volley_match:
             match_data['aces_a'] = Point.objects.filter(point_types=2, team_match=team_match_a).count()
             match_data['aces_b'] = Point.objects.filter(point_types=2, team_match=team_match_b).count()
+            
+        elif match.sport == 0:
+            match_data['penalties_a'] = Point.objects.filter(point_types=2, team_match=team_match_a).count()
+            match_data['penalties_b'] = Point.objects.filter(point_types=2, team_match=team_match_b).count()
 
         if point and created and point.player and point.team_match and point.point_types == 0:
             if point.team_match == team_match_a:
@@ -445,8 +454,12 @@ def send_scoreboard_match(instance):
             if match.sport == 3: ball_sport = static('images/ball-of-handball.png')
             else: ball_sport = static('images/ball-of-futsal.png')
 
-        point_a = Point.objects.filter(team_match=team_match_a).count()
-        point_b = Point.objects.filter(team_match=team_match_b).count()
+        if match.sport == 0:
+            point_a = Point.objects.filter(team_match=team_match_a).count() - Point.objects.filter(point_types=2, team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count() - Point.objects.filter(point_types=2, team_match=team_match_b).count()
+        else:
+            point_a = Point.objects.filter(team_match=team_match_a).count()
+            point_b = Point.objects.filter(team_match=team_match_b).count()
         lack_a = Penalties.objects.filter(type_penalties=2, team_match=team_match_a).count()
         lack_b = Penalties.objects.filter(type_penalties=2, team_match=team_match_b).count()
         card_a = Penalties.objects.filter(type_penalties=0, team_match=team_match_a).count() + Penalties.objects.filter(type_penalties=1, team_match=team_match_a).count()
@@ -479,6 +492,10 @@ def send_scoreboard_match(instance):
         else:
             match_data['seconds'] = seconds
             match_data['status'] = status
+
+        if match.sport == 0:
+            match_data['penalties_a'] = Point.objects.filter(point_types=2, team_match=team_match_a).count()
+            match_data['penalties_b'] = Point.objects.filter(point_types=2, team_match=team_match_b).count()
 
         if match.detailed == 5: 
             players_a = Player_match.objects.filter(team_match=team_match_a)
@@ -591,8 +608,19 @@ def create_user_common_group(sender, **kwargs):
         "delete_match",
         "view_match",
 
+        "add_phase",
+        "change_phase",
+        "delete_phase",
+        "view_phase",
+
+        "add_group_phase",
+        "change_group_phase",
+        "delete_group_phase",
+        "view_group_phase",
+
         "add_point",
         "add_assistance",
+        "add_penalties",
         
     ]
 
