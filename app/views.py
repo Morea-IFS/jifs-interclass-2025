@@ -138,7 +138,7 @@ def event_sport_edit(request):
 
 def home_public(request, event_id):
         event = Event.objects.get(id=event_id)
-        hoje = date.today()
+        hoje = timezone.localdate()
         games_day = Match.objects.filter(time_match__date=hoje, event=event).prefetch_related('teams__team').order_by('time_match')
         context_games_day = [
             {
