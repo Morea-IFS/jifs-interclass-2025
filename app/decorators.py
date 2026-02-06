@@ -4,6 +4,7 @@ from datetime import datetime
 import pytz
 from .models import Event, Terms_Use
 from django.contrib import messages
+from django.urls import resolve
 
 def time_restriction(redirect_page="Home"):
     def decorator(view_func):
@@ -34,28 +35,27 @@ def time_restriction(redirect_page="Home"):
 
 def terms_accept_required(view_func):
     def wrapper(request, *args, **kwargs):
-        return view_func(request, *args, **kwargs)
+        print("printe1")
         if not request.user.is_authenticated:
             return redirect('login')
 
-        if request.user.is_superuser:
+        if request.user.is_superuser or request.user.type == 1 or request.user.type == 3:
+            return view_func(request, *args, **kwargs)    
+        
+        if resolve(request.path_info).url_name == 'logout':
             return view_func(request, *args, **kwargs)
+        
+        if request.user.event_user.general_need_terms:
+            if request.user.event_user:
+                if request.user.event_user.general_need_authorization:
+                    if not request.user.document:
+                        return redirect('upload_document')
 
-        try:
-            termo = Terms_Use.objects.get(usuario=request.user)
-
-            if not termo.document:
-                return redirect('upload_document')
-
-            if not (termo.name and termo.siape):
+            if not (request.user.first_name and request.user.telefone and request.user.photo):
                 return redirect('boss_data')
 
-            if not termo.accepted:
+            if not request.user.accepted:
                 return redirect('terms_use')
-
-        except Terms_Use.DoesNotExist:
-            return redirect('upload_document')
-
         return view_func(request, *args, **kwargs)
     
     return wrapper

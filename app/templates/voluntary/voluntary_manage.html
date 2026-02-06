@@ -80,7 +80,11 @@
             </h1>
             {% if perms.app.add_voluntary %}
             <div class="title-buttons">
+                {% if user.event_user or select_event %}
                 <span onclick="openModal()"><p>Novo</p></span>
+                {% else %}
+                <h3>ATUM SPORTS</h3>
+                {% endif %}
                 {% if user.type == 0 %}
                 <form method="get">
                     <select name="e" onchange="this.form.submit();">
@@ -208,15 +212,16 @@
                 {% endfor %}
             </select>
             {% endif %}
-            {% if not user.event_user %}
-            <label for="nome">*Evento</label>
-            <select id="user_admin" name="event">
-                <option selected disabled>Selecione o evento</option>
-                {% for i in events %}
+            {% if not user.unit %}
+            <label for="nome">Unidade</label>
+            <select id="user_admin" name="unit">
+                <option selected disabled>Selecione a unidade (Não obrigatório)</option>
+                {% for i in event_unit %}
                 <option value="{{i.id}}">{{i.name}}</option>
                 {% endfor %}
             </select>
             {% endif %}
+            <input type="hidden" name="event" {% if user.event_user %} value="{{user.event_user}}" {% else %} value="{{select_event}}" {% endif %}>
             <label for="imagem">*Fotografia</label>
             <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png">
             <button class="button-modal" type="submit">Cadastrar</button>

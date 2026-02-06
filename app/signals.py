@@ -718,9 +718,3 @@ def on_user_logged_in(sender, request, user, **kwargs):
         }
     )
 
-@user_logged_out.connect
-def on_user_logged_out(sender, request, user, **kwargs):
-    try:
-        UserSession.objects.filter(session__session_key=request.session.session_key).delete()
-    except:
-        pass

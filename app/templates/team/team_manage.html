@@ -304,6 +304,14 @@
             </section>
             {% endif %}
         {% endif %}
+        {% if not events_sport %}
+            <section class="alert-page" style="background-color: red;">
+                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-text">
+                    <p>NÃO EXISTE NENHUMA ESPORTE CADASTRADO.</p>
+                </div>
+            </section>
+        {% endif %}
         {% if team %}
         {% if user.type != 2 %}
         <div class="subtitle-adm">
@@ -435,11 +443,19 @@
             <label for="name">Nome</label>
             <input type="text" name="name" id="name" maxlength="100" required>
 
+            {% if event.team_need_color %}
+
             <label for="color">Cor</label>
             <input type="color" name="color" maxlength="7" value="#ffffff" required style="height: 50px;">
 
+            {% endif %}
+
+            {% if event.team_need_description %}
+
             <label for="description">Descrição</label>
             <textarea name="description" id="description" maxlength="200"></textarea>
+
+            {% endif %}
 
             <label for="logo">Logo</label>
             <input type="file" name="photo" id="logo">

@@ -276,7 +276,6 @@
         }
     }
 
-
     let originalPhotoUrl = '';
 
     function openEditModal(id, name, eventId, typeVoluntary, email, telephone, photoUrl, active, teamId) {
@@ -293,8 +292,6 @@
         if (active == 'True'){
             document.getElementById("editUserActive").checked = true;
         }
-            
-        
 
         const typeSelect = document.getElementById("editTypeSelect");
         const team = document.getElementById("editTeamSelect");
@@ -311,7 +308,6 @@
             };
         }
 
-
         function toggleTeamVisibility(selectEl, teamEl, teamLabelEl) {
             if (selectEl.value === "2") {
                 teamEl.style.display = 'flex';
@@ -321,9 +317,6 @@
                 teamLabelEl.style.display = 'none';
             }
         }
-
-
-
 
         const eventSelect = document.getElementById("editEventSelect");
         if (eventSelect) {

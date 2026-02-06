@@ -112,7 +112,7 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ i.player.name }}</td>
-                    <td>{{ i.player.classroom }}</td>
+                    {% if team_sport.team.event.general_need_unit %}<td>{{ i.player.unit.name }}</td>{% endif %}
                     {% if team_sport.team.event.player_need_registration %}<td>{{i.player.registration}}</td>{% endif %}
                     {% if team_sport.team.event.player_need_sexo %}<td>{{i.player.get_sexo_display}}</td>{% endif %}
                     {% if team_sport.team.event.player_need_date_nasc %}<td>{{i.player.date_nasc}}</td>{% endif %}
@@ -144,7 +144,7 @@
 
                     {% if perms.app.change_player_team_sport and perms.app.change_player %}
                     <td>
-                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{{ i.player.classroom|default:"" }}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
+                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:""}}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
                     </td>
                     {% endif %}
 
@@ -179,9 +179,15 @@
             <input type="text" autocomplete="on" autocorrect="on" id="name" name="name" placeholder="Nome*"
                 required>
 
-            <label>Turma</label>
-            <input type="text" name="classroom" placeholder="Nº CURSO*" required>
-            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ IEDF/ IAUT/ IELTM.</p>
+            {% if team_sport.team.event.general_need_unit and not user.type == 2 %}
+            <label for="unit">Unidade/turma</label>
+            <select id="unit" name="unit" required>
+                {% for i in events_unit %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
+            {% endif %}
             
             {% if team_sport.team.event.player_need_date_nasc %}
             <label for="date" >Data de nascimento</label>
@@ -199,6 +205,13 @@
             <label for="registration">CPF</label>
             <input type="text" id="cpf" name="cpf"
                 placeholder="CPF*" required maxlength="14">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_address %}
+
+            <label for="description">Endereço</label>
+            <textarea name="description" id="description" maxlength="200"></textarea>
+
             {% endif %}
 
             {% if team_sport.sport.sport == 2 and team_sport.team.event.player_need_sexo %}
@@ -220,7 +233,7 @@
             <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
             {% endif %}
 
-            {% if team_sport.team.event.player_need_photo %}
+            {% if team_sport.team.event.player_need_photo_goal %}
             <label for="Fotografia">Fotografia gol (JPG, JPEG ou PNG)</label>
             <input type="file" name="photo_goal" id="fotos" accept=".jpg, .jpeg, .png" required>
             {% endif %}
@@ -245,9 +258,15 @@
             <label>Nome Completo</label>
             <input id="editPlayerName" type="text" name="edit-name" required>
 
-            <label>Turma</label>
-            <input id="editPlayerClassroom" type="text" name="edit-classroom" required>
-            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 3º IRC.</p>
+            {% if team_sport.team.event.general_need_unit %}
+            <label for="unit">Unidade/turma</label>
+            <select name="edit-unit" id="editUnit" required>
+                {% for i in events_unit %}
+                <option value="{{i.id}}">{{i.name}}</option>
+                {% endfor %}
+            </select>
+            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
+            {% endif %}
 
             {% if team_sport.team.event.player_need_registration %}
             <label>Matrícula, siape ou CPF</label>
@@ -278,7 +297,7 @@
             <img id="preview" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
             {% endif %}
 
-            {% if team_sport.team.event.player_need_photo %}
+            {% if team_sport.team.event.player_need_photo_goal %}
             <label for="edit-photo-goal">Foto gol</label>
             <input type="file" name="edit-photo-goal" id="edit-photo-goal" accept=".jpg, .jpeg, .png" onchange="previewGoalFoto()" />
             <p style="color: #6d6c6c; font-size: 15px;">*Anexe uma nova Fotografia apenas se quiser trocá-la.</p>
@@ -314,7 +333,8 @@
 
 let originalPhotoUrl = '';
 
-function openEditModal(id, name, classroom, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl) {
+function openEditModal(id, name, unit, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl) {
+ 
     originalPhotoUrl = photoUrl || '';
     originalPhotoUrlgol = photoGoalUrl || '';
     const form = document.getElementById('editForm');
@@ -336,6 +356,13 @@ function openEditModal(id, name, classroom, registration, sexo, data_nasc, photo
     if(sexoSelect) {
         Array.from(sexoSelect.options).forEach(option => {
             option.selected = option.value === sexo;
+        });
+    }
+
+    const unitSelect = document.getElementById("editUnit");
+    if(unitSelect) {
+        Array.from(unitSelect.options).forEach(option => {
+            option.selected = option.value === unit;
         });
     }
 

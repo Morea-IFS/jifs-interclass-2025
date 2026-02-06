@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root{
+            --teste_a: #cbcaca;
+            --teste_b: #eaeaea;
+        }
+        body { font-family: Arial, sans-serif; page-break-before: avoid;}
+
+        .header-data {
+            width: 80vw;
+            height: 6.5em;
+            border: 1.5px solid black;
+            text-align: center;
+        }
+        .logo-ifs {
+            position: absolute;
+            left: 2em;
+            padding-top: 0.8em;
+        }
+        .logo-iefs {
+            position: absolute;
+            padding-top: 0.8em;
+        }
+        .logo-morea {
+            width: 5em;
+            position: absolute;
+            right: 2em;
+            padding-top: 0.8em;
+        }
+        .texto-padrao{
+            text-align: justify;
+            font-size: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header-data">
+        {% if logo_event_type == 1 %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        {% else %}
+        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        {% endif %}
+        <img class="logo-morea" src="{{logo_atum }}" alt="">
+        <p>INSTITUTO FEDERAL DE SERGIPE</p>
+        <p><b>BEM VINDO AO MOREA SPORTS</b></p>
+        <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
+
+    </div>
+
+    <p style="margin-top: 15px; margin-bottom: 15px;"><b>SEJA BEM VINDO AO ATUM!</b></p>
+    <p class="texto-padrao">Desenvolvida em 2023, a plataforma <b style="color: #000055;">ATUM</b> (Administração de Times, Usuários e Modalidades) surgiu como uma solução inovadora concebida no seio do laboratório de pesquisa <b style="color: #000055;">MOREA</b>, localizado no Instituto Federal de Sergipe <b style="color: #000055;">(IFS)</b> - Campus Lagarto. O projeto contou com o suporte estratégico da coordenação do curso de Redes de Computadores, unindo o conhecimento acadêmico às demandas práticas de gestão. A ferramenta foi projetada para otimizar processos organizacionais, refletindo o compromisso da instituição com o desenvolvimento tecnológico e a excelência educacional.</p>
+
+    <p style="margin-top: 28em;"><b>ACESSO AO SISTEMA:</b></p>
+
+    <p style="font-size: 14px;">SITE: {{site|lower}}</p>
+    <p style="font-size: 14px;">USUÁRIO: admin.{{name|lower}}</p>
+    <p style="font-size: 14px;">SENHA: {{password}}</p>
+
+    <div style="display: flex;">
+        <img style="height: 5.8em; position: relative; bottom: 0; padding-right: 10em;" src="data:image/png;base64,{{ qrcode }}"alt="" aria-hidden="true">
+        <img class="logo-iefs" style="height: 4em; position: relative; bottom: 0;" src="{{logo_ifs_ofc}}" alt="">
+        <img class="logo-iefs" style="height: 5em; position: relative; bottom: 0;" src="{{logo_morea}}" alt="">
+    </div>
+    
+</table>
+</body>
+</html>

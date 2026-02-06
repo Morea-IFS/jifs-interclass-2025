@@ -36,7 +36,7 @@ urlpatterns = [
     path('upload', views.upload_document, name='upload_document'),
     path('dados', views.boss_data, name='boss_data'),
     path('termos', views.terms_use, name='terms_use'),
-    path('erro404', views.page_in_erro404),
+    path('erro404', views.page_in_erro404), 
     path('settings', views.settings, name="settings"),
     path('settings_new', views.settings_new, name="settings_new"),
     path("status/", views.manage_session, name="manage_sessions"),
