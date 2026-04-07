@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Detailed, Status, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Event_unit, Detailed, Status, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -23,6 +23,7 @@ from django.utils import timezone
 from .decorators import terms_accept_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.urls import reverse
+from django.contrib.auth import update_session_auth_hash
 
 User = get_user_model()
 
@@ -35,10 +36,10 @@ def events_list(request):
     else:
         return redirect('events')
 
-def has_accepted_terms(user):
+def has_accepted_terms(user, request):
     try:
-        termo = Terms_Use.objects.get(usuario=user)
-        return bool(termo.name and termo.siape and termo.document and termo.photo and termo.accepted)
+        user_accepted = User.objects.get(id=request.user.id)
+        return bool(user_accepted.document and user_accepted.photo and user_accepted.accepted)
     except Terms_Use.DoesNotExist:
         return False
         
@@ -54,12 +55,15 @@ def about_us(request, event_id):
 def event_manage(request):
     if request.method == "GET":
         events = Event.objects.all()
+        events_unit = Event.objects.filter(general_need_unit=True)
         return render(request, 'events/event_manage.html', {
             'events': events,
+            'events_unit': events_unit,
             'sports': Sport_types.choices
         })
 
     else:
+        print(request.POST)
         if 'event' in request.POST:
             event_id = request.POST.get('event')
             sport = request.POST.get('sport')
@@ -78,6 +82,85 @@ def event_manage(request):
                 masc=masc,
                 mist=mist,
             )
+
+        if 'event_unit' in request.POST:
+            print(request.POST)
+            event_unit = int(request.POST.get('event_unit'))
+            event=Event.objects.get(id=event_unit)
+            name_unit = request.POST.get('name_unit')
+            create_team_user = 'create-team-user' in request.POST
+            event_unit = Event_unit.objects.create(
+                event=event,
+                name=name_unit,
+            )
+            event_unit.save()
+            if create_team_user:
+                
+                team = Team.objects.create(name=name_unit, unit=event_unit, event=event, status=False)
+                team.save()
+                list = []
+                possibilidade = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+                number = random.randint(1, 8)
+                chars = ''.join(random.sample(possibilidade, number))
+                list.append(chars)
+                result = str(''.join(list))
+                print(result)
+                User.objects.create_user(username=f"admin.{name_unit.lower()}", password=result, type=2, team=team, event_user=event, unit=event_unit)
+                messages.success(request, f"Sucesso! Unidade cadastrada com exito.")
+                
+                cont = {
+                    'now': timezone.now(),
+                    'user': request.user,
+                    'logo_atum': request.build_absolute_uri('/static/images/logo_atum.png')
+                }
+                
+                if event:
+                    cont['logo_ifs'] = request.build_absolute_uri(event.logo.url)
+                    cont['event'] = event
+                else:
+                    cont['logo_ifs'] = request.build_absolute_uri('/static/images/logo-jiifs-2025.jpg')
+                logo_ifs = cont['logo_ifs']
+                cont['logo_ifs_ofc'] = request.build_absolute_uri('/static/images/logo-ifs.svg')
+                cont['logo_morea'] = request.build_absolute_uri('/static/images/logo-morea-sports.svg')
+                link = f"https://{request.get_host()}"
+                qr = qrcode.make(link)
+                print(link)
+                buffer = BytesIO()
+                qr.save(buffer, format='PNG')
+                buffer.seek(0)
+                cont['site'] = link
+
+                img_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+                img = ImageReader(logo_ifs)
+                largura, altura = img.getSize()
+
+                if largura == altura:
+                    print("Quadrada")
+                    cont['logo_event_type'] = 0
+                elif largura > altura:
+                    print("Retangular horizontal")
+                    cont['logo_event_type'] = 1
+                else:
+                    print("Retangular vertical")
+                    cont['logo_event_type'] = 2
+
+                name_html = 'data-welcome'
+                name_pdf = f'boas vindas, {name_unit.lower()}'
+
+                cont['name'] = name_unit
+                cont['qrcode'] = img_base64
+                cont['password'] = result
+            
+                html_string = render_to_string(f'generator/{name_html}.html', cont)
+
+                response = HttpResponse(content_type='application/pdf')
+                response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
+                #response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
+
+                HTML(string=html_string).write_pdf(response)
+
+                return response
 
         elif 'name' in request.POST:
             name = request.POST.get('name')
@@ -100,6 +183,15 @@ def event_manage(request):
             player_need_registration = 'player_need_registration' in request.POST
             player_need_cpf = 'player_need_cpf' in request.POST
             player_need_date_nasc = 'player_need_date_nasc' in request.POST
+            player_need_address = 'player_need_address' in request.POST
+            player_need_photo_goal = 'player_need_photo_goal' in request.POST
+
+            general_need_authorization = 'general_need_authorization' in request.POST
+            general_need_terms = 'general_need_terms' in request.POST
+            general_need_unit = 'general_need_unit' in request.POST
+
+            team_need_description = 'team_need_description' in request.POST
+            team_need_color = 'team_need_color' in request.POST
 
             Event.objects.create(
                 name=name,
@@ -123,6 +215,15 @@ def event_manage(request):
                 player_need_registration=player_need_registration,
                 player_need_cpf=player_need_cpf,
                 player_need_date_nasc=player_need_date_nasc,
+                player_need_address=player_need_address,
+                player_need_photo_goal=player_need_photo_goal,
+
+                general_need_authorization=general_need_authorization,
+                general_need_terms=general_need_terms,
+                general_need_unit=general_need_unit,
+
+                team_need_description=team_need_description,
+                team_need_color=team_need_color,
                 
             )
 
@@ -584,6 +685,7 @@ def team_manage(request):
             context['team_sports'] = Team_sport.objects.filter(team__id=t)
             context['team'] = Team.objects.get(id=t)
             context['select_event'] = e
+            context['event'] = Event.objects.get(id=e)
 
         elif e and t:
             context['teams'] = Team.objects.filter(event__id=e)
@@ -592,11 +694,13 @@ def team_manage(request):
             context['team'] = Team.objects.get(id=t)
             context['voluntarys'] = Voluntary.objects.filter(event__id=e, type_voluntary=1)
             context['select_event'] = e
+            context['event'] = Event.objects.get(id=e)
 
         elif e:
             context['teams'] = Team.objects.filter(event__id=e)
             context['events_sport'] = Event_sport.objects.filter(event__id=e)
             context['select_event'] = e
+            context['event'] = Event.objects.get(id=e)
 
         elif t and request.user.type == 1:
             context['teams'] = Team.objects.filter(event__id=request.user.event_user.id)
@@ -777,8 +881,16 @@ def team_players_manage(request, id):
             team_sport.save()
         user = User.objects.get(id=request.user.id)
         if request.method == "GET":
-            player_team_sport = Player_team_sport.objects.select_related('player', 'team_sport').filter(team_sport=id)     
-            return render(request, 'team/team_players_manage.html', {'player_team_sport': player_team_sport,'sexos': Sexo_types.choices,'team_sport': team_sport, 'events': Event.objects.all()})
+            player_team_sport = Player_team_sport.objects.select_related('player', 'team_sport').filter(team_sport=id) 
+            context = {
+                'player_team_sport': player_team_sport,
+                'sexos': Sexo_types.choices,
+                'team_sport': team_sport, 
+                'events': Event.objects.all(), 
+                'events_unit': Event_unit.objects.filter(event=team_sport.event)
+                }   
+            print(context)
+            return render(request, 'team/team_players_manage.html', context)
         else:
             print(request.POST)
             if request.POST.get("player_delete"):
@@ -793,11 +905,17 @@ def team_players_manage(request, id):
             elif request.POST.get("edit-name"):
                 player = Player.objects.get(id=request.POST.get("edit-player-id"))
                 player.name = request.POST.get("edit-name")
-                player.classroom = request.POST.get('edit-classroom')
+                if team_sport.team.event.general_need_unit:
+                    player.unit = Event_unit.objects.get(id=int(request.POST.get('edit-unit')))
                 if team_sport.team.event.player_need_registration:
                     player.registration = request.POST.get("edit-registration")
                 if team_sport.team.event.player_need_date_nasc:
-                    player.date_nasc = request.POST.get("edit-date")
+                    date_nasc = datetime.strptime(request.POST.get("edit-date"), "%Y-%m-%d")
+                    date_today = date.today()
+                    if (date_today.year - date_nasc.year) < team_sport.team.event.age:
+                        messages.error(request, "Não conseguimos atualizar a data de nascimento por conta da idade mínima :(")
+                    else:
+                        player.date_nasc = request.POST.get("edit-date")
                 if team_sport.team.event.player_need_sexo:
                     player.sexo = request.POST.get("edit-sexo")
                 if team_sport.team.event.player_need_photo:
@@ -855,7 +973,8 @@ def team_players_manage(request, id):
                 if team_sport.team.event.player_need_date_nasc:
                     date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d")
                     date_today = date.today()
-                    if (date_today.year - date_nasc.year) > 19:
+                    print(date.today(), date_today.year - date_nasc.year)
+                    if (date_today.year - date_nasc.year) < team_sport.team.event.age:
                         messages.error(request, "O atleta não pode ser cadastrado por conta da idade :(")
                         print("O atleta não pode ser cadastrado por conta da idade :(")
                         return redirect('team_players_manage', team_sport.id)
@@ -866,7 +985,7 @@ def team_players_manage(request, id):
                         status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
                         if status: return redirect('team_players_manage', team_sport.id)
 
-                if team_sport.team.event.player_need_photo:
+                if team_sport.team.event.player_need_photo_goal:
                     photo_goal = request.FILES.get('photo_goal')
                     if photo_goal:
                         status = type_file(request, ['.png','.jpg','.jpeg'], photo_goal, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
@@ -891,9 +1010,16 @@ def team_players_manage(request, id):
                     print("criando novo atleta")
                 else:
                     player = Player.objects.get(name=name, admin=user, event=team_sport.event)
-                player.classroom = request.POST.get('classroom')
+                if team_sport.team.event.general_need_unit:
+                    if request.user.type == 2:
+                        player.unit = Event_unit.objects.get(id=request.user.unit.id)
+                        print("A: ",player.unit)
+                    else:
+                        player.unit = Event_unit.objects.get(id=int(request.POST.get('unit')))
                 if team_sport.team.event.player_need_date_nasc:
                     player.date_nasc = date_nasc
+                if team_sport.team.event.player_need_address:
+                    player.address = request.POST.get('description')
                 if team_sport.team.event.player_need_registration:
                     player.registration = request.POST.get('registration')
                 if team_sport.team.event.player_need_cpf:
@@ -901,7 +1027,7 @@ def team_players_manage(request, id):
                     player.cpf = cpf.replace("-","").replace(".","")
                 if team_sport.team.event.player_need_photo:
                     player.photo = photo
-                if team_sport.team.event.player_need_photo:
+                if team_sport.team.event.player_need_photo_goal:
                     player.photo_goal = photo_goal
                 if team_sport.team.event.player_need_bulletin:
                     player.bulletin = bulletin
@@ -1961,11 +2087,12 @@ def banner_manage(request):
 
 @login_required(login_url="login")
 def upload_document(request):
-    try:
-        termo = Terms_Use.objects.get(usuario=request.user)
-    except Terms_Use.DoesNotExist:
-        termo = Terms_Use(usuario=request.user)
-
+    termo = User.objects.get(id=request.user.id)
+    if not request.user.event_user.general_need_authorization:
+        return redirect('boss_data')
+    if termo.document:
+        return redirect('boss_data')
+    
     if request.method == 'POST':
         document = request.FILES.get('document')
         if document:
@@ -1981,30 +2108,31 @@ def upload_document(request):
 
 @login_required(login_url="login")
 def boss_data(request):
-    try:
-        termo = Terms_Use.objects.get(usuario=request.user)
+    termo = User.objects.get(id=request.user.id)
+    if request.user.event_user.general_need_authorization:
         if not termo.document:
             return redirect('upload_document')
-    except Terms_Use.DoesNotExist:
-        return redirect('upload_document')
+    if termo.email and termo.photo and termo.telefone:
+        return redirect('terms_use')
 
     if request.method == 'POST':
-        nome = request.POST.get('name')
-        siape = request.POST.get('siape')
+        password = request.POST.get('password')
+        name = request.POST.get('name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         photo = request.FILES.get('photo')
 
-        if nome and siape and photo and email and phone:
-            termo.name = nome
-            termo.siape = siape
+        if password and photo and email and phone and name:
+            termo.first_name = name
             termo.email = email
-            termo.phone = phone
+            termo.telefone = phone
             if photo: 
                 status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
                 if status: return redirect('boss_data')
             termo.photo = photo
+            termo.set_password(password)
             termo.save()
+            update_session_auth_hash(request, termo)
             return redirect('terms_use')
         else:
             messages.error(request, 'Você precisa preencher todas as informações!')
@@ -2015,33 +2143,33 @@ def boss_data(request):
 
 @login_required(login_url="login")
 def terms_use(request):
-    try:
-        termo = Terms_Use.objects.get(usuario=request.user)
-        if not termo.document:
+    user = User.objects.get(id=request.user.id)
+    if request.user.event_user.general_need_authorization:
+        if not user.document:
             return redirect('upload_document')
-        if not (termo.name and termo.siape and termo.email and termo.phone and termo.photo):
-            return redirect('boss_data')
-    except Terms_Use.DoesNotExist:
-        return redirect('upload_document')
+    if not (user.email and user.photo and user.telefone and user.first_name):
+        return redirect('boss_data')
+    if user.accepted:
+        return redirect('Home')
 
     if request.method == 'POST':
         if request.POST.get('accept') == 'on':
-            termo.accepted = True
-            termo.accepted_at = timezone.now()
-            termo.save()
+            user.accepted = True
+            user.accepted_at = timezone.now()
+            user.save()
 
             Voluntary.objects.create(
-                name=termo.name,
-                photo=termo.photo,
-                campus=request.user.campus,
-                registration=termo.siape,
+                name=user.first_name,
+                photo=user.photo,
+                unit=user.unit,
                 admin=request.user,
-                type_voluntary=4
+                event=user.event_user,
+                type_voluntary=2
             )
 
             return redirect('Home')
 
-    return render(request, 'terms/terms_use.html' , {'termo': termo})
+    return render(request, 'terms/terms_use.html' , {'termo': user})
 
 @login_required(login_url="login")  
 def settings(request):

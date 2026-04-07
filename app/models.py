@@ -151,12 +151,22 @@ class Event(models.Model):
 
     player_need_instagram = models.BooleanField(default=True) 
     player_need_photo = models.BooleanField(default=True) 
+    player_need_photo_goal = models.BooleanField(default=True) 
     player_need_bulletin = models.BooleanField(default=True) 
     player_need_rg = models.BooleanField(default=True) 
     player_need_sexo = models.BooleanField(default=True) 
     player_need_registration = models.BooleanField(default=True) 
     player_need_cpf = models.BooleanField(default=True) 
     player_need_date_nasc = models.BooleanField(default=True) 
+    player_need_address = models.BooleanField(default=True) 
+
+    team_need_description = models.BooleanField(default=True) 
+    team_need_color = models.BooleanField(default=True) 
+
+    general_need_terms = models.BooleanField(default=True) 
+    general_need_authorization = models.BooleanField(default=True) 
+    general_need_unit = models.BooleanField(default=True) 
+
 
     def __str__(self):
         return self.name
@@ -173,6 +183,13 @@ class Event_sport(models.Model):
 
     def __str__(self):
         return f"{self.event.name} | {self.get_sport_display()}"
+    
+class Event_unit(models.Model):
+    name = models.CharField(max_length=100 ,null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="unit_set")
+
+    def __str__(self):
+        return f"{self.event.name} | {self.name}"
 
 class Event_need(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="need_set")
@@ -184,8 +201,12 @@ class CustomUser(AbstractUser):
     team = models.ForeignKey('Team', on_delete=models.CASCADE, blank=True, null=True)
     event_user = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True, null=True, related_name="user_set")
     type = models.IntegerField(choices=Users_types.choices, default=3)
-    address = models.CharField(max_length=200, blank=True, null=True)
-
+    unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
+    address = models.CharField(max_length=200, blank=True, null=True)    
+    document = models.FileField(upload_to='document_boss/', null=True, blank=True)
+    accepted = models.BooleanField(default=False)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    
     def __str__(self):
         return self.username
 
@@ -207,7 +228,8 @@ class Help(models.Model):
 class Player(models.Model):
     name = models.CharField(max_length=100)
     instagram = models.CharField(max_length=100, blank=True, null=True)
-    classroom = models.CharField(max_length=100, blank=True, null=True)
+    unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
+    address = models.CharField(max_length=300, blank=True, null=True)
     photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     photo_goal = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     bulletin = models.FileField(upload_to='bulletins/', blank=True, null=True)
@@ -225,6 +247,7 @@ class Player(models.Model):
 class Voluntary(models.Model):
     name = models.CharField(max_length=100)
     photo = models.ImageField(upload_to='photo_voluntary/', default='defaults/person.png', blank=True, null=True)
+    unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
     registration = models.CharField(max_length=11, default="00000000000", blank=True, null=True)
     admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type_voluntary = models.IntegerField(choices=Type_service.choices, default=Type_service.voluntary)
@@ -236,6 +259,7 @@ class Voluntary(models.Model):
 class Team(models.Model):
     name = models.CharField(max_length=100, blank=True)
     description = models.TextField(max_length=200, blank=True, null=True)
+    unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
     color = models.TextField(max_length=7, default="#02007a",blank=True, null=True)
     photo = models.ImageField(upload_to='logo_team/', default='defaults/team.png', blank=True, null=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)

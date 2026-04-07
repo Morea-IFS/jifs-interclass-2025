@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Event_unit, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -14,13 +14,13 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = UserAdmin.fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address', 'document', 'accepted', 'accepted_at', 'unit')
         }),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informações adicionais', {
-            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address')
+            'fields': ('telefone', 'date_nasc', 'photo', 'team', 'event_user', 'type', 'address', 'document', 'accepted', 'accepted_at', 'unit')
         }),
     )
 
@@ -31,6 +31,11 @@ class CustomUserAdmin(UserAdmin):
 class Settings_accessAdmin(admin.ModelAdmin):
     list_display = ('id','start','end')
     search_fields = ('id','start','end')
+
+@admin.register(Event_unit)
+class Event_unitAdmin(admin.ModelAdmin):
+    list_display = ('id','event','name')
+    search_fields = ('id','event','name')
 
 @admin.register(Event_sport)
 class Event_sportAdmin(admin.ModelAdmin):
