@@ -67,6 +67,11 @@
     .input-search-adm input{
         width: 100%;
     }
+    .all-block, .block1 {
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
 </style>
 {% endblock navbar %}
 
@@ -92,13 +97,18 @@
         </form>
         {% endif %}
 
-        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+        <section class="all-table" style="width: 100%; margin-top: 15px;">
             <table id="search-table" style="width: 100%;">
                 <tr class="hidden">
                     <th>ID</th>
                     <th>NOME</th>
                     <th>TURMA</th>
                     {% if team_sport.team.event.player_need_registration %}<th>MATRÍCULA</th>{% endif %}
+                    {% if team_sport.team.event.player_need_cpf %}<th>CPF</th>{% endif %}
+                    {% if team_sport.team.event.player_need_course %}<th>CURSO</th>{% endif %}
+                    {% if team_sport.team.event.player_need_cep %}<th>CEP</th>{% endif %}
+                    {% if team_sport.team.event.player_need_municipality %}<th>MUNICÍPIO/UF</th>{% endif %}
+                    {% if team_sport.team.event.player_need_address %}<th>ENDEREÇO COMPLETO</th>{% endif %}
                     {% if team_sport.team.event.player_need_sexo %}<th>SEXO</th>{% endif %}
                     {% if team_sport.team.event.player_need_date_nasc %}<th>DATA NASC.</th>{% endif %}
                     {% if team_sport.team.event.player_need_photo %}<th>FOTO</th>{% endif %}
@@ -114,6 +124,11 @@
                     <td>{{ i.player.name }}</td>
                     {% if team_sport.team.event.general_need_unit %}<td>{{ i.player.unit.name }}</td>{% endif %}
                     {% if team_sport.team.event.player_need_registration %}<td>{{i.player.registration}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_cpf %}<td>{{i.player.cpf}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_course %}<td>{{i.player.course}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_cep %}<td>{{i.player.cep}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_municipality %}<td>{{i.player.municipality}}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_address and i.player.address %}<td>{{i.player.address}}</td> {% else %} <td>Não informado</td> {% endif %}
                     {% if team_sport.team.event.player_need_sexo %}<td>{{i.player.get_sexo_display}}</td>{% endif %}
                     {% if team_sport.team.event.player_need_date_nasc %}<td>{{i.player.date_nasc}}</td>{% endif %}
                     {% if team_sport.team.event.player_need_photo %}
@@ -144,7 +159,7 @@
 
                     {% if perms.app.change_player_team_sport and perms.app.change_player %}
                     <td>
-                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:""}}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
+                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:""}}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_cpf %}{{ i.player.cpf|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_course %}{{ i.player.course|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_cep %}{{ i.player.cep|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_municipality %}{{ i.player.municipality|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_address %}{{ i.player.address|default:"" }}{% else %}{% endif %}')">
                     </td>
                     {% endif %}
 
@@ -207,10 +222,29 @@
                 placeholder="CPF*" required maxlength="14">
             {% endif %}
 
+            {% if team_sport.team.event.player_need_course %}
+            <label for="registration">CURSO</label>
+            <input type="text" id="course" name="course"
+                placeholder="Curso*" required maxlength="100">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_cep %}
+            <label for="registration">CEP</label>
+            <input type="text" id="cep" name="cep"
+                placeholder="CEP* (Somente números)" required maxlength="10">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_municipality %}
+            <label for="registration">MUNICIPIO/UF</label>
+            <input type="text" id="municipality" name="municipality"
+                placeholder="Ex: LAGARTO/SE*" required maxlength="100">
+            {% endif %}
+
+
             {% if team_sport.team.event.player_need_address %}
 
-            <label for="description">Endereço</label>
-            <textarea name="description" id="description" maxlength="200"></textarea>
+            <label for="address">ENDEREÇO COMPLETO</label>
+            <textarea name="address" id="address" placeholder="Rua, Bairro e Número*" required maxlength="200"></textarea>
 
             {% endif %}
 
@@ -274,6 +308,31 @@
             <p style="color: #6d6c6c; font-size: 14px;">*Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.</p>
             {% endif %}
 
+            {% if team_sport.team.event.player_need_cpf %}
+            <label>CPF</label>
+            <input id="editPlayerCpf" type="text" name="edit-cpf" maxlength="14" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_course %}
+            <label>Curso</label>
+            <input id="editPlayerCourse" type="text" name="edit-course" maxlength="100" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_cep %}
+            <label>CEP</label>
+            <input id="editPlayerCep" type="text" name="edit-cep" maxlength="10" placeholder="Somente números" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_municipality %}
+            <label>Município/UF</label>
+            <input id="editPlayerMunicipality" type="text" name="edit-municipality" maxlength="100" placeholder="Ex: LAGARTO/SE" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_address %}
+            <label>ENDEREÇO COMPLETO</label>
+            <textarea id="editPlayerAddress" name="edit-address" placeholder="Rua, Bairro e Número*" maxlength="200" required></textarea>
+            {% endif %}
+
             {% if team_sport.team.event.player_need_date_nasc %}
             <label>Data nasc.</label>
             <input id="editPlayerDate" type="date" name="edit-date" required>
@@ -333,7 +392,7 @@
 
 let originalPhotoUrl = '';
 
-function openEditModal(id, name, unit, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl) {
+function openEditModal(id, name, unit, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl, cpf, course, cep, municipality, address) {
  
     originalPhotoUrl = photoUrl || '';
     originalPhotoUrlgol = photoGoalUrl || '';
@@ -347,6 +406,21 @@ function openEditModal(id, name, unit, registration, sexo, data_nasc, photoUrl, 
     }
     if(document.getElementById("editPlayerRegistration")) {
         document.getElementById("editPlayerRegistration").value = registration || '';
+    }
+    if(document.getElementById("editPlayerCpf")) {
+        document.getElementById("editPlayerCpf").value = cpf || '';
+    }
+    if(document.getElementById("editPlayerCourse")) {
+        document.getElementById("editPlayerCourse").value = course || '';
+    }
+    if(document.getElementById("editPlayerCep")) {
+        document.getElementById("editPlayerCep").value = cep || '';
+    }
+    if(document.getElementById("editPlayerMunicipality")) {
+        document.getElementById("editPlayerMunicipality").value = municipality || '';
+    }
+    if(document.getElementById("editPlayerAddress")) {
+        document.getElementById("editPlayerAddress").value = address || '';
     }
 
     const dateInput = document.getElementById("editPlayerDate");

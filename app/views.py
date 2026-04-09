@@ -185,6 +185,9 @@ def event_manage(request):
             player_need_date_nasc = 'player_need_date_nasc' in request.POST
             player_need_address = 'player_need_address' in request.POST
             player_need_photo_goal = 'player_need_photo_goal' in request.POST
+            player_need_course = 'player_need_course' in request.POST
+            player_need_cep = 'player_need_cep' in request.POST
+            player_need_municipality = 'player_need_municipality' in request.POST
 
             general_need_authorization = 'general_need_authorization' in request.POST
             general_need_terms = 'general_need_terms' in request.POST
@@ -217,6 +220,9 @@ def event_manage(request):
                 player_need_date_nasc=player_need_date_nasc,
                 player_need_address=player_need_address,
                 player_need_photo_goal=player_need_photo_goal,
+                player_need_course=player_need_course,
+                player_need_cep=player_need_cep,
+                player_need_municipality=player_need_municipality,
 
                 general_need_authorization=general_need_authorization,
                 general_need_terms=general_need_terms,
@@ -907,6 +913,8 @@ def team_players_manage(request, id):
                 player.name = request.POST.get("edit-name")
                 if team_sport.team.event.general_need_unit:
                     player.unit = Event_unit.objects.get(id=int(request.POST.get('edit-unit')))
+                if team_sport.team.event.player_need_address:
+                    player.address = request.POST.get('edit-address')
                 if team_sport.team.event.player_need_registration:
                     player.registration = request.POST.get("edit-registration")
                 if team_sport.team.event.player_need_date_nasc:
@@ -921,6 +929,14 @@ def team_players_manage(request, id):
                 if team_sport.team.event.player_need_photo:
                     if request.FILES.get("edit-photo"):
                         player.photo = request.FILES.get("edit-photo")
+                if team_sport.team.event.player_need_course:
+                    if request.POST.get("edit-course"):
+                        player.course = request.POST.get('edit-course')
+                if team_sport.team.event.player_need_cep:
+                    cep = request.POST.get('edit-cep')
+                    player.cep = cep.replace("-","").replace(".","").replace(" ","")
+                if team_sport.team.event.player_need_municipality:
+                    player.municipality = request.POST.get('edit-municipality')
                 if team_sport.team.event.player_need_photo:
                     if request.FILES.get("edit-photo-goal"):
                         player.photo_goal = request.FILES.get("edit-photo-goal")
@@ -1019,7 +1035,7 @@ def team_players_manage(request, id):
                 if team_sport.team.event.player_need_date_nasc:
                     player.date_nasc = date_nasc
                 if team_sport.team.event.player_need_address:
-                    player.address = request.POST.get('description')
+                    player.address = request.POST.get('address')
                 if team_sport.team.event.player_need_registration:
                     player.registration = request.POST.get('registration')
                 if team_sport.team.event.player_need_cpf:
@@ -1027,6 +1043,13 @@ def team_players_manage(request, id):
                     player.cpf = cpf.replace("-","").replace(".","")
                 if team_sport.team.event.player_need_photo:
                     player.photo = photo
+                if team_sport.team.event.player_need_course:
+                    player.course = request.POST.get('course')
+                if team_sport.team.event.player_need_cep:
+                    cep = request.POST.get('cep')
+                    player.cep = cep.replace("-","").replace(".","").replace(" ","")
+                if team_sport.team.event.player_need_municipality:
+                    player.municipality = request.POST.get('municipality')
                 if team_sport.team.event.player_need_photo_goal:
                     player.photo_goal = photo_goal
                 if team_sport.team.event.player_need_bulletin:
@@ -1035,6 +1058,7 @@ def team_players_manage(request, id):
                     player.sexo = team_sport.sexo
                 if team_sport.team.event.player_need_rg:
                     player.rg = rg
+
                 player.save()
 
                 if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
