@@ -196,6 +196,10 @@ def event_manage(request):
             team_need_description = 'team_need_description' in request.POST
             team_need_color = 'team_need_color' in request.POST
 
+            terms_intro_text = request.POST.get('terms_intro_text', '').strip() or None
+            terms_declaration_text = request.POST.get('terms_declaration_text', '').strip() or None
+            upload_intro_text = request.POST.get('upload_intro_text', '').strip() or None
+
             Event.objects.create(
                 name=name,
                 logo=logo,
@@ -231,6 +235,9 @@ def event_manage(request):
                 team_need_description=team_need_description,
                 team_need_color=team_need_color,
                 
+                terms_intro_text=terms_intro_text,
+                terms_declaration_text=terms_declaration_text,
+                upload_intro_text=upload_intro_text,
             )
 
         return redirect('event_manage')

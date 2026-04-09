@@ -103,11 +103,17 @@
     }
 
     form input, form textarea {
-        width: 100%;
-        padding: 10px;
-        margin-top: 5px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+    form textarea {
+        min-height: 120px;
+        resize: vertical;
     }
 
     form button {
@@ -277,12 +283,32 @@
 
             <label for="regulation">Regulamento (PDF):</label>
             <input type="file" name="regulation" id="regulation">
-
             <br>
             <hr>
+            
             <h2 style="margin-top: 30px;">Campos obrigatórios</h3>
 
-            <div class="toggle-label"><span>Termos</span><label class="toggle-switch"><input type="checkbox" name="general_need_terms" checked><span class="slider"></span></label></div>
+            <div class="toggle-label">
+                <span>Termos</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="general_need_terms" id="general_need_terms" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div id="terms-fields">
+                <label for="terms_intro_text">Introdução dos Termos de Uso:</label>
+                <textarea name="terms_intro_text" id="terms_intro_text" rows="4"
+                    placeholder="Ex: Leia atentamente os termos de uso antes de utilizar o sistema."></textarea>
+
+               <textarea name="terms_declaration_text" id="terms_declaration_text" rows="6"
+                    placeholder="Eu, {% templatetag openvariable %} user.first_name {% templatetag closevariable %}, responsável por {% templatetag openvariable %} user.team.name {% templatetag closevariable %}, declaro que aceito participar de(o) {% templatetag openvariable %} user.event_user.description {% templatetag closevariable %} - {% templatetag openvariable %} user.event_user.name {% templatetag closevariable %}, respeitando e seguindo o regulamento geral e específico da competição."></textarea>
+
+                <label for="upload_intro_text">Texto do Envio de Documento:</label>
+                <textarea name="upload_intro_text" id="upload_intro_text" rows="4"
+                    placeholder="Ex: Por favor, envie a Declaração de Autorização de acesso ao sistema, conforme orientado pelo coordenador do evento, para prosseguirmos com o processo."></textarea>
+            </div>
+
             <div class="toggle-label"><span>Autorização</span><label class="toggle-switch"><input type="checkbox" name="general_need_authorization" checked><span class="slider"></span></label></div>
             <div class="toggle-label"><span>Unidade</span><label class="toggle-switch"><input type="checkbox" name="general_need_unit" checked><span class="slider"></span></label></div>
 
@@ -406,11 +432,30 @@
         document.getElementById("unitModal").style.display = "none";
     }
 
+    document.addEventListener("DOMContentLoaded", function() {
+    const checkbox = document.getElementById("general_need_terms");
+    if (checkbox) {
+        checkbox.addEventListener("change", toggleTermsFields);
+        toggleTermsFields();
+    }
+});
+
     window.onclick = function(event) {
         const modal = document.getElementById("eventModal");
         if (event.target == modal) {
             modal.style.display = "none";
         }
     }
+
+    function toggleTermsFields() {
+    const checkbox = document.getElementById("general_need_terms");
+    const fields = document.getElementById("terms-fields");
+
+    if (checkbox.checked) {
+        fields.style.display = "block";
+    } else {
+        fields.style.display = "none";
+    }
+}
 </script>
 {% endblock content %}

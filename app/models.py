@@ -170,6 +170,10 @@ class Event(models.Model):
     general_need_authorization = models.BooleanField(default=True) 
     general_need_unit = models.BooleanField(default=True) 
 
+    terms_intro_text = models.TextField(blank=True, null=True)
+    terms_declaration_text = models.TextField(blank=True, null=True)
+    upload_intro_text = models.TextField(blank=True, null=True)
+
 
     def __str__(self):
         return self.name

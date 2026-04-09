@@ -1,4 +1,6 @@
 {% load static %}
+{% load render_text %}
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -12,11 +14,26 @@
 </head>
 <body>
     <main>
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    createToast("{{ message.tags }}", "{{ message }}");
+                </script>
+            {% endfor %}
+        {% endif %}
         <div class="all">
             <div class="container" style="min-height: 38em;">
                 <h1 class="title">Envio de Documento</h1>
+
                 <div class="content">
-                    <p style="text-align: justify;">Por favor, envie a Declaração de Autorização de acesso ao sistema, conforme orientado pelo coordenador do evento, para prosseguirmos com o processo.</p>
+                    <p style="text-align: justify;">
+                        {% if user.event_user.upload_intro_text %}
+                            {{ user.event_user.upload_intro_text|render_with_user:user }}
+                        {% else %}
+                            Por favor, envie a Declaração de Autorização de acesso ao sistema,
+                            conforme orientado pelo coordenador do evento, para prosseguirmos com o processo.
+                        {% endif %}
+                    </p>
                 </div>
                 <form method="post" enctype="multipart/form-data" class="form-checkbox" style="height: 22em; justify-content: flex-end; gap: 10em;">
                     {% csrf_token %}
@@ -29,7 +46,17 @@
             </div>
         </div>
     </main>
+    <ul class="notifications"></ul>
+    <script src="{% static 'js/messages.js' %}"></script>
+    <script>
+        {% if messages %}
+            {% for message in messages %}
+                createToast("{{ message.tags }}", "{{ message|escapejs }}");
+            {% endfor %}
+        {% endif %}
+    </script>
     <script src="{% static 'js/script.js' %}"></script>
+
     <script>
         const inputFile = document.getElementById('document');
         const label = document.querySelector('label[for="document"]');

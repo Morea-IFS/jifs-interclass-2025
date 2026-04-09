@@ -14,6 +14,13 @@
 
 <body>
     <main>
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    createToast("{{ message.tags }}", "{{ message }}");
+                </script>
+            {% endfor %}
+        {% endif %}
         <div class="all">
             <div class="container">
                 <h1 class="title">Dados do usuário</h1>
@@ -51,7 +58,17 @@
             </div>
         </div>
     </main>
+    <ul class="notifications"></ul>
+    <script src="{% static 'js/messages.js' %}"></script>
+    <script>
+        {% if messages %}
+            {% for message in messages %}
+                createToast("{{ message.tags }}", "{{ message|escapejs }}");
+            {% endfor %}
+        {% endif %}
+    </script>
     <script src="{% static 'js/script.js' %}"></script>
+
     <script>
         const inputFile = document.getElementById('photo');
         const label = document.querySelector('label[for="photo"]');
