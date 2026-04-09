@@ -195,6 +195,7 @@ def event_manage(request):
 
             team_need_description = 'team_need_description' in request.POST
             team_need_color = 'team_need_color' in request.POST
+            team_need_technician = 'team_need_technician' in request.POST
 
             terms_intro_text = request.POST.get('terms_intro_text', '').strip() or None
             terms_declaration_text = request.POST.get('terms_declaration_text', '').strip() or None
@@ -234,6 +235,7 @@ def event_manage(request):
 
                 team_need_description=team_need_description,
                 team_need_color=team_need_color,
+                team_need_technician=team_need_technician,
                 
                 terms_intro_text=terms_intro_text,
                 terms_declaration_text=terms_declaration_text,

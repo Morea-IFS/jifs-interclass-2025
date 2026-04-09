@@ -12,17 +12,17 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='event',
+            name='upload_intro_text',
+            field=models.TextField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='event',
             name='terms_declaration_text',
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name='event',
             name='terms_intro_text',
-            field=models.TextField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='event',
-            name='upload_intro_text',
             field=models.TextField(blank=True, null=True),
         ),
     ]

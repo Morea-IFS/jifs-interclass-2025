@@ -165,14 +165,15 @@ class Event(models.Model):
 
     team_need_description = models.BooleanField(default=True) 
     team_need_color = models.BooleanField(default=True) 
+    team_need_technician = models.BooleanField(default=True) 
 
     general_need_terms = models.BooleanField(default=True) 
     general_need_authorization = models.BooleanField(default=True) 
     general_need_unit = models.BooleanField(default=True) 
 
+    upload_intro_text = models.TextField(blank=True, null=True)
     terms_intro_text = models.TextField(blank=True, null=True)
     terms_declaration_text = models.TextField(blank=True, null=True)
-    upload_intro_text = models.TextField(blank=True, null=True)
 
 
     def __str__(self):

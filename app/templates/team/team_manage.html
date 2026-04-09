@@ -420,6 +420,8 @@
                 <option value="1">Feminino</option>
                 <option value="2">Misto</option>
             </select>
+
+            {% if event.team_need_color %}
             <label for="esportes">Técnico</label>
             <select id="times" name="technitian">
                 <option selected disabled value="None">Selecione o técnico</option>
@@ -427,6 +429,7 @@
                 <option value="{{i.id}}">{{i.name}}</option>
                 {% endfor %}
             </select>
+            {% endif %}
             <input type="hidden" name="add-team-sport" id="addTimeId">
             <button class="button-modal" type="submit">Adicionar esporte</button>
         </form>
