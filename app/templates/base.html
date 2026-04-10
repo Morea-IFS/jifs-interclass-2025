@@ -110,6 +110,12 @@
                                 {% if perms.app.data %}
                                 <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
                                 {% endif %}
+                                {% if perms.app.data or user.type == 2 %}
+                                <a href="{% url 'spreadsheet' %}">
+                                    <span class="submenu-marker">└─</span>
+                                    <i class="fa-solid fa-file-excel"></i>PLANILHAS
+                                </a>
+                                {% endif %}
                                 {% if perms.app.view_certificate and perms.app.add_certificate %}
                                 <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>CERTIFICADOS</a>
                                 {% endif %}

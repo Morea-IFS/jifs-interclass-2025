@@ -69,6 +69,9 @@ urlpatterns = [
     path('generator/certificate', views.generator_certificate, name="certificate"),
     path('generator/data', views.generator_data, name="data"),
 
+    path('spreadsheet/', views.generator_spreadsheet, name='spreadsheet'),
+
+
     #API
     path('get_teams/', views.get_teams, name='get_teams'),
     path('get_sexos/', views.get_sexos, name='get_sexos'),

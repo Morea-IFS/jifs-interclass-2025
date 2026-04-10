@@ -24,6 +24,11 @@ from .decorators import terms_accept_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.urls import reverse
 from django.contrib.auth import update_session_auth_hash
+from django.core.exceptions import PermissionDenied
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+import io
 
 User = get_user_model()
 
@@ -3433,6 +3438,360 @@ def generator_data(request):
         HTML(string=html_string).write_pdf(response)
 
         return response
+
+def generate_spreadsheet(players, event_name, label):
+    wb = Workbook()
+
+    thin = Side(style='thin', color='000000')
+    medium = Side(style='medium', color='000000')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    header_font = Font(name='Arial', size=10, bold=True)
+    body_font = Font(name='Arial', size=10)
+
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+
+    fill_header_pag = PatternFill(fill_type='solid', fgColor='BDBDBD')
+    fill_header_end = PatternFill(fill_type='solid', fgColor='AEABAB')
+    fill_white = PatternFill(fill_type='solid', fgColor='FFFFFF')
+
+    def make_header(ws, headers, widths, fill_color):
+        ws.row_dimensions[1].height = 35
+
+        for i, (header, width) in enumerate(zip(headers, widths), start=1):
+            ws.column_dimensions[get_column_letter(i)].width = width
+            cell = ws.cell(row=1, column=i, value=header)
+            cell.font = header_font
+            cell.fill = PatternFill(fill_type='solid', fgColor=fill_color)
+            cell.alignment = center
+            cell.border = Border(left=thin, right=thin, top=medium, bottom=thin)
+
+    def style_row(ws, row_num, num_cols, center_cols=()):
+        for col in range(1, num_cols + 1):
+            cell = ws.cell(row=row_num, column=col)
+            cell.font = body_font
+            cell.fill = fill_white
+            cell.border = border
+            cell.alignment = center if col in center_cols else left
+
+    # ABA 1 - PAGAMENTO
+    ws1 = wb.active
+    ws1.title = 'PLANILHA DE PAGAMENTO'
+
+    headers_pag = [
+        'SEQ',
+        'MATRÍCULA',
+        'NOME DO ALUNO',
+        'CPF/CHAVE PIX [Somente Números]',
+        'VALOR',
+        'CURSO',
+        'AUXÍLIO [Descrição]',
+        'EVENTO',
+        'VALOR TOTAL',
+    ]
+
+    widths_pag = [5.86, 13.29, 44.14, 24.00, 14.29, 29.71, 20.00, 20.00, 16.00]
+    make_header(ws1, headers_pag, widths_pag, 'BDBDBD')
+
+    for seq, player in enumerate(players, start=1):
+        ws1.append([
+            seq,
+            player.registration or '',
+            player.name or '',
+            (player.cpf or '').replace('.', '').replace('-', '').replace('/', ''),
+            '',          # VALOR
+            player.course or '',
+            '',          # AUXÍLIO [Descrição]
+            event_name,  # EVENTO
+            '',          # VALOR TOTAL fica vazio nas linhas
+        ])
+
+        style_row(ws1, ws1.max_row, len(headers_pag), center_cols=(1, 2, 4, 5, 8, 9))
+
+    # linha de total geral
+    first_data_row = 2
+    last_data_row = ws1.max_row
+    total_row = last_data_row + 1
+
+    # deixa a linha inteira estilizada
+    style_row(ws1, total_row, len(headers_pag), center_cols=(1, 2, 4, 5, 8, 9))
+
+    # rótulo do total
+    ws1.cell(row=total_row, column=8, value='TOTAL GERAL')
+    ws1.cell(row=total_row, column=8).font = header_font
+    ws1.cell(row=total_row, column=8).alignment = center
+    ws1.cell(row=total_row, column=8).border = border
+    ws1.cell(row=total_row, column=8).fill = fill_white
+
+    # fórmula somando toda a coluna VALOR
+    if last_data_row >= first_data_row:
+        ws1.cell(row=total_row, column=9, value=f'=SUM(E{first_data_row}:E{last_data_row})')
+    else:
+        ws1.cell(row=total_row, column=9, value='')
+
+    ws1.cell(row=total_row, column=9).font = header_font
+    ws1.cell(row=total_row, column=9).alignment = center
+    ws1.cell(row=total_row, column=9).border = border
+    ws1.cell(row=total_row, column=9).fill = fill_white
+
+    for row in range(2, ws1.max_row + 1):
+        ws1.cell(row=row, column=5).number_format = 'R$ #,##0.00'
+        ws1.cell(row=row, column=9).number_format = 'R$ #,##0.00'
+
+    # ABA 2 - ENDEREÇO
+    ws2 = wb.create_sheet('PLANILHA DE ENDEREÇO')
+
+    headers_end = [
+        'SEQ.',
+        'MATRÍCULA',
+        'NOME DO ALUNO',
+        'CPF / CHAVE PIX [Somente Números]',
+        'CURSO',
+        'ENDEREÇO COMPLETO [Rua, Bairro e Número]',
+        'CEP [Somente Números]',
+        'MUNICÍPIO/UF',
+    ]
+
+    widths_end = [5.86, 13.29, 37.57, 24.00, 29.71, 63.86, 18.00, 26.0]
+    make_header(ws2, headers_end, widths_end, 'AEABAB')
+
+    for seq, player in enumerate(players, start=1):
+        ws2.append([
+            seq,
+            player.registration or '',
+            player.name or '',
+            (player.cpf or '').replace('.', '').replace('-', '').replace('/', ''),
+            player.course or '',
+            player.address or '',
+            (player.cep or '').replace('-', '').replace('.', ''),
+            player.municipality or '',
+        ])
+
+        style_row(ws2, ws2.max_row, len(headers_end), center_cols=(1, 2, 4, 7, 8))
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    safe_label = (
+        label.replace(' ', '_')
+        .replace('/', '_')
+        .replace('\\', '_')
+        .lower()
+    )
+
+    response = HttpResponse(
+        buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="planilha_{safe_label}.xlsx"'
+    return response
+
+
+@login_required(login_url="login")
+@terms_accept_required
+def generator_spreadsheet(request):
+    user = request.user
+
+    # permite:
+    # - quem tem a permissão app.data
+    # - técnico (type == 2)
+    if not (user.has_perm('app.data') or user.type == 2):
+        raise PermissionDenied
+
+    current_get_params = request.GET.urlencode()
+
+    def _redirect():
+        if current_get_params:
+            return redirect(f"{reverse('spreadsheet')}?{current_get_params}")
+        return redirect('spreadsheet')
+
+    def _dedup_from_pts(pts_qs):
+        seen = set()
+        result = []
+        for pts in pts_qs:
+            if pts.player_id not in seen:
+                result.append(pts.player)
+                seen.add(pts.player_id)
+        return result
+
+    # GET — monta contexto
+    if request.method == "GET":
+        context = {}
+
+        if user.type == 0:
+            context['events'] = Event.objects.all()
+
+            selected_event = request.GET.get('e')
+            if selected_event:
+                try:
+                    event = Event.objects.get(id=selected_event)
+                    context['event'] = event
+                    context['select_event'] = selected_event
+                    context['teams'] = Team.objects.filter(event=event).order_by('name')
+                    context['event_sports'] = Event_sport.objects.filter(event=event)
+                except Event.DoesNotExist:
+                    messages.error(request, "Evento selecionado não foi encontrado.")
+
+        elif user.type == 1:
+            event = user.event_user
+            if event:
+                context['event'] = event
+                context['teams'] = Team.objects.filter(event=event).order_by('name')
+                context['event_sports'] = Event_sport.objects.filter(event=event)
+            else:
+                messages.error(request, "Seu usuário não possui evento vinculado.")
+
+        elif user.type == 2:
+            if user.event_user and user.team:
+                event = user.event_user
+                context['event'] = event
+                context['my_team'] = user.team
+                context['my_team_sports'] = (
+                    Team_sport.objects
+                    .filter(team=user.team, event=event)
+                    .select_related('sport')
+                    .order_by('sport__sport', 'sexo')
+                )
+            else:
+                messages.error(request, "Seu usuário técnico precisa ter evento e campus vinculados.")
+
+        return render(request, 'spreadsheet.html', context)
+
+    # POST — gera o xlsx
+    event_id = request.POST.get('event_data')
+    if not event_id:
+        messages.error(request, "Evento não identificado.")
+        return _redirect()
+
+    try:
+        event = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        messages.error(request, "Evento não encontrado.")
+        return _redirect()
+
+    # segurança extra por tipo de usuário
+    if user.type in [1, 2] and user.event_user != event:
+        messages.error(request, "Você não tem permissão para acessar este evento.")
+        return _redirect()
+
+    players = None
+    label = event.name
+
+    # GERAL
+    if 'p_todos' in request.POST:
+        if user.type == 2:
+            players = list(
+                Player.objects.filter(event=event, admin=user).order_by('name')
+            )
+        else:
+            players = list(
+                Player.objects.filter(event=event).order_by('name')
+            )
+        label = f'todos_{event.name}'
+
+    elif 'p_masc' in request.POST:
+        if user.type == 2:
+            players = list(
+                Player.objects.filter(event=event, admin=user, sexo=0).order_by('name')
+            )
+        else:
+            players = list(
+                Player.objects.filter(event=event, sexo=0).order_by('name')
+            )
+        label = f'masculino_{event.name}'
+
+    elif 'p_fem' in request.POST:
+        if user.type == 2:
+            players = list(
+                Player.objects.filter(event=event, admin=user, sexo=1).order_by('name')
+            )
+        else:
+            players = list(
+                Player.objects.filter(event=event, sexo=1).order_by('name')
+            )
+        label = f'feminino_{event.name}'
+
+    # POR CAMPUS
+    elif 'p_team' in request.POST:
+        if user.type not in [0, 1]:
+            messages.error(request, "Você não tem permissão para gerar esta planilha.")
+            return _redirect()
+
+        try:
+            team = Team.objects.get(id=request.POST.get('p_team'), event=event)
+        except Team.DoesNotExist:
+            messages.error(request, "Campus não encontrado neste evento.")
+            return _redirect()
+
+        pts_qs = (
+            Player_team_sport.objects
+            .filter(team_sport__team=team, player__event=event)
+            .select_related('player')
+            .order_by('player__name')
+        )
+        players = _dedup_from_pts(pts_qs)
+        label = f'{team.name}_{event.name}'
+
+    # POR MODALIDADE — superusuário/coordenador
+    elif 'p_sport' in request.POST:
+        if user.type not in [0, 1]:
+            messages.error(request, "Você não tem permissão para gerar esta planilha.")
+            return _redirect()
+
+        try:
+            event_sport = Event_sport.objects.get(id=request.POST.get('p_sport'), event=event)
+        except Event_sport.DoesNotExist:
+            messages.error(request, "Modalidade não encontrada neste evento.")
+            return _redirect()
+
+        pts_qs = (
+            Player_team_sport.objects
+            .filter(team_sport__sport=event_sport, player__event=event)
+            .select_related('player')
+            .order_by('player__name')
+        )
+        players = _dedup_from_pts(pts_qs)
+        label = f'{event_sport.get_sport_display()}_{event.name}'
+
+    # POR MODALIDADE + GÊNERO — técnico
+    elif 'p_team_sport' in request.POST:
+        try:
+            team_sport_obj = Team_sport.objects.select_related('team', 'sport').get(
+                id=request.POST.get('p_team_sport'),
+                event=event
+            )
+        except Team_sport.DoesNotExist:
+            messages.error(request, "Modalidade da equipe não encontrada.")
+            return _redirect()
+
+        if user.type == 2 and team_sport_obj.team != user.team:
+            messages.error(request, "Você não tem permissão para gerar esta planilha.")
+            return _redirect()
+
+        pts_qs = (
+            Player_team_sport.objects
+            .filter(team_sport=team_sport_obj)
+            .select_related('player')
+            .order_by('player__name')
+        )
+        players = _dedup_from_pts(pts_qs)
+        label = (
+            f'{team_sport_obj.sport.get_sport_display()}_'
+            f'{team_sport_obj.get_sexo_display()}_'
+            f'{event.name}'
+        )
+
+    else:
+        messages.error(request, "Nenhum filtro de planilha foi enviado.")
+        return _redirect()
+
+    if not players:
+        messages.error(request, "Não há atletas cadastrados para os filtros selecionados.")
+        return _redirect()
+
+    return generate_spreadsheet(players, event.name, label)
 
 @time_restriction("team_manage")
 @login_required(login_url="login")
