@@ -133,6 +133,16 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.ip_address or 'desconhecido'}"
+    
+class ActivityLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    action = models.CharField(max_length=50)  # CREATE, UPDATE, DELETE
+    model_name = models.CharField(max_length=100)
+    object_name = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.model_name} - {self.timestamp}"
 
 class Event(models.Model):
     name = models.CharField(max_length=100)
@@ -147,7 +157,8 @@ class Event(models.Model):
     active = models.BooleanField(default=True) 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
-    age = models.IntegerField(default=99)
+    age = models.IntegerField(default=0)
+    age_max = models.IntegerField(default=99)
 
     player_need_instagram = models.BooleanField(default=True) 
     player_need_photo = models.BooleanField(default=True) 

@@ -8,13 +8,31 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import Group, Permission
 from .generators import generate_timer
 from django.contrib.auth import get_user_model
-from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession
+from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession, Player, ActivityLog
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
 User = get_user_model()
 default_photo_url = f"{settings.MEDIA_URL}defaults/team.png"
+
+@receiver(post_save, sender=Player)
+def log_player_save(sender, instance, created, **kwargs):
+    ActivityLog.objects.create(
+        user=instance.admin, 
+        action='CREATE' if created else 'UPDATE',
+        model_name='Player',
+        object_name=str(instance)
+    )
+
+@receiver(post_delete, sender=Player)
+def log_player_delete(sender, instance, **kwargs):
+    ActivityLog.objects.create(
+        user=instance.admin,
+        action='DELETE',
+        model_name='Player',
+        object_name=str(instance)
+    )
 
 def serialize_players(players_qs):
     result = []

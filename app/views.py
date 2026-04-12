@@ -29,6 +29,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import io
+import pytz
+from datetime import datetime as dt
+from collections import Counter
 
 User = get_user_model()
 
@@ -178,6 +181,7 @@ def event_manage(request):
             enrollment_end = request.POST.get('enrollment_end')
             local = request.POST.get('local')
             age = request.POST.get('age')
+            age_max = request.POST.get('age_max')
             regulation = request.FILES.get('regulation')
 
             player_need_instagram = 'player_need_instagram' in request.POST
@@ -217,6 +221,7 @@ def event_manage(request):
                 enrollment_end=enrollment_end,
                 local=local,
                 age=age,
+                age_max=age_max,
                 regulation=regulation,
                 user=request.user,
 
@@ -1004,7 +1009,7 @@ def team_players_manage(request, id):
                     date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d")
                     date_today = date.today()
                     print(date.today(), date_today.year - date_nasc.year)
-                    if (date_today.year - date_nasc.year) < team_sport.team.event.age:
+                    if (date_today.year - date_nasc.year) < team_sport.team.event.age and (date_today.year - date_nasc.year) > team_sport.team.event.age_max:
                         messages.error(request, "O atleta não pode ser cadastrado por conta da idade :(")
                         print("O atleta não pode ser cadastrado por conta da idade :(")
                         return redirect('team_players_manage', team_sport.id)
@@ -4028,9 +4033,91 @@ def player_list_edit(request, team_name, id, team_sexo, sport_name):
     return redirect('Home')
 
 @login_required(login_url="login")
-@terms_accept_required 
-def dashboard(request):
-    return render(request, 'guiate/dashboard.html', {'players': Player_team_sport.objects.all()})
+@terms_accept_required
+@permission_required('app.view_customuser', raise_exception=True)
+def dashboard_acesso(request):
+    user = request.user
+
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+
+    # ── Seleção de evento ──────────────────────────────────────────────────
+    select_event_id = request.GET.get('e', '')
+    if user.type == 0 and select_event_id:
+        base_sessions = UserSession.objects.filter(
+            user__event_user__id=select_event_id
+        ).select_related('user')
+        base_users = User.objects.filter(
+            event_user__id=select_event_id, type__in=[1, 2, 3]
+        ).select_related('event_user', 'team')
+    elif user.type == 0:
+        base_sessions = UserSession.objects.all().select_related('user')
+        base_users = User.objects.filter(type__in=[1, 2, 3]).select_related('event_user', 'team')
+    else:
+        base_sessions = UserSession.objects.filter(
+            user__event_user=user.event_user
+        ).select_related('user')
+        base_users = User.objects.filter(
+            event_user=user.event_user, type__in=[1, 2, 3]
+        ).select_related('event_user', 'team')
+
+    # ── Filtro de data para total de acessos ──────────────────────────────
+    date_str = request.GET.get('date', timezone.localdate().isoformat())
+    try:
+        selected_date = dt.strptime(date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        selected_date = timezone.localdate()
+
+    # ── Métricas ──────────────────────────────────────────────────────────
+    first_session  = base_sessions.order_by('created_at').first()
+    last_session   = base_sessions.order_by('-created_at').first()
+    total_day      = base_sessions.filter(created_at__date=selected_date).count()
+    total_users    = base_users.count()
+    accepted_count = base_users.filter(accepted=True).count()
+    total_sessions = base_sessions.count()
+
+    # ── Sessões recentes (serviços / acessos) ─────────────────────────────
+    recent_sessions = base_sessions.order_by('-created_at')[:30]
+
+    # ── Tabela de usuários ────────────────────────────────────────────────
+    users_data = []
+    for u in base_users.order_by('-id'):
+        last_u_session = (
+            UserSession.objects.filter(user=u).order_by('-created_at').first()
+        )
+        term = Terms_Use.objects.filter(usuario=u).order_by('-id').first()
+        users_data.append({
+            'user':        u,
+            'last_access': last_u_session.created_at if last_u_session else None,
+            'term':        term,
+            'has_doc':     bool(u.document),
+            'accepted':    u.accepted,
+            'accepted_at': u.accepted_at,
+        })
+
+    # ── Distribuição horária no dia selecionado ────────────────────────────
+    hour_counts = Counter()
+    for s in base_sessions.filter(created_at__date=selected_date):
+        local_dt = s.created_at.astimezone(brasilia_tz)
+        hour_counts[local_dt.hour] += 1
+    hourly_data = [hour_counts.get(h, 0) for h in range(24)]
+    hourly_max   = max(hourly_data) if any(hourly_data) else 1
+
+    context = {
+        'first_session':   first_session,
+        'last_session':    last_session,
+        'total_day':       total_day,
+        'selected_date':   selected_date,
+        'recent_sessions': recent_sessions,
+        'users_data':      users_data,
+        'total_users':     total_users,
+        'accepted_count':  accepted_count,
+        'total_sessions':  total_sessions,
+        'hourly_data':     hourly_data,
+        'hourly_max':      hourly_max,
+        'events':          Event.objects.all() if user.type == 0 else None,
+        'select_event':    select_event_id,
+    }
+    return render(request, 'dashboard_acesso.html', context)
 
 def allowed_pages(user):
     brasilia_tz = pytz.timezone('America/Sao_Paulo')

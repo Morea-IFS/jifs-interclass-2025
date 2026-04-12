@@ -63,7 +63,7 @@ urlpatterns = [
     path('players/<str:team_name>/list/<str:team_sexo>/<str:sport_name>', views.players_list, name="guiate_players_list"),
     path('players/<str:team_name>/edit/<int:id>/<str:team_sexo>/<str:sport_name>', views.player_list_edit, name = "player_list_edit"),
 
-    path('dashboard', views.dashboard, name="dashboard"),
+    path('dashboard-acessos/', views.dashboard_acesso, name='dashboard_acesso'),
 
     path('generator/badge', views.generator_badge, name="badge"),
     path('generator/certificate', views.generator_certificate, name="certificate"),

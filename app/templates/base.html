@@ -87,10 +87,15 @@
                         {% if user.type == 0 or user.type == 1 %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-table-cells-large"></i>DASHBOARD
+                                <i class="fa-solid fa-table-cells-large"></i>
+                                DASHBOARD
                             </button>
                             <div class="dropdown-menu">
-                                <a href="{% url 'dashboard' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>DADOS</a>
+                                <a href="{% url 'dashboard_acesso' %}">
+                                    <span class="submenu-marker">└─</span>
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    DADOS
+                                </a>
                             </div>
                         </div>
                         {% endif %}
