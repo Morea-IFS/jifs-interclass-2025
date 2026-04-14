@@ -6,6 +6,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.timezone import localtime
 from django.utils import timezone
 from django.conf import settings
+from django.db import models
+from django.contrib.sessions.models import Session
 
 # Create your models here.
 
@@ -202,6 +204,15 @@ class Event_sport(models.Model):
 
     def __str__(self):
         return f"{self.event.name} | {self.get_sport_display()}"
+
+class Event_badge(models.Model):
+    name = models.CharField(max_length=100 ,null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="badge_set")
+    number = models.CharField(max_length=1 ,null=True, blank=True)
+    file = models.FileField(upload_to='events/', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.event.name} | {self.name} | {self.number} | {self.file}"
     
 class Event_unit(models.Model):
     name = models.CharField(max_length=100 ,null=True, blank=True)
@@ -506,3 +517,37 @@ class Statement_user(models.Model):
     statement = models.ForeignKey(Statement, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+
+# DASHBOARD AQ EMBAIXO
+class AccessLog(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="access_logs"
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="access_logs"
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="access_logs"
+    )
+    accessed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-accessed_at"]
+        verbose_name = "Log de acesso"
+        verbose_name_plural = "Logs de acesso"
+
+    def __str__(self):
+        event_name = self.event.name if self.event else "Sem evento"
+        return f"{self.user} | {event_name} | {self.accessed_at:%d/%m/%Y %H:%M}"

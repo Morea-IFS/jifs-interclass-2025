@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Event_unit, ActivityLog, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, Event_badge, Event_unit, ActivityLog, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -31,6 +31,11 @@ class CustomUserAdmin(UserAdmin):
 class Settings_accessAdmin(admin.ModelAdmin):
     list_display = ('id','start','end')
     search_fields = ('id','start','end')
+
+@admin.register(Event_badge)
+class Event_badgeAdmin(admin.ModelAdmin):
+    list_display = ('id','name','number','file')
+    search_fields = ('id','name','number''file')
 
 @admin.register(ActivityLog)
 class ActivityLogAdmin(admin.ModelAdmin):

@@ -84,10 +84,10 @@
                         </div>
                         {% endif %}
 
-                        {% if user.type == 0 or user.type == 1 %}
+                        {% if user.type == 0 %}
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
-                                <i class="fa-solid fa-table-cells-large"></i>
+                                <i class="fa-solid fa-bar-chart"></i>
                                 DASHBOARD
                             </button>
                             <div class="dropdown-menu">
@@ -115,7 +115,7 @@
                                 {% if perms.app.data %}
                                 <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
                                 {% endif %}
-                                {% if perms.app.data or user.type == 2 %}
+                                {% if perms.app.data or user.type == 1 or user.type == 2 %}
                                 <a href="{% url 'spreadsheet' %}">
                                     <span class="submenu-marker">└─</span>
                                     <i class="fa-solid fa-file-excel"></i>PLANILHAS
@@ -127,7 +127,7 @@
                                 <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>ANEXOS</a>
                                 {% if user.is_staff %}
                                 <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>CONFIGURAÇÕES</a>
-                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONIFG</a>
+                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONFIG</a>
                                 {% endif %}
                             </div>
                         </div>

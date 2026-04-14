@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, QueryDict
-from .models import Sexo_types, Settings_access, UserSession, Event_unit, Detailed, Status, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
+from .models import Sexo_types, Settings_access, UserSession, Event_unit, Event_badge, Detailed, Status, Authenticity, Match_referee, Type_referee, Replacement, Group_phase, Phase, Phase_types, Campus_types, Help, Type_penalties, Detailed, Activity, Statement, Point_types, Event, Event_sport, Statement_user, Users_types, Type_service, Certificate, Attachments, Volley_match, Player, Sport_types, Voluntary, Penalties, Occurrence, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Assistance,  Banner, Terms_Use
 from django.db.models import Count, Q, Prefetch
 from .decorators import time_restriction
 from django.contrib import messages
@@ -32,6 +32,20 @@ import io
 import pytz
 from datetime import datetime as dt
 from collections import Counter
+from django.db.models.functions import TruncDate
+from django.db.models import Count
+from datetime import date, timedelta
+from datetime import date, timedelta
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required, permission_required
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from .models import AccessLog, UserSession
+from .decorators import terms_accept_required
+from datetime import date, timedelta
+from .models import AccessLog, Event
 
 User = get_user_model()
 
@@ -71,7 +85,7 @@ def event_manage(request):
         })
 
     else:
-        print(request.POST)
+        print(request.POST, request.FILES)
         if 'event' in request.POST:
             event_id = request.POST.get('event')
             sport = request.POST.get('sport')
@@ -90,30 +104,50 @@ def event_manage(request):
                 masc=masc,
                 mist=mist,
             )
+        
+        elif 'event_badge' in request.POST:
+            event_badge = request.POST.get("event_badge")
+            type_badge = request.POST.get("type_badge")
+            image_badge = request.FILES.get("image_badge")
+            if image_badge and type_badge and image_badge:
+                if Event_badge.objects.filter(event=Event.objects.get(id=event_badge), number=type_badge):
+                    event_badge = Event_badge.objects.filter(event=Event.objects.get(id=event_badge), number=type_badge)[0]
+                    event_badge.file = image_badge
+                    event_badge.save()
+                    messages.success(request, f"Sucesso! o crachá já existe. sendo assim, apenas a imagem foi trocada.")
+                else:
+                    Event_badge.objects.create(event=Event.objects.get(id=event_badge), number=type_badge, file=image_badge)
+                    messages.success(request, f"Sucesso! o crachá foi cadastrado!.")
+            else:
+                messages.error(request, f"Erro! algumas informações não foram enviadas. :(")
+                
 
-        if 'event_unit' in request.POST:
+        elif 'event_unit' in request.POST:
             print(request.POST)
             event_unit = int(request.POST.get('event_unit'))
             event=Event.objects.get(id=event_unit)
-            name_unit = request.POST.get('name_unit')
+            name_unit = request.POST.get('name_unit').replace(" ", "").replace(".", "").replace("-", "")
             create_team_user = 'create-team-user' in request.POST
-            event_unit = Event_unit.objects.create(
-                event=event,
-                name=name_unit,
-            )
+            if Event_unit.objects.filter(event=event, name=name_unit):
+                event_unit = Event_unit.objects.get(event=event, name=name_unit)
+            else:
+                event_unit = Event_unit.objects.create(
+                    event=event,
+                    name=name_unit,
+                )
             event_unit.save()
             if create_team_user:
-                
+                if Team.objects.filter(name=name_unit, unit=event_unit, event=event):
+                    if User.objects.filter(username=f"admin.{name_unit.lower()}{event.id}", type=2, team=Team.objects.get(name=name_unit, unit=event_unit, event=event), event_user=event, unit=event_unit):
+                        messages.info(request, f"Erro! Já existe um time e um usuário que está associada a unidade.")
+                        return redirect('event_manage')
                 team = Team.objects.create(name=name_unit, unit=event_unit, event=event, status=False)
                 team.save()
-                list = []
+                list = [] 
                 possibilidade = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
-                number = random.randint(1, 8)
-                chars = ''.join(random.sample(possibilidade, number))
-                list.append(chars)
+                list.append(''.join(random.sample(possibilidade, 8)))
                 result = str(''.join(list))
-                print(result)
-                User.objects.create_user(username=f"admin.{name_unit.lower()}", password=result, type=2, team=team, event_user=event, unit=event_unit)
+                user = User.objects.create_user(username=f"admin.{name_unit.lower()}{event.id}", password=result, type=2, team=team, event_user=event, unit=event_unit)
                 messages.success(request, f"Sucesso! Unidade cadastrada com exito.")
                 
                 cont = {
@@ -156,16 +190,15 @@ def event_manage(request):
                 name_html = 'data-welcome'
                 name_pdf = f'boas vindas, {name_unit.lower()}'
 
-                cont['name'] = name_unit
+                cont['name'] = user.username
                 cont['qrcode'] = img_base64
                 cont['password'] = result
             
                 html_string = render_to_string(f'generator/{name_html}.html', cont)
 
                 response = HttpResponse(content_type='application/pdf')
-                response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
-                #response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
-
+                #response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'  #gerar e deixar no navegador
+                response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"' #gerar e baixar no navegador
                 HTML(string=html_string).write_pdf(response)
 
                 return response
@@ -645,47 +678,7 @@ def player_edit(request, id):
     except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('Home')
 
-@time_restriction("team_manage")
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.change_player', raise_exception=True)
-def team_players_edit(request, id, team):
-    try:
-        team_sport = Team_sport.objects.get(id=team)
-        campus = Campus_types.choices
-        player = get_object_or_404(Player, id=id)
-        if request.method == 'GET':
-            return render(request, 'team/team_players_edit.html', {'player': player, 'campus': campus, 'team_sport': team_sport})            
-        else:
-            print(request.FILES)
-
-            player.name = request.POST.get('name')
-            player.sexo = request.POST.get('sexo')
-            player.registration = request.POST.get('registration')
-            player.cpf = request.POST.get('cpf')
-            photo = request.FILES.get('photo')
-            print("verifica:")
-            if photo:
-                print("photo")
-                status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                print(status)
-                if not status:
-                    print("status")
-                    status_photo = verificar_foto(str(player.photo))
-                    if status_photo:
-                        player.photo.delete()
-                    else: print("an?")
-                    player.photo = photo
-                else: print("nop")
-            campus_id = request.POST.get('campus')
-            if campus_id:
-                player.campus = campus_id
-            player.save()
-            messages.success(request, "Os dados do atleta foram atualizados com sucesso!")
-            return redirect('team_players_manage', team_sport.id)
-    except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-    return redirect('team_manage')
-
+@time_restriction()
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_team_sport', raise_exception=True)
@@ -697,8 +690,7 @@ def team_manage(request):
     if request.method == "GET":
         if request.user.type == 0: 
             context['users'] = User.objects.all()
-            context['events'] = Event.objects.all()
-        
+            context['events'] = Event.objects.all()   
 
         e = request.GET.get("e")
         t = request.GET.get("t")
@@ -893,6 +885,7 @@ def team_edit(request, id):
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('team_manage') 
 
+@time_restriction()
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_player_team_sport', raise_exception=True)
@@ -1747,18 +1740,20 @@ def manage_session(request):
 @terms_accept_required
 @permission_required('app.view_customuser', raise_exception=True)
 def user_manage(request):
-    team = Team.objects.all()
     context = {
-        'team':team, 
         'events': Event.objects.all(), 
     }
     if not request.user.type in [0]:
         context['type_user'] = Users_types.choices[2:]
+        context['team'] = Team.objects.filter(event__id=request.user.event_user.id)
+        context['event_unit'] = Event_unit.objects.filter(event__id=request.user.event_user.id)
         context['users_all'] = User.objects.filter(event_user=request.user.event_user)
     elif 'e' in request.GET and request.GET['e'] != '':
         context['type_user'] = Users_types.choices
         context['users_all'] = User.objects.filter(event_user=Event.objects.get(id=request.GET['e']))
         context['select_event'] = request.GET['e']
+        context['event_unit'] = Event_unit.objects.filter(event__id=request.GET['e'])
+        context['team'] = Team.objects.filter(event__id=request.GET['e'])
     else:
         context['type_user'] = Users_types.choices
         context['users_all'] = User.objects.filter(event_user=None)
@@ -1821,13 +1816,79 @@ def user_manage(request):
             else:
                 User.objects.create_user(username=name, password=password, photo=photo, type=type, email=email, telefone=telephone, event_user=event )
                 messages.success(request, f"{name} cadastrado do sistema com sucesso!")
+        elif 'new_password' in request.POST:
+            user = User.objects.get(id=request.POST.get('new_password'))
+            list = [] 
+            possibilidade = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+            list.append(''.join(random.sample(possibilidade, 8)))
+            result = str(''.join(list))
+
+            user.set_password(result)
+            
+            user.save()
+            messages.success(request, f"Sucesso! Senha gerada com exito.")
+            
+            cont = {
+                'now': timezone.now(),
+                'user': request.user,
+                'logo_atum': request.build_absolute_uri('/static/images/logo_atum.png')
+            }
+            
+            if user.event_user:
+                cont['logo_ifs'] = request.build_absolute_uri(user.event_user.logo.url)
+                cont['event'] = user.event_user
+            else:
+                cont['logo_ifs'] = request.build_absolute_uri('/static/images/logo-jiifs-2025.jpg')
+            logo_ifs = cont['logo_ifs']
+            cont['logo_ifs_ofc'] = request.build_absolute_uri('/static/images/logo-ifs.svg')
+            cont['logo_morea'] = request.build_absolute_uri('/static/images/logo-morea-sports.svg')
+            link = f"https://{request.get_host()}"
+            qr = qrcode.make(link)
+            print(link)
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            buffer.seek(0)
+            cont['site'] = link
+
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            img = ImageReader(logo_ifs)
+            largura, altura = img.getSize()
+
+            if largura == altura:
+                print("Quadrada")
+                cont['logo_event_type'] = 0
+            elif largura > altura:
+                print("Retangular horizontal")
+                cont['logo_event_type'] = 1
+            else:
+                print("Retangular vertical")
+                cont['logo_event_type'] = 2
+
+            name_html = 'data-welcome'
+            name_pdf = f'boas vindas, {user.username.lower()}'
+
+            cont['name'] = user.username
+            cont['qrcode'] = img_base64
+            cont['password'] = result
+        
+            html_string = render_to_string(f'generator/{name_html}.html', cont)
+
+            response = HttpResponse(content_type='application/pdf')
+            #response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'  #gerar e deixar no navegador
+            response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"' #gerar e baixar no navegador
+
+            HTML(string=html_string).write_pdf(response)
+            return response
+    
         elif 'user_delete' in request.POST:
             user_id = request.POST.get('user_delete')
             user_delete = User.objects.get(id=user_id)
             user_delete.delete()
             messages.info(request, f"{user_delete.username} removido do sistema com sucesso!")
         return redirect('user_manage')
-    
+
+@time_restriction()
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_voluntary', raise_exception=True)
@@ -1846,9 +1907,11 @@ def voluntary_manage(request):
         if not request.user.event_user: context['events'] = Event.objects.all()
         if 'e' in request.GET and request.GET['e'] != '' and 'q' in request.GET:
             context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event__id=request.GET['e'])
+            context['events_unit'] = Event_unit.objects.filter(event__id=request.GET['e'])
         elif 'e' in request.GET and request.GET['e'] != '':
             context['voluntarys'] = Voluntary.objects.filter(event__id=request.GET['e'])
             context['select_event'] = request.GET['e']
+            context['events_unit'] = Event_unit.objects.filter(event__id=request.GET['e'])
         elif 'q' in request.GET and request.GET['q'] != '':
             if request.user.event_user: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event=request.user.event_user)
             else: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'])
@@ -3070,7 +3133,7 @@ def generator_badge(request):
             else:
                 namebadge = f'{ team_sport_badge.sport.get_sport_display() }-{ team_sport_badge.team.name }-jifs'
                 print('team_sport_in-criar')
-                return generate_badges(players, '2',namebadge)
+                return generate_badges(players, '7',namebadge, event.id)
         elif 'team_in' in request.POST: 
             print('team_sport_in')
             players_qs = Player_team_sport.objects.filter(team_sport__team__id=request.POST.get('team_in'), team_sport__event=event)
@@ -3090,7 +3153,7 @@ def generator_badge(request):
             else:
                 namebadge = f'{ team.name }-jifs'
                 print('team_in-criar')
-                return generate_badges(players, '2',namebadge)
+                return generate_badges(players, '7',namebadge, event.id)
         elif 'all_voluntary' in request.POST:
             print('all_voluntary')
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=0, event=event)
@@ -3101,7 +3164,7 @@ def generator_badge(request):
             else:
                 print("a: ",voluntary)
                 namebadge = 'voluntarios-jifs'
-                return generate_badges(voluntary, '1',namebadge)
+                return generate_badges(voluntary, '0',namebadge, event.id)
         elif 'all_support' in request.POST:
             print('all_support-zero')
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=2, event=event)
@@ -3111,7 +3174,7 @@ def generator_badge(request):
                 print('all_support-zero')
             else:
                 namebadge = 'apoio-jifs'
-                return generate_badges(voluntary, '4',namebadge)
+                return generate_badges(voluntary, '2',namebadge, event.id)
         elif 'all_organization' in request.POST:
             print('all_organization-zero')
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=5, event=event)
@@ -3121,7 +3184,7 @@ def generator_badge(request):
                 print('all_organization-zero')
             else:
                 namebadge = 'apoio-jifs'
-                return generate_badges(voluntary, '5',namebadge)
+                return generate_badges(voluntary, '5',namebadge, event.id)
         elif 'all_trainee' in request.POST:
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=3, event=event)
             else: voluntary = Voluntary.objects.filter(type_voluntary=3, admin=user, event=event)
@@ -3129,7 +3192,7 @@ def generator_badge(request):
                 messages.error(request, "Não tem nenhum estagiário cadastrado!")
             else:
                 namebadge = 'estagiario-jifs'
-                return generate_badges(voluntary, '4',namebadge)
+                return generate_badges(voluntary, '3',namebadge, event.id)
         elif 'all_technician' in request.POST:
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=1, event=event)
             else: voluntary = Voluntary.objects.filter(type_voluntary=1, admin=user, event=event)
@@ -3137,7 +3200,7 @@ def generator_badge(request):
                 messages.error(request, "Não tem nenhum técnico cadastrado!")
             else:
                 namebadge = 'tecnico-modalidade-jifs'
-                return generate_badges(voluntary, '3',namebadge)
+                return generate_badges(voluntary, '1',namebadge, event.id)
         elif 'all_head' in request.POST:
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=4, event=event)
             else: voluntary = Voluntary.objects.filter(type_voluntary=4, admin=user, event=event)
@@ -3145,7 +3208,7 @@ def generator_badge(request):
                 messages.error(request, "Não tem nenhum chefe de delegação cadastrado!")
             else:
                 namebadge = 'chefe-delegacao-jifs'
-                return generate_badges(voluntary, '3',namebadge)
+                return generate_badges(voluntary, '4',namebadge, event.id)
         elif 'all_arbitrator' in request.POST:
             if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=6, event=event)
             else: voluntary = Voluntary.objects.filter(type_voluntary=6, admin=user, event=event)
@@ -3153,7 +3216,7 @@ def generator_badge(request):
                 messages.error(request, "Não tem nenhum árbitro cadastrado!")
             else:
                 namebadge = 'chefe-delegacao-jifs'
-                return generate_badges(voluntary, '6',namebadge)
+                return generate_badges(voluntary, '6',namebadge, event.id)
     if current_get_params:
         print('com url-zero')
         return redirect(f"{reverse('badge')}?{current_get_params}")
@@ -3602,7 +3665,7 @@ def generator_spreadsheet(request):
     # permite:
     # - quem tem a permissão app.data
     # - técnico (type == 2)
-    if not (user.has_perm('app.data') or user.type == 2):
+    if not (user.has_perm('app.data') or user.type in [1, 2]):
         raise PermissionDenied
 
     current_get_params = request.GET.urlencode()
@@ -3798,326 +3861,316 @@ def generator_spreadsheet(request):
 
     return generate_spreadsheet(players, event.name, label)
 
-@time_restriction("team_manage")
+
+# Dashboard de acesso
+
+
+def _has_user_document(user):
+    doc = getattr(user, "document", None)
+    return bool(doc and str(doc).strip())
+
+
+def _format_dt(dt):
+    if not dt:
+        return ""
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt)
+    return dt.strftime("%d/%m/%Y %H:%M")
+
+
+def _get_user_access_qs(user, selected_date=None, event=None):
+    qs = AccessLog.objects.filter(user=user)
+
+    if event:
+        qs = qs.filter(event=event)
+
+    if selected_date:
+        qs = qs.filter(accessed_at__date=selected_date)
+
+    return qs.order_by("accessed_at")
+
+
+def _build_user_dashboard_row(user, selected_date=None, event=None):
+    access_qs = _get_user_access_qs(user, selected_date=selected_date, event=event)
+
+    total_acessos = access_qs.count()
+    primeiro_acesso = access_qs.first()
+    ultimo_acesso = access_qs.order_by("-accessed_at").first()
+
+    return {
+        "user": user,
+        "primeiro_login": primeiro_acesso.accessed_at if primeiro_acesso else None,
+        "ultimo_login": ultimo_acesso.accessed_at if ultimo_acesso else None,
+        "total_acessos": total_acessos,
+        "accepted": bool(getattr(user, "accepted", False)),
+        "accepted_at": getattr(user, "accepted_at", None),
+        "has_document": _has_user_document(user),
+    }
+
+
+@permission_required("app.view_dashboard_acesso", raise_exception=True)
 @login_required(login_url="login")
 @terms_accept_required
-@permission_required('app.add_team_sport', raise_exception=True)
-def register_team(request, event_id):
-    sports = Event_sport.objects.filter(event__id=event_id)
-    context = {'sports': sports, 'event_id': event_id}
-    if request.method == 'GET':
-        if request.user.type in [0, 1]: 
-            context['teams'] = Team.objects.all().order_by('-id')
-            context['events'] = Event.objects.all().order_by('-id')
-            return render(request, 'guiate/team_register_admin.html', context)
-        else:
-            if len(Team_sport.objects.filter(admin=request.user)) == 0: context['button_return_manage'] = True 
-            return render(request, 'guiate/team_register.html', context)
-    else:
-        if 'add-team' in request.POST:
-            print("Água")
-        
-        return redirect('guiate_register_team', event_id)
-    
-@time_restriction("team_manage")
-@login_required(login_url="login")
-@terms_accept_required  
-@permission_required('app.add_team_sport', raise_exception=True)
-def team_sexo(request, sport_name, event_id):
-    sport_team = {label: value for value, label in Sport_types.choices}
-    sport = Event_sport.objects.get(sport=sport_team[sport_name])
-    event = Event.objects.get(id=event_id)
-    context = {'sport': sport,'event_id':event_id}
-    if request.method == 'GET':
-        return render(request, 'guiate/team_sexo.html', context)
-    else:
-        print("cirand tema")
-        print(request.POST)
-        sexo = request.POST.get('sexo')
-        if request.user.team and request.user.event_user:
-            print("entrando")
-            if not Team_sport.objects.filter(team=request.user.team, sport=sport, sexo=int(sexo), event=event).exists():
-                team_sport = Team_sport.objects.create(team=request.user.team, sport=sport, sexo=int(sexo), admin=User.objects.get(id=request.user.id), event=event)
-                messages.success(request, "O seu campus foi cadastrado em uma nova modalidade, parabéns!")
-                print("O seu campus foi cadastrado em uma nova modalidade, parabéns!")
-            else:
-                team_sport = Team_sport.objects.get(team=request.user.team, sport=sport, sexo=int(sexo), event=event)
-                messages.info(request, "O seu campus já está cadastrado nessa modalidade, adicione atletas!")
-                print("O seu campus já está cadastrado nessa modalidade, adicione atletas!")
-                if Player_team_sport.objects.filter(team_sport=team_sport).exists():
-                    return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-            return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-        else:
-            messages.info(request, "Observamos que você não tem um time associado os seu usuário ou um evento impossibilitando a ação.")
-            return redirect('guiate_register_team', event_id)   
-
-@time_restriction("team_manage")
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.add_player', raise_exception=True)
-@permission_required('app.add_player_team_sport', raise_exception=True)
-def players_team(request, team_name, team_sexo, sport_name, event_id):
-    user = User.objects.get(id=request.user.id)
-    sport_team = {label: value for value, label in Sport_types.choices}
-    sexo_team = {label: value for value, label in Sexo_types.choices}
-    sport = Event_sport.objects.get(sport=sport_team[sport_name], event=request.user.event_user)
-    sexo = sexo_team[team_sexo]
-    team_sport = Team_sport.objects.get(team__name=team_name, sexo=sexo, sport=sport, event__id=event_id)
-    players = Player.objects.all()
-    events = Event.objects.all()
-    if request.method == 'GET':
-        if not players: messages.info(request, "Não tem nenhum jogador cadastrado no sistema!")
-        return render(request, 'guiate/player_register_team.html', {'players': players,'team_sport': team_sport,'events': events}) 
-    else:
-        print(request.POST)
-        if 'qe' in request.POST: 
-            qe = request.POST.get('qe')
-            if request.user.type == 0 or request.user.type == 1:
-                if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event__id=event_id)
-                else: player_filter = Player.objects.filter(name__icontains=qe, event__id=event_id)
-            else:
-                if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event__id=event_id, admin=user)
-                else: player_filter = Player.objects.filter(name__icontains=qe, event__id=event_id, admin=user)
-            if len(player_filter) > 1:
-                messages.error(request, f"{len(player_filter)} atletas foram encontrados, seja mais preciso, você pode buscar pelo nome e pela matrícula!")
-            elif len(player_filter) == 0:
-                messages.error(request, "O atleta não foi encontrado!")
-                return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(), team_sport.sport.get_sport_display(), team_sport.event.id)
-            else:
-                player = Player.objects.get(id=player_filter.first().id)
-                if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
-                    Player_team_sport.objects.create(player=player, team_sport=team_sport)        
-                    messages.success(request, f"O atleta {player.name} foi cadastrado na modalidade com sucesso!")
-                    return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-                else:
-                    messages.info(request, f"O atleta {player.name} já está cadastrado, tá?!")
-                    return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-        elif 'name' in request.POST:
-            number_players = len(Player_team_sport.objects.filter(team_sport=team_sport))
-            if number_players >= team_sport.sport.max_sport:
-                messages.error(request, "O seu campus atingiu o limite de atletas nessa modalidade!")
-                print("O seu campus atingiu o limite de atletas nessa modalidade!")
-                return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display()) 
-            name = request.POST.get('name')
-            date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d")
-            date_today = date.today()
-            if (date_today.year - date_nasc.year) > 19:
-                messages.error(request, "O atleta não pode ser cadastrado por conta da idade :(")
-                print("O atleta não pode ser cadastrado por conta da idade :(")
-                return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-            registration = request.POST.get('registration')
-            cpf = request.POST.get('cpf')
-            cpf = cpf.replace("-","").replace(".","")
-            photo = request.FILES.get('photo')
-            if request.POST.get('event') and request.user.type == 0: event = Event.objects.get(id=request.POST.get('event'))
-            else: event = Event.objects.get(id=request.user.event_user.id)
-            if photo: 
-                print(photo)
-                status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                if status: return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-            bulletin = request.FILES.get('bulletin')
-            if bulletin: 
-                status = type_file(request, ['.pdf'], bulletin, 'O boletim escolar anexado não é do tipo pdf, que é o tipo aceito.')
-                if status: return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-            rg = request.FILES.get('rg')
-            if rg: 
-                status = type_file(request, ['.png','.jpg','.jpeg','.pdf','docx'], rg, 'O RG anexado não é faz parte dos tipos aceito, os tipos são png, jpg, jpeg, pdf ou docs.')
-                if status: return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-            if team_sport.sport.sport == 2:
-                print("espote 2")
-                sexo = request.POST.get('sexo')
-                if not Player.objects.filter(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event).exists():
-                    player = Player.objects.create(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, bulletin=bulletin, registration=registration, rg=rg, photo=photo, admin=user, event=event)
-                else:
-                    player = Player.objects.get(name=name, sexo=sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event)
-            else:
-                print("aleratorio")
-                if not Player.objects.filter(name=name, sexo=team_sport.sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event).exists():
-                    player = Player.objects.create(name=name, sexo=team_sport.sexo, rg=rg, cpf=cpf, date_nasc=date_nasc, bulletin=bulletin, registration=registration, photo=photo, admin=user, event=event)
-                    print("criando novo atleta", team_sport.sexo, team_sport.get_sexo_display())
-                else:
-                    player = Player.objects.get(name=name, sexo=team_sport.sexo, cpf=cpf, date_nasc=date_nasc, registration=registration, admin=user, event=event)
-            if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
-                Player_team_sport.objects.create(player=player, team_sport=team_sport)        
-                messages.success(request, "O jogador foi cadastrado no sistema com sucesso!")
-                print("O jogador foi cadastrado no sistema com sucesso!")
-            else:
-                messages.info(request, "O jogador já está cadastrado nessa modalidade, tá?!")
-            return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-        return redirect('guiate_players_team', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display(), team_sport.event.id)
-
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.view_player', raise_exception=True)
-@permission_required('app.view_player_team_sport', raise_exception=True)
-def players_list(request, team_name, team_sexo, sport_name):
-        sport_team = {label: value for value, label in Sport_types.choices}
-        sexo_team = {label: value for value, label in Sexo_types.choices}
-        sport = Event_sport.objects.get(sport=sport_team[sport_name], event=request.user.event_user)
-        sexo = sexo_team[team_sexo]
-        team_sport = Team_sport.objects.get(team__name=team_name, sexo=sexo, sport=sport)
-        players = Player_team_sport.objects.filter(team_sport=team_sport)
-        if request.method == "GET":
-            return render(request, 'guiate/players_list.html', {'team_sport':team_sport, 'players':players, 'allowed': allowed_pages(request.user)})
-        else:
-            if 'player_delete' in request.POST:
-                if request.user.has_perm('app.delete_player_team_sport') and request.user.has_perm('app.delete_player'):
-                    player_id = request.POST.get("player_delete")
-                    player = Player_team_sport.objects.get(id=player_id)
-                    player.delete()
-                    print("eupa")
-                    if not Player_team_sport.objects.filter(id=player_id).exists():
-                        print("eupaESSS")
-                        player_table = Player.objects.get(id=player.player.id)
-                        status = verificar_foto(str(player_table.photo))
-                        if status:
-                            player_table.photo.delete()
-                        player_table.bulletin.delete()
-                        player_table.rg.delete()
-                        player_table.delete()
-                    messages.success(request, "O jogador foi removido com sucesso!")
-                    print("O jogador foi cadastrado no sistema com sucesso!")
-                else:
-                    messages.error(request, "Você não tem permissão para remover.")
-
-                return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-            if 'Cancelar' in request.POST:
-                if Player_team_sport.objects.filter(team_sport=team_sport).exists():
-                    player_t_s = Player_team_sport.objects.filter(team_sport=team_sport)
-                    for i in player_t_s:
-                        i.delete()
-                team_sport.delete()
-                if not Team_sport.objects.filter(team=team_sport.team.id):
-                    Team.objects.get(id=team_sport.team.id).delete()
-                return redirect('team_manage')
-
-@time_restriction("team_manage")
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.change_player', raise_exception=True)
-def player_list_edit(request, team_name, id, team_sexo, sport_name):
-    try:
-        campus = Campus_types.choices
-        player = get_object_or_404(Player, id=id)
-        sport_team = {label: value for value, label in Sport_types.choices}
-        sexo_team = {label: value for value, label in Sexo_types.choices}
-        sport = sport_team[sport_name]
-        sexo = sexo_team[team_sexo]
-        team_sport = Team_sport.objects.get(team__name=team_name, sexo=sexo, sport=sport)
-        if request.method == 'GET':
-            return render(request, 'guiate/player_list_edit.html', {'player': player, 'campus': campus, 'team_sport': team_sport})            
-        else:
-            print(request.FILES)
-            player.name = request.POST.get('name')
-            player.sexo = request.POST.get('sexo')
-            player.registration = request.POST.get('registration')
-            player.cpf = request.POST.get('cpf')
-            photo = request.FILES.get('photo')
-            print("verifica:")
-            if photo:
-                print("photo")
-                status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                if not status:
-                    print("status")
-                    status_photo = verificar_foto(str(player.photo))
-                    if status_photo:
-                        player.photo.delete()
-                    player.photo = photo
-            campus_id = request.POST.get('campus')
-            if campus_id:
-                player.campus = campus_id
-            player.save()
-            messages.success(request, "Os dados do atleta foram atualizados com sucesso!")
-            return redirect('guiate_players_list', team_sport.team.name, team_sport.get_sexo_display(),team_sport.sport.get_sport_display())
-    except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
-    return redirect('Home')
-
-@login_required(login_url="login")
-@terms_accept_required
-@permission_required('app.view_customuser', raise_exception=True)
 def dashboard_acesso(request):
     user = request.user
 
-    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+    if not user.is_superuser and getattr(user, "type", None) not in [0, 1]:
+        messages.error(request, "Você não tem permissão para acessar essa página.")
+        return redirect("Home")
 
-    # ── Seleção de evento ──────────────────────────────────────────────────
-    select_event_id = request.GET.get('e', '')
-    if user.type == 0 and select_event_id:
-        base_sessions = UserSession.objects.filter(
-            user__event_user__id=select_event_id
-        ).select_related('user')
-        base_users = User.objects.filter(
-            event_user__id=select_event_id, type__in=[1, 2, 3]
-        ).select_related('event_user', 'team')
-    elif user.type == 0:
-        base_sessions = UserSession.objects.all().select_related('user')
-        base_users = User.objects.filter(type__in=[1, 2, 3]).select_related('event_user', 'team')
-    else:
-        base_sessions = UserSession.objects.filter(
-            user__event_user=user.event_user
-        ).select_related('user')
-        base_users = User.objects.filter(
-            event_user=user.event_user, type__in=[1, 2, 3]
-        ).select_related('event_user', 'team')
+    user_model = get_user_model()
 
-    # ── Filtro de data para total de acessos ──────────────────────────────
-    date_str = request.GET.get('date', timezone.localdate().isoformat())
+    selected_event_id = request.GET.get("e", "").strip()
+    selected_user_id = request.GET.get("u", "").strip()
+    selected_date_raw = request.GET.get("d", "").strip()
+
     try:
-        selected_date = dt.strptime(date_str, '%Y-%m-%d').date()
-    except (ValueError, TypeError):
-        selected_date = timezone.localdate()
+        selected_date_obj = date.fromisoformat(selected_date_raw) if selected_date_raw else None
+    except ValueError:
+        selected_date_obj = None
+        selected_date_raw = ""
 
-    # ── Métricas ──────────────────────────────────────────────────────────
-    first_session  = base_sessions.order_by('created_at').first()
-    last_session   = base_sessions.order_by('-created_at').first()
-    total_day      = base_sessions.filter(created_at__date=selected_date).count()
-    total_users    = base_users.count()
-    accepted_count = base_users.filter(accepted=True).count()
-    total_sessions = base_sessions.count()
+    events = None
+    event = None
 
-    # ── Sessões recentes (serviços / acessos) ─────────────────────────────
-    recent_sessions = base_sessions.order_by('-created_at')[:30]
+    if user.type == 0:
+        events = Event.objects.all().order_by("name")
 
-    # ── Tabela de usuários ────────────────────────────────────────────────
-    users_data = []
-    for u in base_users.order_by('-id'):
-        last_u_session = (
-            UserSession.objects.filter(user=u).order_by('-created_at').first()
+        if selected_event_id:
+            try:
+                event = Event.objects.get(id=selected_event_id)
+            except Event.DoesNotExist:
+                messages.error(request, "Evento selecionado não foi encontrado.")
+                selected_event_id = ""
+                event = None
+
+    elif user.type == 1:
+        event = user.event_user
+        if not event:
+            messages.error(request, "Seu usuário não possui evento vinculado.")
+            return redirect("Home")
+        selected_event_id = str(event.id)
+
+    if user.type == 0 and not event:
+        context = {
+            "events": events,
+            "event": None,
+            "select_event": selected_event_id,
+            "all_users": [],
+            "selected_user_id": "",
+            "selected_user_obj": None,
+            "selected_date": selected_date_raw,
+            "total_users": 0,
+            "total_accepted": 0,
+            "total_docs": 0,
+            "total_pendentes": 0,
+            "acessos_hoje": 0,
+            "acessos_7dias": [],
+            "user_rows": [],
+        }
+        return render(request, "dashboard_acesso.html", context)
+
+    all_users = (
+        user_model.objects
+        .exclude(is_superuser=True)
+        .filter(event_user=event)
+        .order_by("username")
+    )
+
+    selected_user_obj = None
+    users_qs = all_users
+
+    if selected_user_id:
+        users_qs = all_users.filter(id=selected_user_id)
+        selected_user_obj = users_qs.first()
+
+    hoje = timezone.localdate()
+
+    total_users = all_users.count()
+    total_accepted = all_users.filter(accepted=True).count()
+    total_docs = sum(1 for u in all_users if _has_user_document(u))
+    total_pendentes = sum(
+        1
+        for u in all_users
+        if (not getattr(u, "accepted", False)) or (not _has_user_document(u))
+    )
+
+    acessos_hoje = (
+        AccessLog.objects.filter(
+            event=event,
+            accessed_at__date=hoje
         )
-        term = Terms_Use.objects.filter(usuario=u).order_by('-id').first()
-        users_data.append({
-            'user':        u,
-            'last_access': last_u_session.created_at if last_u_session else None,
-            'term':        term,
-            'has_doc':     bool(u.document),
-            'accepted':    u.accepted,
-            'accepted_at': u.accepted_at,
-        })
+        .values("user")
+        .distinct()
+        .count()
+    )
 
-    # ── Distribuição horária no dia selecionado ────────────────────────────
-    hour_counts = Counter()
-    for s in base_sessions.filter(created_at__date=selected_date):
-        local_dt = s.created_at.astimezone(brasilia_tz)
-        hour_counts[local_dt.hour] += 1
-    hourly_data = [hour_counts.get(h, 0) for h in range(24)]
-    hourly_max   = max(hourly_data) if any(hourly_data) else 1
+    acessos_7dias_raw = []
+    max_count = 0
+
+    for i in range(6, -1, -1):
+        dia = hoje - timedelta(days=i)
+        count = (
+            AccessLog.objects.filter(
+                event=event,
+                accessed_at__date=dia
+            )
+            .values("user")
+            .distinct()
+            .count()
+        )
+        acessos_7dias_raw.append({"dia": dia, "count": count})
+        max_count = max(max_count, count)
+
+    acessos_7dias = []
+    for item in acessos_7dias_raw:
+        count = item["count"]
+        pct = max(6, round((count / max_count) * 100)) if max_count > 0 else 0
+
+        acessos_7dias.append(
+            {
+                "label": item["dia"].strftime("%d/%m"),
+                "count": count,
+                "pct": pct,
+            }
+        )
+
+    user_rows = []
+    for u in users_qs:
+        row = _build_user_dashboard_row(
+            u,
+            selected_date=selected_date_obj,
+            event=event,
+        )
+        user_rows.append(row)
 
     context = {
-        'first_session':   first_session,
-        'last_session':    last_session,
-        'total_day':       total_day,
-        'selected_date':   selected_date,
-        'recent_sessions': recent_sessions,
-        'users_data':      users_data,
-        'total_users':     total_users,
-        'accepted_count':  accepted_count,
-        'total_sessions':  total_sessions,
-        'hourly_data':     hourly_data,
-        'hourly_max':      hourly_max,
-        'events':          Event.objects.all() if user.type == 0 else None,
-        'select_event':    select_event_id,
+        "events": events,
+        "event": event,
+        "select_event": selected_event_id,
+        "all_users": all_users,
+        "selected_user_id": selected_user_id,
+        "selected_user_obj": selected_user_obj,
+        "selected_date": selected_date_raw,
+        "total_users": total_users,
+        "total_accepted": total_accepted,
+        "total_docs": total_docs,
+        "total_pendentes": total_pendentes,
+        "acessos_hoje": acessos_hoje,
+        "acessos_7dias": acessos_7dias,
+        "user_rows": user_rows,
     }
-    return render(request, 'dashboard_acesso.html', context)
+    return render(request, "dashboard_acesso.html", context)
+
+
+@login_required(login_url="login")
+@terms_accept_required
+def dashboard_acesso_user_detail(request, user_id):
+    user = request.user
+
+    if not user.is_superuser and getattr(user, "type", None) not in [0, 1]:
+        return JsonResponse({"error": "Sem permissão"}, status=403)
+
+    selected_event_id = request.GET.get("e", "").strip()
+
+    event = None
+    if user.type == 0:
+        if selected_event_id:
+            event = Event.objects.filter(id=selected_event_id).first()
+    elif user.type == 1:
+        event = user.event_user
+
+    if not event:
+        return JsonResponse({"error": "Evento não selecionado"}, status=400)
+
+    user_model = get_user_model()
+    u = user_model.objects.filter(
+        id=user_id,
+        event_user=event
+    ).first()
+
+    if not u:
+        return JsonResponse({"error": "Não encontrado"}, status=404)
+
+    row_data = _build_user_dashboard_row(u, event=event)
+
+    access_logs_qs = (
+        AccessLog.objects.filter(user=u, event=event)
+        .select_related("session", "event")
+        .order_by("-accessed_at")[:10]
+    )
+
+    service_map = {
+        "team_manage": "Times",
+        "player_manage": "Atletas",
+        "voluntary_manage": "Equipe",
+        "games": "Partidas",
+        "badge": "Crachás",
+        "data": "Relatórios",
+        "spreadsheet": "Planilhas",
+        "certificate": "Certificados",
+        "attachments": "Anexos",
+        "scoreboard": "Placar",
+        "user_manage": "Usuários",
+        "Home": "Início",
+        "event_manage": "Eventos",
+    }
+
+    sessions_data = []
+
+    for log in access_logs_qs:
+        session_data = {}
+        services = []
+
+        try:
+            if log.session:
+                session_data = log.session.get_decoded() or {}
+                visited = session_data.get("visited_urls", []) or []
+                services = list(
+                    dict.fromkeys(
+                        [service_map.get(url, url) for url in visited if url]
+                    )
+                )
+        except Exception:
+            session_data = {}
+            services = []
+
+        sessions_data.append(
+            {
+                "date": _format_dt(log.accessed_at),
+                "services": services,
+                "ip": log.ip_address or session_data.get("client_ip", ""),
+            }
+        )
+
+    full_name = (
+        getattr(u, "get_full_name", lambda: "")().strip()
+        or getattr(u, "first_name", "")
+        or u.username
+    )
+
+    data = {
+        "username": u.username,
+        "full_name": full_name,
+        "first_name": u.first_name or "",
+        "email": u.email or "",
+        "telefone": getattr(u, "telefone", "") or "",
+        "type_display": u.get_type_display() if hasattr(u, "get_type_display") else "",
+        "photo": u.photo.url if getattr(u, "photo", None) else "",
+        "event_user": u.event_user.name if getattr(u, "event_user", None) else "",
+        "unit": u.unit.name if getattr(u, "unit", None) else "",
+        "team": u.team.name if getattr(u, "team", None) else "",
+        "accepted": row_data["accepted"],
+        "accepted_at": _format_dt(row_data["accepted_at"]),
+        "has_document": row_data["has_document"],
+        "document_url": u.document.url if _has_user_document(u) else "",
+        "primeiro_login": _format_dt(row_data["primeiro_login"]),
+        "ultimo_login": _format_dt(row_data["ultimo_login"]),
+        "total_acessos": row_data["total_acessos"],
+        "sessions": sessions_data,
+    }
+
+    return JsonResponse(data)
 
 def allowed_pages(user):
     brasilia_tz = pytz.timezone('America/Sao_Paulo')

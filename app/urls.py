@@ -20,7 +20,6 @@ urlpatterns = [
     path('manage/team', views.team_manage, name = "team_manage"),
     path('edit/team/<int:id>', views.team_edit, name = "team_edit"),
     path('manage/team/player/<int:id>', views.team_players_manage, name = "team_players_manage"),
-    path('edit/player/<int:id>/team/<int:team>', views.team_players_edit, name = "team_player_edit"),
     path('manage/match', views.matches_manage, name = "matches_manage"),
     path('edit/match/<int:id>', views.matches_edit, name = "matches_edit"),
     path('add/player/team/<int:id>', views.add_player_team, name = "add_player_team"),
@@ -57,14 +56,9 @@ urlpatterns = [
     path('manage/sport', views.event_sport_manage, name="event_sport_manage"),
     path('edit/sport', views.event_sport_edit, name="event_sport_edit"),
 
-    path('register_team/<int:event_id>', views.register_team, name="guiate_register_team"),
-    path('team/<str:sport_name>/<int:event_id>', views.team_sexo, name="guiate_team"),
-    path('players/<str:team_name>/<str:team_sexo>/<str:sport_name>/<int:event_id>', views.players_team, name="guiate_players_team"),
-    path('players/<str:team_name>/list/<str:team_sexo>/<str:sport_name>', views.players_list, name="guiate_players_list"),
-    path('players/<str:team_name>/edit/<int:id>/<str:team_sexo>/<str:sport_name>', views.player_list_edit, name = "player_list_edit"),
-
     path('dashboard-acessos/', views.dashboard_acesso, name='dashboard_acesso'),
-
+    path('dashboard-acessos/user/<int:user_id>/', views.dashboard_acesso_user_detail, name='dashboard_acesso_user_detail'),
+    
     path('generator/badge', views.generator_badge, name="badge"),
     path('generator/certificate', views.generator_certificate, name="certificate"),
     path('generator/data', views.generator_data, name="data"),

@@ -35,6 +35,34 @@
             font-size: 15px;
         }
 
+        /* NOVA ÁREA DE ACESSO */
+        .access-area {
+            margin-top: 26em;
+            border: 1px solid #bbb;
+            background-color: var(--teste_b);
+            padding: 12px 15px;
+            width: 80vw;
+        }
+
+        .access-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .access-table {
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .access-table td {
+            padding: 3px 0;
+        }
+
+        .access-label {
+            font-weight: bold;
+            width: 90px;
+        }
+
     </style>
 </head>
 <body>
@@ -48,24 +76,39 @@
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
         <p><b>BEM VINDO AO MOREA SPORTS</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
-
     </div>
 
     <p style="margin-top: 15px; margin-bottom: 15px;"><b>SEJA BEM VINDO AO ATUM!</b></p>
-    <p class="texto-padrao">Desenvolvida em 2023, a plataforma <b style="color: #000055;">ATUM</b> (Administração de Times, Usuários e Modalidades) surgiu como uma solução inovadora concebida no seio do laboratório de pesquisa <b style="color: #000055;">MOREA</b>, localizado no Instituto Federal de Sergipe <b style="color: #000055;">(IFS)</b> - Campus Lagarto. O projeto contou com o suporte estratégico da coordenação do curso de Redes de Computadores, unindo o conhecimento acadêmico às demandas práticas de gestão. A ferramenta foi projetada para otimizar processos organizacionais, refletindo o compromisso da instituição com o desenvolvimento tecnológico e a excelência educacional.</p>
 
-    <p style="margin-top: 28em;"><b>ACESSO AO SISTEMA:</b></p>
+    <p class="texto-padrao">
+        Desenvolvida em 2023, a plataforma <b style="color: #000055;">ATUM</b> (Administração de Times, Usuários e Modalidades) surgiu como uma solução inovadora concebida no seio do laboratório de pesquisa <b style="color: #000055;">MOREA</b>, localizado no Instituto Federal de Sergipe <b style="color: #000055;">(IFS)</b> - Campus Lagarto. O projeto contou com o suporte estratégico da coordenação do curso de Redes de Computadores, unindo o conhecimento acadêmico às demandas práticas de gestão. A ferramenta foi projetada para otimizar processos organizacionais, refletindo o compromisso da instituição com o desenvolvimento tecnológico e a excelência educacional.
+    </p>
 
-    <p style="font-size: 14px;">SITE: {{site|lower}}</p>
-    <p style="font-size: 14px;">USUÁRIO: admin.{{name|lower}}</p>
-    <p style="font-size: 14px;">SENHA: {{password}}</p>
+    <!-- NOVA ACCESS AREA -->
+    <div class="access-area">
+        <div class="access-title">ACESSO AO SISTEMA</div>
 
-    <div style="display: flex;">
+        <table class="access-table">
+            <tr>
+                <td class="access-label">Site:</td>
+                <td>{{site|lower}}</td>
+            </tr>
+            <tr>
+                <td class="access-label">Usuário:</td>
+                <td>{{name|lower}}</td>
+            </tr>
+            <tr>
+                <td class="access-label">Senha:</td>
+                <td><b>{{password}}</b></td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="display: flex; margin-top: 10px;">
         <img style="height: 5.8em; position: relative; bottom: 0; padding-right: 10em;" src="data:image/png;base64,{{ qrcode }}"alt="" aria-hidden="true">
         <img class="logo-iefs" style="height: 4em; position: relative; bottom: 0;" src="{{logo_ifs_ofc}}" alt="">
         <img class="logo-iefs" style="height: 5em; position: relative; bottom: 0;" src="{{logo_morea}}" alt="">
     </div>
     
-</table>
 </body>
 </html>

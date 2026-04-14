@@ -12,7 +12,7 @@ import os, time
 from typing import List, Dict
 from django.http import HttpResponse
 from django.templatetags.static import static
-from .models import Certificate, Match, Occurrence, Match, Time_pause
+from .models import Certificate, Match, Occurrence, Match, Time_pause, Event_badge, Event
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('Outfit', 'fonts/Outfit-Black.ttf'))
@@ -76,9 +76,9 @@ def draw_circular_image(c, image_path, center_x, center_y, diameter):
     )
     c.restoreState()
     
-def generate_badges(players, t, namebadge):
+def generate_badges(players, t, namebadge, event):
     print('gerar crachá')
-    if t == '2':
+    if t == '7':
         buffer = BytesIO()
         w, h = A4
         nametag_width = (w - 3 * 20) / 2
@@ -98,10 +98,12 @@ def generate_badges(players, t, namebadge):
             x, y = positions[j % 4]
 
             c.rect(x, y, nametag_width, nametag_height)
-            base_nametag_path = os.path.join(
-                settings.BASE_DIR,
-                f'static/images/generators/base_nametag__{t}.png'
-            )
+            
+            #base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
+            if Event_badge.objects.filter(event=Event.objects.get(id=event), number=t):
+                base_nametag_path = Event_badge.objects.get(event=Event.objects.get(id=event), number=t).file.path
+            else:
+                base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
             base_nametag = ImageReader(base_nametag_path)
             c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
 
@@ -125,6 +127,7 @@ def generate_badges(players, t, namebadge):
                 except Exception as e:
                     print("Erro ao carregar foto:", e)
 
+            """
             imag = user.team_sport.team.event.logo_badge
             if imag:
                 try:
@@ -133,7 +136,7 @@ def generate_badges(players, t, namebadge):
                     center_y = y + nametag_height - photo_diameter - 220
                     c.drawImage(imag, center_x, center_y, width=67, height=36)
                 except Exception as e:
-                    print("Erro ao carregar foto:", e)
+                    print("Erro ao carregar foto:", e)"""
 
             
 
@@ -170,10 +173,11 @@ def generate_badges(players, t, namebadge):
             x, y = positions[j % 4]
 
             c.rect(x, y, nametag_width, nametag_height)
-            base_nametag_path = os.path.join(
-                settings.BASE_DIR,
-                f'static/images/generators/base_nametag__{t}.png'
-            )
+            #base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
+            if Event_badge.objects.filter(event=Event.objects.get(id=event), number=t):
+                base_nametag_path = Event_badge.objects.get(event=Event.objects.get(id=event), number=t).file.path
+            else:
+                base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
             base_nametag = ImageReader(base_nametag_path)
             c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
 
@@ -196,7 +200,8 @@ def generate_badges(players, t, namebadge):
                     draw_circular_image(c, photo, center_x, center_y, photo_diameter)
                 except Exception as e:
                     print("Erro ao carregar foto:", e)
-
+                    
+            """
             if imag:
                 try:
                     imag = imag.path
@@ -206,7 +211,7 @@ def generate_badges(players, t, namebadge):
                 except Exception as e:
                     print("Erro ao carregar foto:", e)
 
-            c.setFont("Helvetica-Bold", 28)
+            c.setFont("Helvetica-Bold", 28)"""
             short_name = (
                 name.upper()
                 if len(name) < 15

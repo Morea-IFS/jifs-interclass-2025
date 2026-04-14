@@ -304,13 +304,15 @@
             </section>
             {% endif %}
         {% endif %}
-        {% if not events_sport %}
-            <section class="alert-page" style="background-color: red;">
-                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
-                <div class="alert-text">
-                    <p>NÃO EXISTE NENHUMA ESPORTE CADASTRADO.</p>
-                </div>
-            </section>
+        {% if not events_sport and select_event %}
+            {% if user.type == 0 or user.type == 1 %}
+                <section class="alert-page" style="background-color: red;">
+                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-text">
+                        <p>NÃO EXISTE NENHUMA ESPORTE CADASTRADO.</p>
+                    </div>
+                </section>
+            {% endif %}
         {% endif %}
         {% if team %}
         {% if user.type != 2 %}

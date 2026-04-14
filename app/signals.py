@@ -12,6 +12,8 @@ from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Pla
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.sessions.models import Session
 from django.utils import timezone
+from datetime import datetime
+import pytz
 
 User = get_user_model()
 default_photo_url = f"{settings.MEDIA_URL}defaults/team.png"
@@ -558,6 +560,8 @@ def send_scoreboard_match(instance):
 
 @receiver(post_save, sender=User)
 def set_type_for_staff(sender, instance, created, **kwargs):
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+    now = datetime.now(brasilia_tz)
     if settings.DEBUG: print("chegouuu")
     if created and instance.is_staff:
         instance.type = 0
@@ -566,8 +570,12 @@ def set_type_for_staff(sender, instance, created, **kwargs):
         group_name = "event coordinator"
         group, _ = Group.objects.get_or_create(name=group_name)
         instance.groups.add(group)
-    elif int(instance.type) == 2:
+    elif int(instance.type) == 2 and (instance.event_user.enrollment_init <= now <= instance.event_user.enrollment_end):
         group_name = "add user common"
+        group, _ = Group.objects.get_or_create(name=group_name)
+        instance.groups.add(group)
+    elif int(instance.type) == 2:
+        group_name = "user common"
         group, _ = Group.objects.get_or_create(name=group_name)
         instance.groups.add(group)
     elif int(instance.type) == 3:

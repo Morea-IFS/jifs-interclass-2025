@@ -3,13 +3,16 @@ from django.shortcuts import redirect
 from datetime import datetime
 import pytz
 from .models import Event, Terms_Use
+from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.urls import resolve
 
 def time_restriction(redirect_page="Home"):
     def decorator(view_func):
         @wraps(view_func)
+        
         def wrapper(request, *args, **kwargs):
+            print("uaieo444")
             if request.user.type == 0 or request.user.type == 1 or request.user.is_staff:
                 return view_func(request, *args, **kwargs)
             else:
@@ -25,12 +28,17 @@ def time_restriction(redirect_page="Home"):
 
                     if not config or (config.enrollment_init <= now <= config.enrollment_end):
                         print("vaaai")
+                        request.user.groups.remove(Group.objects.get(name="user common"))
+                        request.user.groups.add(Group.objects.get(name="add user common"))
                         return view_func(request, *args, **kwargs)
                     else:
-                        messages.info(request, "O período para realizar as inscrições e edições já foi finalizado.")
-                        return redirect(redirect_page)
+                        request.user.groups.remove(Group.objects.get(name="add user common"))
+                        request.user.groups.add(Group.objects.get(name="user common"))
+                        return view_func(request, *args, **kwargs)
             return view_func(request, *args, **kwargs)
+        print("uaieo444")
         return wrapper
+    print("uaieo444")
     return decorator
 
 def terms_accept_required(view_func):
