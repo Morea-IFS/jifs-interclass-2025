@@ -115,10 +115,10 @@
                     <th>MATRÍCULA/SIAPE</th>
                     {% endif %}
                     <th>FOTO</th>
-                    {% if allowed and perms.app.change_voluntary %}
+                    {% if perms.app.change_voluntary %}
                     <th>EDITAR</th>
                     {% endif %}
-                    {% if allowed and perms.app.delete_voluntary %}
+                    {% if perms.app.delete_voluntary %}
                     <th>DELETAR</th> 
                     {% endif %}
                 </tr>
@@ -136,14 +136,16 @@
                     <td>{{voluntary.registration}}</td>
                     {% endif %}
                     <td>{% if voluntary.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
-                    {% if allowed and perms.app.change_voluntary %}
+                    {% if perms.app.change_voluntary %}
                     <td>
-                        <img style="cursor: pointer;" onclick="openEditModal('{{ voluntary.id }}','{{ voluntary.name }}','{{ voluntary.registration }}','{{ voluntary.type_voluntary }}','{{ voluntary.admin.id }}','{{ voluntary.event.id }}', '{% if voluntary.photo %}{{ voluntary.photo.url }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">
+                        {% if not voluntary.type_voluntary == 4 or user.is_staff or user.type == 0 %}
+                        <img style="cursor: pointer;" onclick="openEditModal('{{ voluntary.id }}','{{ voluntary.name }}','{{ voluntary.registration }}','{{ voluntary.type_voluntary }}','{{ voluntary.admin.id }}','{{ voluntary.event.id }}', '{% if voluntary.photo %}{{ voluntary.photo.url }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">        
+                        {% endif %}
                     </td>
                     {% endif %}
-                    {% if allowed and perms.app.delete_voluntary %}
+                    {% if perms.app.delete_voluntary %}
                     <td>
-                        {% if not voluntary.type_voluntary == 4 or user.is_staff %}
+                        {% if not voluntary.type_voluntary == 4 or user.is_staff or user.type == 0 %}
                         <form method="POST" action="">
                             {% csrf_token %}
                             <button data-confirm="Você realmente deseja excluir este membro da comissão técnica" name="voluntary_delete" value="{{voluntary.id}}" style="background-color: transparent; border: none;">

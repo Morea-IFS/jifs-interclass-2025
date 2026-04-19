@@ -1897,10 +1897,9 @@ def voluntary_manage(request):
     if user.is_staff:
         types = Type_service.choices
     else:
-        types = Type_service.choices[:-1]
+        types = [choice for choice in Type_service.choices if choice[0] != 4]
     if request.method == "GET":
         context = {
-            'allowed': allowed_pages(user),
             'types': types,
             'users': User.objects.all(),
         }
@@ -3116,8 +3115,8 @@ def generator_badge(request):
                 context['event_sports'] = Event_sport.objects.filter(event__id=request.GET.get('e'))
         else:
             context['event'] = user.event_user
-            context['teams'] = Team.objects.filter(event=user.event_user).order_by('name')
-            context['teams_sport'] = Team_sport.objects.filter(team__event=user.event_user).order_by('team','sport','-sexo')   
+            context['teams'] = Team.objects.filter(unit=user.unit, event=user.event_user).order_by('name')
+            context['teams_sport'] = Team_sport.objects.filter(team__unit=user.unit, team__event=user.event_user).order_by('team','sport','-sexo')   
             context['event_sports'] = Event_sport.objects.filter(event=user.event_user)
         return render(request, 'badge.html', context)
     else:
@@ -3293,15 +3292,16 @@ def generator_certificate(request):
 
 @login_required(login_url="login")
 @terms_accept_required
-@permission_required('app.data', raise_exception=True)
 def generator_data(request):
     user = User.objects.get(id=request.user.id)
     current_get_params = request.GET.urlencode()
     if request.method == "GET":
         if request.user.is_staff: 
             team_sport = Team_sport.objects.filter(players__isnull=False).distinct().order_by('sport','-sexo')
+        elif request.user.type == 1: 
+            team_sport = Team_sport.objects.all().filter(players__isnull=False, event=user.event_user).order_by('sport','-sexo')
         else: 
-            team_sport = Team_sport.objects.all().filter(players__isnull=False, admin=user).order_by('sport','-sexo')
+            team_sport = Team_sport.objects.all().filter(players_isnull=False, team_unit=user.unit).order_by('sport','-sexo')
         context = {
             'sexo': Sexo_types.choices,
             'team_sport': team_sport,
@@ -3380,8 +3380,8 @@ def generator_data(request):
         elif 'all_team' in request.POST:
             name_html = 'data-base-campus'
             name_pdf = 'dados_campus'
-            if user.is_staff: teams = Team_sport.objects.prefetch_related('players').filter(event=event).order_by('sport','-sexo')
-            else: teams = Team_sport.objects.prefetch_related('players').filter(admin=user, event=event).order_by('sport','-sexo')
+            if user.is_staff or user.type == 0 or user.type == 1: teams = Team_sport.objects.prefetch_related('players').filter(event=event).order_by('sport','-sexo')
+            else: teams = Team_sport.objects.prefetch_related('players').filter(team__unit=user.unit, event=event).order_by('sport','-sexo')
             if len(teams) == 0:
                 messages.error(request, "Você não está cadastrado em alguma modalidade ou não há atletas cadastrados.")
                 status = True
@@ -3410,7 +3410,7 @@ def generator_data(request):
             name_html = 'data-base-eqp'
             name_pdf = 'dados_equipe_jifs'
             cont['infor'] = f"comissão técnica do {event.name}"
-            if user.is_staff: voluntary = Voluntary.objects.filter(event=event).order_by('-type_voluntary')
+            if user.is_staff or user.type == 0 or user.type == 1: voluntary = Voluntary.objects.filter(event=event).order_by('-type_voluntary')
             else: voluntary = Voluntary.objects.filter(admin=user, event=event).order_by('-type_voluntary')
             if len(voluntary) == 0:
                 messages.error(request, "Não há voluntários, técnicos, atletas ou chefe de delegação cadastrados.")
@@ -3421,8 +3421,8 @@ def generator_data(request):
             name_html = 'data-base'
             name_pdf = 'dados_atletas'
             cont['infor'] = "atletas"
-            if user.is_staff: players = Player.objects.filter(event=event).order_by('-sexo')
-            else: players = Player.objects.filter(admin=user,event=event).order_by('-sexo')
+            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(event=event).order_by('-sexo')
+            else: players = Player.objects.filter(unit=user.unit, event=event).order_by('-sexo')
             if len(players) == 0:
                 messages.error(request, "Não há atletas cadastrados.")
                 status = True  
@@ -3431,8 +3431,8 @@ def generator_data(request):
         elif 'all_players_fem' in request.POST:
             name_html = 'data-base'
             name_pdf = 'dados_atletas'
-            if user.is_staff: players = Player.objects.filter(sexo=1,event=event).order_by('-sexo')
-            else: players = Player.objects.filter(sexo=1, admin=user, event=event).order_by('-sexo')
+            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(sexo=1,event=event).order_by('-sexo')
+            else: players = Player.objects.filter(sexo=1, unit=user.unit, event=event).order_by('-sexo')
             if len(players) == 0:
                 messages.error(request, "Não há atletas do sexo feminino cadastrados.")
                 status = True
@@ -3443,8 +3443,8 @@ def generator_data(request):
         elif 'all_players_masc' in request.POST:
             name_html = 'data-base'
             name_pdf = 'dados_atletas'
-            if user.is_staff: players = Player.objects.filter(sexo=0, event=event).order_by('-sexo')
-            else: players = Player.objects.filter(sexo=0, admin=user, event=event).order_by('-sexo')
+            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(sexo=0, event=event).order_by('-sexo')
+            else: players = Player.objects.filter(sexo=0, unit=user.unit, event=event).order_by('-sexo')
             if len(players) == 0:
                 messages.error(request, "Não há atletas do sexo masculino cadastrados.")
                 status = True
@@ -3458,7 +3458,7 @@ def generator_data(request):
             cont['team'] = team
             name_html = 'data-base-campus-individual'
             name_pdf = f'atletas_{team.name}'
-            players = Player_team_sport.objects.filter(team_sport__team=team, player__event=event).order_by('-team_sport')
+            players = Player_team_sport.objects.filter(team_sport_team=team, player_event=event).order_by('-team_sport')
             if len(players) == 0:
                 messages.error(request, "Não há atletas cadastrados.")
                 status = True
@@ -3485,7 +3485,7 @@ def generator_data(request):
                     messages.error(request, "Não há equipes em modalidades ou atletas cadastrados.")
                     status = True
                 cont['teams'] = teams
-                #players = Player_team_sport.objects.filter(team_sport__sport=data, team_sport__admin=user)
+                #players = Player_team_sport.objects.filter(team_sport_sport=data, team_sport_admin=user)
                 #if len(players) == 0:
                 #    messages.error(request, f'Não há atletas cadastrados no {name_sport}.')
                 #    return redirect('data')
@@ -4171,24 +4171,6 @@ def dashboard_acesso_user_detail(request, user_id):
     }
 
     return JsonResponse(data)
-
-def allowed_pages(user):
-    brasilia_tz = pytz.timezone('America/Sao_Paulo')
-    now = datetime.now(brasilia_tz)
-    
-    config = Settings_access.objects.order_by('-id').first()
-
-    if config:
-        if config.start.tzinfo is None:
-            config.start = brasilia_tz.localize(config.start)
-        if config.end.tzinfo is None:
-            config.end = brasilia_tz.localize(config.end)
-    
-    if not config or (config.start <= now <= config.end) or user.is_staff:  
-        allowed = True
-    else:
-        allowed = False
-    return allowed
 
 def verificar_foto(url_name):
     print("url: ", url_name)

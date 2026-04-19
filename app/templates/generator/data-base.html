@@ -78,7 +78,9 @@
             {% if event.player_need_sexo %}
             <th style="width: 4%;">Sexo</th>
             {% endif %}
-            <th style="width: 4%;">Turma</th>
+            {% if event.general_need_unit %}
+            <th style="width: 4%;">Unidade</th>
+            {% endif %}
             {% if event.player_need_date_nasc %}
             <th style="width: 9%;">Data Nasc.</th>
             {% endif %}
@@ -95,7 +97,9 @@
             {% if event.player_need_sexo %}
             <td>{{i.get_sexo_display}}</td>
             {% endif %}
-            <td>{{i.classroom|upper }}</td>
+            {% if event.general_need_unit %}
+            <td>{{i.unit.name|upper }}</td>
+            {% endif %}
             {% if event.player_need_date_nasc %}
             <td>{{i.date_nasc|date:"d/m/Y"}}</td>
             {% endif %}

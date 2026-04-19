@@ -106,16 +106,16 @@
                                 <i class="fa-solid fa-compass"></i>OUTROS
                             </button>
                             <div class="dropdown-menu">
-                                {% if user.type == 0 or user.type == 1 %}
+                                {% if user.type != 3 %}
                                 <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
                                 {% endif %}
                                 {% if user.type == 1 %}
                                 <a href="{% url 'user_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>USUÁRIOS</a>
                                 {% endif %}
-                                {% if perms.app.data %}
+                                {% if user.type != 3 %}
                                 <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
                                 {% endif %}
-                                {% if perms.app.data or user.type == 1 or user.type == 2 %}
+                                {% if user.type == 1 or user.type == 2 %}
                                 <a href="{% url 'spreadsheet' %}">
                                     <span class="submenu-marker">└─</span>
                                     <i class="fa-solid fa-file-excel"></i>PLANILHAS

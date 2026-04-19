@@ -17,7 +17,7 @@
         <div class="relatorios-wrapper">
             <div class="title-adm">
                 <h1>
-                {% if event %} RELATÓRIOS DO {{event.name}}{% else %} RELATÓRIOS {% endif %}
+                {% if event %} RELATÓRIOS DO {{event.name}}{% elif user.type == 1 %} RELATÓRIOS DO {{user.event_user.name}} {% else %} RELATÓRIOS {% endif %}
                 </h1>
                 {% if perms.app.add_attachments %}
                 <div class="title-buttons">
@@ -40,10 +40,10 @@
                 {% endif %}
             </div>
             
-            {% if event %}
+            {% if event or user.event_user %}
             <form method="post" class="relatorios-grid">
                 {% csrf_token %}
-                <input type="hidden" name="event_data" {% if event %} value="{{event.id}}" {% else %} value="0" {% endif %}>
+                <input type="hidden" name="event_data"{% if user.event_user %} value="{{user.event_user.id}}" {% elif event %} value="{{event.id}}" {% else %} value="0" {% endif %}>
 
                 {% if user.is_staff %}
                     <button name="all_data" type="submit" class="relatorio-btn">
