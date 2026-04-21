@@ -84,20 +84,42 @@
                         </div>
                         {% endif %}
 
+                        {% if user.type == 0 %}
+                        <div class="dropdown">
+                            <button class="side-bar-buttons-items dropdown-toggle">
+                                <i class="fa-solid fa-bar-chart"></i>
+                                DASHBOARD
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="{% url 'dashboard_acesso' %}">
+                                    <span class="submenu-marker">└─</span>
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    DADOS
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                         
                         <!-- OUTROS -->
                         <div class="dropdown">
                             <button class="side-bar-buttons-items dropdown-toggle">
                                 <i class="fa-solid fa-compass"></i>OUTROS
                             </button>
                             <div class="dropdown-menu">
-                                {% if user.type == 0 or user.type == 1 %}
+                                {% if user.type != 3 %}
                                 <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
                                 {% endif %}
                                 {% if user.type == 1 %}
                                 <a href="{% url 'user_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>USUÁRIOS</a>
                                 {% endif %}
-                                {% if perms.app.data %}
+                                {% if user.type != 3 %}
                                 <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
+                                {% endif %}
+                                {% if user.type != 3 %}
+                                <a href="{% url 'spreadsheet' %}">
+                                    <span class="submenu-marker">└─</span>
+                                    <i class="fa-solid fa-file-excel"></i>PLANILHAS
+                                </a>
                                 {% endif %}
                                 {% if perms.app.view_certificate and perms.app.add_certificate %}
                                 <a href="{% url 'certificate' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-certificate"></i>CERTIFICADOS</a>
@@ -105,7 +127,7 @@
                                 <a href="{% url 'attachments' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-paperclip"></i>ANEXOS</a>
                                 {% if user.is_staff %}
                                 <a href="{% url 'settings' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>CONFIGURAÇÕES</a>
-                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONIFG</a>
+                                <a href="{% url 'settings_new' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-gear"></i>NOVA CONFIG</a>
                                 {% endif %}
                             </div>
                         </div>

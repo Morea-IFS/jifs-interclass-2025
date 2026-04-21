@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>Dashboard de Acessos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/dashboard_acesso.css' %}">
+{% endblock head %}
+
+{% block navbar %}{% endblock navbar %}
+
+{% block content %}
+<div class="dash-root">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <h1><i class="fa-solid fa-chart-line"></i> Dashboard de Acessos</h1>
+            <p>
+                {% if event %}
+                    Visão geral de acessos e conformidade — {{ event.name }}
+                {% else %}
+                    Visão geral de acessos e conformidade dos usuários
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="title-buttons dash-filters">
+            <form method="get" class="dash-filter-form">
+
+                {% if user.type == 0 %}
+                <select name="e" onchange="this.form.submit()" class="filter-select" title="Filtrar por evento">
+                    <option value="">Selecione o evento</option>
+                    {% for ev in events %}
+                        <option value="{{ ev.id }}" {% if select_event == ev.id|stringformat:"s" %}selected{% endif %}>
+                            {{ ev.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+
+                {% if event %}
+                <select name="u" onchange="this.form.submit()" class="filter-select" title="Filtrar por usuário">
+                    <option value="">Todos os usuários</option>
+                    {% for u in all_users %}
+                        <option value="{{ u.id }}" {% if selected_user_id == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.username }}{% if u.first_name %} — {{ u.first_name }}{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <input type="date" name="d" value="{{ selected_date }}" onchange="this.form.submit()" class="filter-date" title="Filtrar por data">
+                {% endif %}
+
+                {% if user.type == 0 and select_event or selected_user_id or selected_date %}
+                <a href="{% url 'dashboard_acesso' %}" class="filter-clear">
+                    <i class="fa-solid fa-xmark"></i> Limpar
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    {% if event %}
+
+    <div class="dash-cards">
+        <div class="dash-card">
+            <div class="dc-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="dc-value">{{ total_users }}</div>
+            <div class="dc-label">Usuários cadastrados</div>
+        </div>
+        <div class="dash-card">
+            <div class="dc-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+            <div class="dc-value">{{ acessos_hoje }}</div>
+            <div class="dc-label">Acessos hoje</div>
+        </div>
+        <div class="dash-card">
+            <div class="dc-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="dc-value">{{ total_accepted }}</div>
+            <div class="dc-label">Termos aceitos</div>
+        </div>
+        <div class="dash-card">
+            <div class="dc-icon"><i class="fa-solid fa-file-circle-check"></i></div>
+            <div class="dc-value">{{ total_docs }}</div>
+            <div class="dc-label">Docs. enviados</div>
+        </div>
+        <div class="dash-card">
+            <div class="dc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="dc-value">{{ total_pendentes }}</div>
+            <div class="dc-label">Pendências</div>
+        </div>
+    </div>
+
+    <div class="section-heading">
+        <i class="fa-solid fa-chart-bar"></i>
+        <span>Acessos — últimos 7 dias</span>
+    </div>
+    <div class="chart-wrap">
+        {% if acessos_7dias %}
+        <div class="bar-chart">
+            {% for item in acessos_7dias %}
+            <div class="bar-col">
+                <span class="bar-count">{{ item.count }}</span>
+                <div class="bar-wrap">
+                    <div class="bar-fill" style="height:{{ item.pct }}%;" data-count="{{ item.count }}"></div>
+                </div>
+                <span class="bar-label">{{ item.label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="chart-empty">
+            <i class="fa-solid fa-chart-bar"></i>
+            <span>Sem dados de acesso nos últimos 7 dias</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section-heading">
+        <i class="fa-solid fa-table-list"></i>
+        <span>
+            {% if selected_user_obj %}Detalhes — {{ selected_user_obj.username }}
+            {% else %}Todos os usuários{% endif %}
+        </span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>1º Login</th>
+                    <th>Último Login</th>
+                    <th style="text-align:center;">
+                        Acessos{% if selected_date %}<br><span style="font-weight:400; text-transform:none; font-size:10px;">{{ selected_date }}</span>{% endif %}
+                    </th>
+                    <th>Termos</th>
+                    <th>Autorização</th>
+                    <th style="text-align:center;">Ver</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in user_rows %}
+                <tr>
+                    <td>
+                        <span class="user-cell-name">{{ row.user.username }}</span>
+                        {% if row.user.first_name %}<span class="user-cell-sub">{{ row.user.first_name }}</span>{% endif %}
+                        <span class="user-cell-tag">{{ row.user.get_type_display }}</span>
+                    </td>
+                    <td>
+                        {% if row.primeiro_login %}
+                            <span class="time-cell">
+                                {{ row.primeiro_login|date:"d/m/Y" }}
+                                <small>{{ row.primeiro_login|date:"H:i" }}</small>
+                            </span>
+                        {% else %}
+                            <span style="color:#9aa3b2; font-size:13px;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.ultimo_login %}
+                            <span class="time-cell">
+                                {{ row.ultimo_login|date:"d/m/Y" }}
+                                <small>{{ row.ultimo_login|date:"H:i" }}</small>
+                            </span>
+                        {% else %}
+                            <span style="color:#9aa3b2; font-size:13px;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="count-bubble">{{ row.total_acessos }}</span>
+                    </td>
+                    <td>
+                        {% if row.user.accepted %}
+                            <span class="badge badge-ok"><i class="fa-solid fa-check"></i> Aceito</span>
+                            {% if row.user.accepted_at %}
+                            <span class="badge-date">{{ row.user.accepted_at|date:"d/m/Y H:i" }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge badge-no"><i class="fa-solid fa-xmark"></i> Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.user.document %}
+                            <span class="badge badge-ok"><i class="fa-solid fa-file-circle-check"></i> Enviado</span>
+                        {% else %}
+                            <span class="badge badge-pend"><i class="fa-solid fa-clock"></i> Não enviado</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <button class="btn-detail" onclick="openUserModal({{ row.user.id }})" title="Ver detalhes de {{ row.user.username }}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-users-slash"></i>
+                            <span>Nenhum usuário encontrado para os filtros selecionados.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="table-wrap">
+        <div class="empty-state">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <span>Nenhum evento selecionado.</span>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<div id="userModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-user-title">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeUserModal()" aria-label="Fechar">&times;</button>
+
+        <div id="modalLoading" class="modal-loading">
+            <div class="spinner"></div>
+            <span>Carregando dados...</span>
+        </div>
+
+        <div id="modalBody" style="display:none; overflow-y: auto;">
+            <div class="modal-hero">
+                <img id="m-photo" src="" alt="Foto" class="modal-avatar"
+                     onerror="this.src='{% static 'images/person.png' %}'">
+                <div class="modal-hero-info">
+                    <h2 id="m-username"></h2>
+                    <p id="m-type"></p>
+                </div>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fa-solid fa-user"></i> Dados cadastrais
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="i-label">Nome completo</span>
+                            <span class="i-value" id="m-nome">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">E-mail</span>
+                            <span class="i-value" id="m-email">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Telefone</span>
+                            <span class="i-value mono" id="m-telefone">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Evento</span>
+                            <span class="i-value" id="m-evento">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Unidade</span>
+                            <span class="i-value" id="m-unidade">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Time</span>
+                            <span class="i-value" id="m-time">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Histórico de acesso
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="i-label">1º Login</span>
+                            <span class="i-value mono" id="m-primeiro-login">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Último login</span>
+                            <span class="i-value mono" id="m-ultimo-login">—</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="i-label">Total de acessos</span>
+                            <span class="i-value mono" id="m-total-acessos">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fa-solid fa-file-contract"></i> Conformidade
+                    </div>
+                    <div class="compliance-row">
+                        <span class="lbl">Termos de uso aceitos</span>
+                        <span id="m-accepted"></span>
+                    </div>
+                    <div class="compliance-row">
+                        <span class="lbl">Data de aceite</span>
+                        <span id="m-accepted-at" style="font-family:'DM Mono',monospace; font-size:12px; color:#555;"></span>
+                    </div>
+                    <div class="compliance-row">
+                        <span class="lbl">Regulamento lido e aceito</span>
+                        <span id="m-regulamento"></span>
+                    </div>
+                    <div class="compliance-row">
+                        <span class="lbl">Autorização enviada</span>
+                        <span id="m-doc-status"></span>
+                    </div>
+                    <div id="m-doc-link-row" class="compliance-row" style="display:none;">
+                        <span class="lbl">Visualizar documento</span>
+                        <a id="m-doc-link" href="#" target="_blank" class="btn-doc">
+                            <i class="fa-solid fa-file-pdf"></i> Abrir PDF
+                        </a>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fa-solid fa-list-check"></i> Sessões recentes
+                    </div>
+                    <div id="m-sessions-list">
+                        <div class="empty-state" style="color:#bbb; padding:20px 0;">
+                            <i class="fa-solid fa-clock" style="font-size:20px; color:#ccc;"></i>
+                            <span>Sem sessões registradas.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const modal   = document.getElementById('userModal');
+    const loading = document.getElementById('modalLoading');
+    const body    = document.getElementById('modalBody');
+
+    function badge(ok, okText, noText) {
+        return ok
+            ? `<span class="mbadge mbadge-ok"><i class="fa-solid fa-check"></i> ${okText}</span>`
+            : `<span class="mbadge mbadge-no"><i class="fa-solid fa-xmark"></i> ${noText}</span>`;
+    }
+
+    window.openUserModal = function(userId) {
+        modal.classList.add('open');
+        loading.style.display = 'flex';
+        body.style.display = 'none';
+        document.body.style.overflow = 'hidden';
+
+        const baseUrl = "{% url 'dashboard_acesso_user_detail' 0 %}".replace('/0/', '/' + userId + '/');
+        const eventId = "{{ select_event|default:'' }}";
+        const url = eventId ? `${baseUrl}?e=${eventId}` : baseUrl;
+
+        fetch(url)
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(d => {
+                const photo = document.getElementById('m-photo');
+                photo.src = d.photo || '';
+                document.getElementById('m-username').textContent = d.username;
+                document.getElementById('m-type').textContent = d.type_display;
+
+                document.getElementById('m-nome').textContent = d.full_name || '—';
+                document.getElementById('m-email').textContent = d.email || '—';
+                document.getElementById('m-telefone').textContent = d.telefone || '—';
+                document.getElementById('m-evento').textContent = d.event_user || '—';
+                document.getElementById('m-unidade').textContent = d.unit || '—';
+                document.getElementById('m-time').textContent = d.team || '—';
+
+                document.getElementById('m-primeiro-login').textContent = d.primeiro_login || '—';
+                document.getElementById('m-ultimo-login').textContent = d.ultimo_login || '—';
+                document.getElementById('m-total-acessos').textContent = d.total_acessos;
+
+                document.getElementById('m-accepted').innerHTML = badge(d.accepted, 'Aceito', 'Não aceito');
+                document.getElementById('m-accepted-at').textContent = d.accepted_at || '—';
+                document.getElementById('m-regulamento').innerHTML = badge(d.accepted, 'Lido e aceito', 'Pendente');
+                document.getElementById('m-doc-status').innerHTML = badge(d.has_document, 'Enviado', 'Não enviado');
+
+                const docRow = document.getElementById('m-doc-link-row');
+                if (d.has_document && d.document_url) {
+                    document.getElementById('m-doc-link').href = d.document_url;
+                    docRow.style.display = 'flex';
+                } else {
+                    docRow.style.display = 'none';
+                }
+
+                const sessDiv = document.getElementById('m-sessions-list');
+                if (d.sessions && d.sessions.length > 0) {
+                    sessDiv.innerHTML = d.sessions.map(s => {
+                        const pills = (s.services && s.services.length)
+                            ? s.services.map(sv => `<span class="spill">${sv}</span>`).join('')
+                            : '<span style="font-size:11px;color:#bbb;">Nenhuma página registrada</span>';
+                        return `
+                            <div class="session-card">
+                                <div class="session-meta">
+                                    <span class="session-date">${s.date}</span>
+                                    <span class="session-ip">${s.ip || ''}</span>
+                                </div>
+                                <div class="session-services">${pills}</div>
+                            </div>`;
+                    }).join('');
+                } else {
+                    sessDiv.innerHTML = `
+                        <div class="empty-state" style="color:#bbb; padding:20px 0;">
+                            <i class="fa-solid fa-clock" style="font-size:20px;color:#ccc;"></i>
+                            <span>Sem sessões registradas.</span>
+                        </div>`;
+                }
+
+                loading.style.display = 'none';
+                body.style.display = 'block';
+            })
+            .catch(() => {
+                loading.innerHTML = `
+                    <div style="color:#c00; font-size:13px; text-align:center; padding:40px;">
+                        <i class="fa-solid fa-circle-exclamation" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                        Erro ao carregar os dados. Tente novamente.
+                    </div>`;
+            });
+    };
+
+    window.closeUserModal = function() {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+        loading.innerHTML = `
+            <div class="spinner"></div>
+            <span>Carregando dados...</span>`;
+        loading.style.display = 'flex';
+        body.style.display = 'none';
+    };
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeUserModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('open')) closeUserModal();
+    });
+})();
+</script>
+{% endblock content %}

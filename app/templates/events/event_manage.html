@@ -4,7 +4,6 @@
 
 {% block head %}
 <style>
-
     .container {
         width: 100%;
         max-width: 1000px;
@@ -13,10 +12,13 @@
         box-sizing: border-box;
         background-color: var(--global-third-color);
     }
-    h1{
-        color: var(--global-header-color);;
+
+    h1 {
+        color: var(--global-header-color);
     }
-    h2, h3 {
+
+    h2,
+    h3 {
         color: var(--global-color-white);
         margin-top: 20px;
     }
@@ -42,7 +44,7 @@
         padding: 20px;
         margin-bottom: 20px;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     ul {
@@ -53,7 +55,8 @@
         margin-bottom: 5px;
         color: var(--global-color-white);
     }
-    p{
+
+    p {
         color: var(--global-color-white);
     }
 
@@ -66,20 +69,23 @@
         width: 100%;
         height: 100%;
         overflow: auto;
-        background-color: rgba(0,0,0,0.5);
+        background-color: rgba(0, 0, 0, 0.5);
     }
 
     .modal-content {
         background-color: #fff;
-        margin: 5% auto;
+        margin: 3% auto;
         padding: 20px;
         border-radius: 10px;
         width: 90%;
-        max-width: 600px;
+        max-width: 700px;
         position: relative;
         box-sizing: border-box;
+        max-height: 90vh;
+        overflow-y: auto;
     }
-    .modal-content h2{
+
+    .modal-content h2 {
         color: #2196F3;
     }
 
@@ -102,12 +108,20 @@
         display: block;
     }
 
-    form input, form textarea {
+    form input,
+    form textarea,
+    form select {
         width: 100%;
         padding: 10px;
         margin-top: 5px;
         border-radius: 5px;
         border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    form textarea {
+        min-height: 120px;
+        resize: vertical;
     }
 
     form button {
@@ -124,7 +138,6 @@
         background-color: #192a56;
     }
 
-    /* Toggle Switch Custom */
     .toggle-switch {
         position: relative;
         display: inline-block;
@@ -164,11 +177,11 @@
         border-radius: 50%;
     }
 
-    .toggle-switch input:checked + .slider {
+    .toggle-switch input:checked+.slider {
         background-color: #2196F3;
     }
 
-    .toggle-switch input:checked + .slider:before {
+    .toggle-switch input:checked+.slider:before {
         transform: translateX(24px);
     }
 
@@ -177,12 +190,113 @@
         align-items: center;
         justify-content: space-between;
         margin-top: 15px;
+        gap: 10px;
     }
 
     .toggle-label span {
         font-weight: bold;
     }
 
+    .step-nav-wrapper {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .step-pill-nav {
+        text-align: center;
+        padding: 10px 6px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #888;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .25s ease;
+        background: #f8f8f8;
+        user-select: none;
+    }
+
+    .step-pill-nav:hover {
+        background: #eef3ff;
+    }
+
+    .step-pill-nav.active {
+        color: #fff;
+        background: #273c75;
+        border-color: #273c75;
+    }
+
+    .step-pill-nav.done {
+        color: #2196F3;
+        border-color: #2196F3;
+        background: #f4fbff;
+    }
+
+    .step-section-title {
+        margin-top: 0;
+        color: #2196F3;
+    }
+
+    .modal-footer-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 24px;
+        padding-top: 14px;
+        border-top: 1px solid #eee;
+        gap: 10px;
+    }
+
+    .modal-footer-nav button {
+        margin-top: 0;
+    }
+
+    .btn-secondary {
+        padding: 9px 20px;
+        background: #f0f0f0;
+        color: #555;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        padding: 9px 20px;
+        background: #273c75;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    @media (max-width: 768px) {
+        .step-nav-wrapper {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 4% auto;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .step-nav-wrapper {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 <title>Gerenciar Eventos</title>
 {% endblock head %}
@@ -194,42 +308,57 @@
 <div class="container">
     <h1>GERENCIAMENTO DE EVENTOS</h1>
 
-    <!-- Botão para abrir modal -->
     <button class="btn-add" onclick="openModal()">+ Novo evento</button>
     <button class="btn-add" onclick="openSportModal()">+ Novo esporte</button>
     <button class="btn-add" onclick="openUnitModal()">+ Nova unidade</button>
+    <button class="btn-add" onclick="openBadgeModal()">+ Novo crachá</button>
 
-    <!-- Lista de eventos -->
     {% for event in events %}
     <div class="event-card">
         <h2>{{ event.name }}</h2>
         <p><strong>Local:</strong> {{ event.local }}</p>
         <p><strong>Período:</strong> {{ event.date_init }} - {{ event.date_end }}</p>
         <p><strong>Descrição:</strong> {{ event.description }}</p>
+        <p><strong>Inscrições:</strong> {{ event.enrollment_init }} - {{ event.enrollment_end }}</p>
 
         <h3>Esportes no evento:</h3>
         <ul>
             {% for sport in event.sport_set.all %}
-                <li>{{ sport.get_sport_display }} ({{ sport.min_sport }} - {{ sport.max_sport }} atletas)</li>
+            <li>
+                {{ sport.get_sport_display }} 
+                ({{ sport.min_sport }} - {{ sport.max_sport }} atletas)
+                — 
+                {% if sport.masc %}Masculino{% endif %}
+                {% if sport.fem %}
+                    {% if sport.masc %}, {% endif %}
+                    Feminino
+                {% endif %}
+                {% if sport.mist %}
+                    {% if sport.masc or sport.fem %}, {% endif %}
+                    Misto
+                {% endif %}
+            </li>
             {% empty %}
-                <li>Nenhum esporte registrado para este evento.</li>
+            <li>Nenhum esporte registrado para este evento.</li>
             {% endfor %}
         </ul>
+
         <h3>Usuários organizadores:</h3>
         <ul>
             {% for user in event.user_set.all %}
-                <li>{{ user.username }} - {{ user.get_type_display }}</li>
+            <li>{{ user.username }} - {{ user.get_type_display }}</li>
             {% empty %}
-                <li>Nenhum usuário registrado para este evento.</li>
+            <li>Nenhum usuário registrado para este evento.</li>
             {% endfor %}
         </ul>
+
         {% if event.general_need_unit %}
         <h3>Unidades:</h3>
         <ul>
             {% for i in event.unit_set.all %}
-                <li>{{ i.name }}</li>
+            <li>{{ i.name }}</li>
             {% empty %}
-                <li>Não há nenhuma unidade para este evento.</li>
+            <li>Não há nenhuma unidade para este evento.</li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -237,78 +366,177 @@
     {% endfor %}
 </div>
 
-<!-- Modal -->
 <div id="eventModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Cadastrar Evento</h2>
+
+        <div style="padding-bottom: 0;">
+            <h2 id="modal-step-title" style="color: #2196F3;">Cadastrar Evento</h2>
+            <p id="modal-step-label" style="font-size: 12px; color: #888; margin: 4px 0 10px;">Etapa 1 de 6 — Informações Básicas</p>
+
+            <div style="height: 5px; background: #e0e0e0; border-radius: 3px; margin-bottom: 12px;">
+                <div id="modal-progress-fill" style="height: 5px; background: #273c75; border-radius: 3px; width: 16.66%; transition: width .35s ease;"></div>
+            </div>
+
+            <div class="step-nav-wrapper">
+                <div class="step-pill-nav active" data-step="1">1. Básico</div>
+                <div class="step-pill-nav" data-step="2">2. Datas</div>
+                <div class="step-pill-nav" data-step="3">3. Idade</div>
+                <div class="step-pill-nav" data-step="4">4. Arquivos</div>
+                <div class="step-pill-nav" data-step="5">5. Geral</div>
+                <div class="step-pill-nav" data-step="6">6. Times/Jogadores</div>
+            </div>
+        </div>
+
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="name">Nome:</label>
-            <input type="text" name="name" id="name" required>
 
-            <label for="logo">Logo:</label>
-            <input type="file" name="logo" id="logo">
+            <div class="modal-step" id="modal-step-1">
+                <h2 class="step-section-title">Informações Básicas</h2>
 
-            <label for="logo_badge">Logo crachá:</label>
-            <input type="file" name="logo_badge" id="logo">
-            <p>*Retangular</p>
+                <label for="name">Nome:</label>
+                <input type="text" name="name" id="name" required>
 
-            <label for="description">Descrição:</label>
-            <textarea name="description" id="description"></textarea>
+                <label for="description">Descrição:</label>
+                <textarea name="description" id="description"></textarea>
 
-            <label for="date_init">Início do evento:</label>
-            <input type="date" name="date_init" id="date_init">
+                <label for="local">Local:</label>
+                <input type="text" name="local" id="local">
+            </div>
 
-            <label for="date_end">Fim do evento:</label>
-            <input type="date" name="date_end" id="date_end">
+            <div class="modal-step" id="modal-step-2" style="display:none;">
+                <h2 class="step-section-title">Datas e Inscrições</h2>
 
-            <label for="enrollment_init">Início das inscrições:</label>
-            <input type="datetime-local" name="enrollment_init" id="enrollment_init">
+                <label for="date_init">Início do evento:</label>
+                <input type="date" name="date_init" id="date_init">
 
-            <label for="enrollment_end">Fim das inscrições:</label>
-            <input type="datetime-local" name="enrollment_end" id="enrollment_end">
+                <label for="date_end">Fim do evento:</label>
+                <input type="date" name="date_end" id="date_end">
 
-            <label for="local">Local:</label>
-            <input type="text" name="local" id="local">
+                <label for="enrollment_init">Início das inscrições:</label>
+                <input type="datetime-local" name="enrollment_init" id="enrollment_init">
 
-            <label for="age">Idade mínima:</label>
-            <input type="number" name="age" id="age" value="99">
+                <label for="enrollment_end">Fim das inscrições:</label>
+                <input type="datetime-local" name="enrollment_end" id="enrollment_end">
+            </div>
 
-            <label for="regulation">Regulamento (PDF):</label>
-            <input type="file" name="regulation" id="regulation">
+            <div class="modal-step" id="modal-step-3" style="display:none;">
+                <h2 class="step-section-title">Faixa Etária</h2>
 
-            <br>
-            <hr>
-            <h2 style="margin-top: 30px;">Campos obrigatórios</h3>
+                <label for="age">Idade mínima:</label>
+                <input type="number" name="age" id="age" value="0">
 
-            <div class="toggle-label"><span>Termos</span><label class="toggle-switch"><input type="checkbox" name="general_need_terms" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Autorização</span><label class="toggle-switch"><input type="checkbox" name="general_need_authorization" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Unidade</span><label class="toggle-switch"><input type="checkbox" name="general_need_unit" checked><span class="slider"></span></label></div>
+                <label for="age_max">Idade máxima:</label>
+                <input type="number" name="age_max" id="age_max" value="99">
+            </div>
 
-            <br>
-            <hr>
-            <h2 style="margin-top: 30px;">Campos obrigatórios para times</h3>
+            <div class="modal-step" id="modal-step-4" style="display:none;">
+                <h2 class="step-section-title">Arquivos e Logos</h2>
 
-            <div class="toggle-label"><span>Descrição</span><label class="toggle-switch"><input type="checkbox" name="team_need_description" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Cor</span><label class="toggle-switch"><input type="checkbox" name="team_need_color" checked><span class="slider"></span></label></div>
+                <label for="logo">Logo:</label>
+                <input type="file" name="logo" id="logo">
 
-            <br>
-            <hr>
-            <h2 style="margin-top: 30px;">Campos obrigatórios para Jogadores</h3>
+                <label for="logo_badge">Logo crachá:</label>
+                <input type="file" name="logo_badge" id="logo_badge">
+                <p class="help-text">*Retangular</p>
 
-            <div class="toggle-label"><span>Instagram</span><label class="toggle-switch"><input type="checkbox" name="player_need_instagram" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Foto</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Foto gol</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo_goal" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Boletim</span><label class="toggle-switch"><input type="checkbox" name="player_need_bulletin" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>RG</span><label class="toggle-switch"><input type="checkbox" name="player_need_rg" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Sexo</span><label class="toggle-switch"><input type="checkbox" name="player_need_sexo" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Matrícula</span><label class="toggle-switch"><input type="checkbox" name="player_need_registration" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>CPF</span><label class="toggle-switch"><input type="checkbox" name="player_need_cpf" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Data de nascimento</span><label class="toggle-switch"><input type="checkbox" name="player_need_date_nasc" checked><span class="slider"></span></label></div>
-            <div class="toggle-label"><span>Endereço</span><label class="toggle-switch"><input type="checkbox" name="player_need_address" checked><span class="slider"></span></label></div>
+                <label for="regulation">Regulamento (PDF):</label>
+                <input type="file" name="regulation" id="regulation">
+            </div>
 
-            <button type="submit">Cadastrar Evento</button>
+            <div class="modal-step" id="modal-step-5" style="display:none;">
+                <h2 class="step-section-title">Campos Gerais</h2>
+
+                <div class="toggle-label">
+                    <span>Termos</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="general_need_terms" id="general_need_terms" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="terms-fields">
+                    <label for="upload_intro_text">Texto do Envio de Documento:</label>
+                    <textarea name="upload_intro_text" id="upload_intro_text" rows="4"
+                        placeholder="Ex: Por favor, envie a Declaração de Autorização de acesso ao sistema..."></textarea>
+
+                    <label for="terms_intro_text">Introdução dos Termos de Uso:</label>
+                    <textarea name="terms_intro_text" id="terms_intro_text" rows="4"
+                        placeholder="Ex: Leia atentamente os termos de uso antes de utilizar o sistema."></textarea>
+
+                    <label for="terms_declaration_text">Declaração dos Termos de Uso:</label>
+                    <textarea name="terms_declaration_text" id="terms_declaration_text" rows="6"
+                        placeholder="Ex: Eu, {% templatetag openvariable %} user.first_name {% templatetag closevariable %}, declaro que aceito participar..."></textarea>
+                </div>
+
+                <div class="toggle-label">
+                    <span>Autorização</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="general_need_authorization" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-label">
+                    <span>Unidade</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="general_need_unit" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-step" id="modal-step-6" style="display:none;">
+                <h2 class="step-section-title">Requisitos dos Times</h2>
+
+                <div class="toggle-label">
+                    <span>Descrição</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="team_need_description" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-label">
+                    <span>Cor</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="team_need_color" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-label">
+                    <span>Técnico</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="team_need_technician" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <hr style="margin: 25px 0; border: none; border-top: 1px solid #eee;">
+
+                <h2 class="step-section-title">Requisitos dos Jogadores</h2>
+
+                <div class="toggle-label"><span>Instagram</span><label class="toggle-switch"><input type="checkbox" name="player_need_instagram" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Foto</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Foto gol</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo_goal" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Boletim</span><label class="toggle-switch"><input type="checkbox" name="player_need_bulletin" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>RG</span><label class="toggle-switch"><input type="checkbox" name="player_need_rg" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Sexo</span><label class="toggle-switch"><input type="checkbox" name="player_need_sexo" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Matrícula</span><label class="toggle-switch"><input type="checkbox" name="player_need_registration" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>CPF</span><label class="toggle-switch"><input type="checkbox" name="player_need_cpf" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Data de nascimento</span><label class="toggle-switch"><input type="checkbox" name="player_need_date_nasc" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Endereço</span><label class="toggle-switch"><input type="checkbox" name="player_need_address" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>Curso</span><label class="toggle-switch"><input type="checkbox" name="player_need_course" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>CEP</span><label class="toggle-switch"><input type="checkbox" name="player_need_cep" checked><span class="slider"></span></label></div>
+                <div class="toggle-label"><span>MUNICIPIO/UF</span><label class="toggle-switch"><input type="checkbox" name="player_need_municipality" checked><span class="slider"></span></label></div>
+            </div>
+
+            <div class="modal-footer-nav">
+                <button type="button" id="modal-btn-back" class="btn-secondary" style="visibility:hidden;" onclick="modalChangeStep(-1)">← Voltar</button>
+                <span style="font-size:12px; color:#aaa;" id="modal-step-count">1 / 6</span>
+                <button type="button" id="modal-btn-next" class="btn-primary" onclick="modalChangeStep(1)">Próximo →</button>
+            </div>
         </form>
     </div>
 </div>
@@ -319,12 +547,12 @@
         <h2>Cadastrar esporte no evento</h2>
         <form method="post">
             {% csrf_token %}
-            
+
             <label for="event">Evento:</label>
             <select name="event" id="event" required>
                 <option selected disabled>Selecione o evento</option>
                 {% for event in events %}
-                    <option value="{{ event.id }}">{{ event.name }}</option>
+                <option value="{{ event.id }}">{{ event.name }}</option>
                 {% endfor %}
             </select>
 
@@ -332,7 +560,7 @@
             <select name="sport" id="sport" required>
                 <option selected disabled>Selecione o esporte</option>
                 {% for value, name in sports %}
-                    <option value="{{ value }}">{{ name }}</option>
+                <option value="{{ value }}">{{ name }}</option>
                 {% endfor %}
             </select>
 
@@ -341,9 +569,9 @@
 
             <label for="max_sport">Máximo de atletas:</label>
             <input type="number" name="max_sport" id="max_sport" min="1" required>
-            
+
             <hr>
-            <h2 style="margin-top: 30px;">Campos obrigatórios</h3>
+            <h2 style="margin-top: 30px;">Campos obrigatórios</h2>
 
             <div class="toggle-label"><span>Feminino</span><label class="toggle-switch"><input type="checkbox" name="fem" checked><span class="slider"></span></label></div>
             <div class="toggle-label"><span>Masculino</span><label class="toggle-switch"><input type="checkbox" name="masc" checked><span class="slider"></span></label></div>
@@ -354,18 +582,52 @@
     </div>
 </div>
 
+<div id="badgeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeBadgeModal()">&times;</span>
+        <h2>Cadastrar crachá no evento</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="event">Evento:</label>
+            <select name="event_badge" id="event" required>
+                {% for event in events_unit %}
+                <option value="{{ event.id }}">{{ event.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="event">Tipo:</label>
+            <select name="type_badge" id="event" required>
+                <option value="0">Voluntário</option>
+                <option value="1">Técnico de modalidade esportiva</option>
+                <option value="2">Apoio</option>
+                <option value="3">Estagiário</option>
+                <option value="4">Chefe de delegação</option>
+                <option value="5">Organização</option>
+                <option value="6">Árbitro</option>
+                <option value="7">Atleta</option>
+            </select>
+
+            <label for="image_badge">Crachá (Arquivo imagem):</label>
+            <input type="file" name="image_badge" required>
+            
+            <button type="submit">Cadastrar unidade</button>
+        </form>
+    </div>
+</div>
+
 <div id="unitModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeUnitModal()">&times;</span>
         <h2>Cadastrar unidade no evento</h2>
         <form method="post">
             {% csrf_token %}
-            
+
             <label for="event">Evento:</label>
             <select name="event_unit" id="event" required>
                 <option selected disabled>Selecione o evento</option>
                 {% for event in events_unit %}
-                    <option value="{{ event.id }}">{{ event.name }}</option>
+                <option value="{{ event.id }}">{{ event.name }}</option>
                 {% endfor %}
             </select>
 
@@ -380,13 +642,79 @@
 </div>
 
 <script>
+    let modalCurrentStep = 1;
+    const modalTotalSteps = 6;
+
+    const modalStepLabels = [
+        'Etapa 1 de 6 — Informações Básicas',
+        'Etapa 2 de 6 — Datas e Inscrições',
+        'Etapa 3 de 6 — Faixa Etária',
+        'Etapa 4 de 6 — Arquivos e Logos',
+        'Etapa 5 de 6 — Configurações Gerais',
+        'Etapa 6 de 6 — Requisitos dos Times e Jogadores'
+    ];
+
+    function showModalStep(step) {
+        if (step < 1 || step > modalTotalSteps) return;
+
+        modalCurrentStep = step;
+
+        document.querySelectorAll('#eventModal .modal-step').forEach(function (el, index) {
+            el.style.display = (index + 1 === step) ? 'block' : 'none';
+        });
+
+        document.getElementById('modal-step-label').textContent = modalStepLabels[step - 1];
+        document.getElementById('modal-progress-fill').style.width = ((step / modalTotalSteps) * 100) + '%';
+        document.getElementById('modal-step-count').textContent = step + ' / ' + modalTotalSteps;
+
+        document.querySelectorAll('#eventModal .step-pill-nav').forEach(function (pill) {
+            const pillStep = Number(pill.getAttribute('data-step'));
+            pill.classList.remove('active', 'done');
+
+            if (pillStep === step) {
+                pill.classList.add('active');
+            } else if (pillStep < step) {
+                pill.classList.add('done');
+            }
+        });
+
+        const btnBack = document.getElementById('modal-btn-back');
+        const btnNext = document.getElementById('modal-btn-next');
+
+        btnBack.style.visibility = step === 1 ? 'hidden' : 'visible';
+
+        if (step === modalTotalSteps) {
+            btnNext.textContent = 'Cadastrar Evento';
+            btnNext.setAttribute('type', 'button');
+            btnNext.setAttribute('onclick', 'submitEventForm()');
+            btnNext.style.background = '#2196F3';
+        } 
+        
+        else {
+            btnNext.textContent = 'Próximo →';
+            btnNext.setAttribute('type', 'button');
+            btnNext.setAttribute('onclick', 'modalChangeStep(1)');
+            btnNext.style.background = '#273c75';
+        }
+
+        toggleTermsFields();
+    }
+
+    function modalChangeStep(dir) {
+        const next = modalCurrentStep + dir;
+        if (next < 1 || next > modalTotalSteps) return;
+        showModalStep(next);
+    }
+
     function openModal() {
         document.getElementById("eventModal").style.display = "block";
+        showModalStep(1);
     }
 
     function closeModal() {
         document.getElementById("eventModal").style.display = "none";
     }
+
     function openSportModal() {
         document.getElementById("sportModal").style.display = "block";
     }
@@ -403,11 +731,63 @@
         document.getElementById("unitModal").style.display = "none";
     }
 
-    window.onclick = function(event) {
-        const modal = document.getElementById("eventModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
+    function openBadgeModal() {
+        document.getElementById("badgeModal").style.display = "block";
+    }
+
+    function closeBadgeModal() {
+        document.getElementById("badgeModal").style.display = "none";
+    }
+
+    function toggleTermsFields() {
+        const checkbox = document.getElementById("general_need_terms");
+        const fields = document.getElementById("terms-fields");
+
+        if (!checkbox || !fields) return;
+
+        if (checkbox.checked) {
+            fields.style.display = "block";
+        } else {
+            fields.style.display = "none";
         }
     }
+    function submitEventForm() {
+        document.querySelector('#eventModal form').submit();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const checkbox = document.getElementById("general_need_terms");
+        if (checkbox) {
+            checkbox.addEventListener("change", toggleTermsFields);
+        }
+
+        document.querySelectorAll('#eventModal .step-pill-nav').forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                const step = Number(this.getAttribute('data-step'));
+                showModalStep(step);
+            });
+        });
+
+        toggleTermsFields();
+        showModalStep(1);
+    });
+
+    window.addEventListener('click', function (event) {
+        const eventModal = document.getElementById("eventModal");
+        const sportModal = document.getElementById("sportModal");
+        const unitModal = document.getElementById("unitModal");
+
+        if (event.target === eventModal) {
+            closeModal();
+        }
+
+        if (event.target === sportModal) {
+            closeSportModal();
+        }
+
+        if (event.target === unitModal) {
+            closeUnitModal();
+        }
+    });
 </script>
 {% endblock content %}

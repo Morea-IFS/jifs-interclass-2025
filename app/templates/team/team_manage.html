@@ -304,13 +304,15 @@
             </section>
             {% endif %}
         {% endif %}
-        {% if not events_sport %}
-            <section class="alert-page" style="background-color: red;">
-                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
-                <div class="alert-text">
-                    <p>NÃO EXISTE NENHUMA ESPORTE CADASTRADO.</p>
-                </div>
-            </section>
+        {% if not events_sport and select_event %}
+            {% if user.type == 0 or user.type == 1 %}
+                <section class="alert-page" style="background-color: red;">
+                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-text">
+                        <p>NÃO EXISTE NENHUMA ESPORTE CADASTRADO.</p>
+                    </div>
+                </section>
+            {% endif %}
         {% endif %}
         {% if team %}
         {% if user.type != 2 %}
@@ -324,7 +326,7 @@
         </div>
         <p class="description-team">{{team.description}}</p>
         {% endif %}
-        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+        <section class="all-table" style="width: 100%; max-width: 100%; margin-top: 15px;">
             <table id="search-table" style="width: 100%;">
                 <tr class="hidden error">
                     <th>ESPORTE</th>
@@ -404,22 +406,21 @@
     <div class="modal-content">
         <span class="close" onclick="closeTimeModal()">&times;</span>
         <h2>Cadastrar esporte</h2>
-        <form method="post" enctype="multipart/form-data">
+        <form id="modal-team" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <label for="esportes">Esportes</label>
             <select id="times" name="sport_adm_id">
                 <option selected disabled value="None">Selecione o esporte</option>
                 {% for i in events_sport %}
-                <option value="{{i.id}}">{{i.get_sport_display}} - {% if i.masc %} (masc){% endif %} {% if i.fem %} (fem){% endif %}{% if i.mist %} (mist){% endif %}</option>
+                <option value="{{i.id}}">{{i.get_sport_display}}</option>
                 {% endfor %}
             </select>
-            <label for="sexos">Sexo</label>
-            <select id="sexos" name="sexo_adm_id">
+            <label for="sexo_adm_id">Sexo</label>
+            <select id="sexo_adm_id" name="sexo_adm_id" disabled>
                 <option selected disabled value="None">Selecione o sexo</option>
-                <option value="0">Masculino</option>
-                <option value="1">Feminino</option>
-                <option value="2">Misto</option>
             </select>
+
+            {% if event.team_need_color %}
             <label for="esportes">Técnico</label>
             <select id="times" name="technitian">
                 <option selected disabled value="None">Selecione o técnico</option>
@@ -427,11 +428,42 @@
                 <option value="{{i.id}}">{{i.name}}</option>
                 {% endfor %}
             </select>
+            {% endif %}
             <input type="hidden" name="add-team-sport" id="addTimeId">
             <button class="button-modal" type="submit">Adicionar esporte</button>
         </form>
     </div>
 </div>
+
+<script>
+  const eventSportPhaseSelect = document.querySelector('#modal-team select[name="sport_adm_id"]');
+  const sexoPhaseSelect = document.getElementById("sexo_adm_id");
+
+  async function carregarSexosPhase() {
+    const sport = eventSportPhaseSelect.value;
+    if (sport && sport !== "None") {
+      const response = await fetch(`/get_sexos/?sport=${sport}`);
+      const data = await response.json();
+
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      data.sexos.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.value;
+        opt.textContent = s.label;
+        sexoPhaseSelect.appendChild(opt);
+      });
+
+      sexoPhaseSelect.disabled = false;
+    } else {
+      sexoPhaseSelect.innerHTML = '<option selected disabled value="None">Selecione o sexo</option>';
+      sexoPhaseSelect.disabled = true;
+    }
+  }
+
+  if (eventSportPhaseSelect) {
+    eventSportPhaseSelect.addEventListener("change", carregarSexosPhase);
+  }
+</script>
 
 <div id="eventModal" class="modal">
     <div class="modal-content">

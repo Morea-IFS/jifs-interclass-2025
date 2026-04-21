@@ -17,35 +17,46 @@
         <div class="relatorios-wrapper">
             <div class="title-adm">
                 <h1>
-                {% if event %} RELATÓRIOS DO {{event.name}}{% else %} RELATÓRIOS {% endif %}
-                </h1>
-                {% if perms.app.add_attachments %}
-                <div class="title-buttons">
-                    {% if user.type == 0 %} 
-                    <form method="get">
-                        <select name="e" onchange="this.form.submit();">
-                            <option value="">Evento</option>
-                            {% for i in events %}
-                                <option value="{{ i.id }}" {% if event.id|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
-                    <h3>{% if event %} {{event.name}} {% else %} ATUM ADMIN {% endif %}</h3>
+                    {% if event %}
+                        RELATÓRIOS DO {{ event.name }}
+                    {% elif user.type == 1 %}
+                        RELATÓRIOS DO {{ user.event_user.name }}
                     {% else %}
-                    <h3>
-                        {{user.event_user.name}}
-                    </h3>
+                        RELATÓRIOS
+                    {% endif %}
+                </h1>
+
+                <div class="title-buttons">
+                    {% if user.type == 0 %}
+                        {# Admin escolhe o evento via dropdown #}
+                        <form method="get">
+                            <select name="e" onchange="this.form.submit();">
+                                <option value="">Selecione um evento</option>
+                                {% for i in events %}
+                                    <option value="{{ i.id }}"
+                                        {% if event.id|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ i.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        <h3>{% if event %}{{ event.name }}{% else %}ATUM ADMIN{% endif %}</h3>
+                    {% elif user.type == 1 %}
+                        <h3>{{ user.event_user.name }}</h3>
                     {% endif %}
                 </div>
-                {% endif %}
             </div>
-            
-            {% if event %}
+
+            {% if event or user.event_user %}
             <form method="post" class="relatorios-grid">
                 {% csrf_token %}
-                <input type="hidden" name="event_data" {% if event %} value="{{event.id}}" {% else %} value="0" {% endif %}>
 
-                {% if user.is_staff %}
+                {# event_data: coordenador usa seu próprio evento; admin usa o selecionado #}
+                <input type="hidden" name="event_data"
+                    value="{% if user.type == 0 and event %}{{ event.id }}{% elif user.event_user %}{{ user.event_user.id }}{% else %}0{% endif %}">
+
+                {# ── Botões exclusivos de admin e coordenador ────────────────── #}
+                {% if user.is_staff or user.type == 1 %}
                     <button name="all_data" type="submit" class="relatorio-btn">
                         <i class="fas fa-database"></i>
                         <p>Dados gerais</p>
@@ -62,6 +73,7 @@
                     </button>
                 {% endif %}
 
+                {# ── Botões disponíveis para todos ───────────────────────────── #}
                 <button name="all_players" type="submit" class="relatorio-btn">
                     <i class="fas fa-users"></i>
                     <p>Todos os atletas</p>
@@ -82,33 +94,39 @@
                     <p>Comissão Técnica</p>
                 </button>
 
-                {% for i in teams %}
-                    <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
-                        <i class="fas fa-university"></i>
-                        <p>{{ i.name }}</p>
-                    </button>
-                {% endfor %}
                 <button name="all_team" type="submit" class="relatorio-btn">
                     <i class="fas fa-university"></i>
-                    <p>Dados do{% if user.is_staff %}s times {% else %} time {% endif %}</p>
+                    <p>Dados do{% if user.is_staff or user.type == 1 %}s times{% else %} time{% endif %}</p>
                 </button>
-                {% if event %}
-                    {% for i in event_sports %}
-                        <button name="all_players_sport" value="{{ i.id }}" type="submit" class="relatorio-btn">
-                            <i class="fas fa-running"></i>
-                            <p>{{ i.get_sport_display }}</p>
+
+                {# ── Botão por campus (admin e coordenador) ──────────────────── #}
+                {% if user.is_staff or user.type == 1 %}
+                    {% for i in teams %}
+                        <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                            <i class="fas fa-university"></i>
+                            <p>{{ i.name }}</p>
                         </button>
                     {% endfor %}
                 {% endif %}
+
+                {# ── Botões por modalidade ───────────────────────────────────── #}
+                {% for i in event_sports %}
+                    <button name="all_players_sport" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                        <i class="fas fa-running"></i>
+                        <p>{{ i.get_sport_display }}</p>
+                    </button>
+                {% endfor %}
             </form>
+
             {% else %}
             <section class="alert-page">
-                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
                 <div class="alert-text">
                     <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
                 </div>
             </section>
             {% endif %}
+
         </div>
     </div>
 </div>

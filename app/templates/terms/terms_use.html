@@ -1,4 +1,5 @@
 {% load static %}
+{% load render_text %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -14,19 +15,37 @@
 
 <body class="light-mode">
     <main>
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    createToast("{{ message.tags }}", "{{ message }}");
+                </script>
+            {% endfor %}
+        {% endif %}
         <div class="all">
             <div class="container">
                 <h1 class="title">Termos de Uso</h1>
 
                 <div class="content">
-                    <p>Leia atentamente os termos de uso antes de utilizar o sistema.</p>
+                    <p>
+                        {% if user.event_user.terms_intro_text %}
+                            {{ user.event_user.terms_intro_text|render_with_user:user }}
+                        {% else %}
+                            Leia atentamente os termos de uso antes de utilizar o sistema.
+                        {% endif %}
+                    </p>
                 </div>
 
                 <div class="terms-content">
                     <p>
-                        Eu, <b>{{ user.first_name }}</b>, responsável por <b>{{ user.team.name }},</b>
-                        declaro que aceito participar de(o) <b>{{ user.event_user.description }}</b> <b>- {{ user.event_user.name }}</b>,
-                        respeitando e seguindo o regulamento geral e específico da competição.
+                        {% if user.event_user.terms_declaration_text %}
+                            {{ user.event_user.terms_declaration_text|render_with_user:user }}
+                        {% else %}
+                            Eu, <b>{{ user.first_name }}</b>, responsável por <b>{{ user.team.name }}</b>,
+                            declaro que aceito participar de(o) <b>{{ user.event_user.description }}</b>
+                            <b>- {{ user.event_user.name }}</b>, respeitando e seguindo o regulamento
+                            geral e específico da competição.
+                        {% endif %}
                     </p>
                 </div>
 
@@ -53,7 +72,15 @@
             </div>
         </div>
     </main>
-
+    <ul class="notifications"></ul>
+    <script src="{% static 'js/messages.js' %}"></script>
+    <script>
+        {% if messages %}
+            {% for message in messages %}
+                createToast("{{ message.tags }}", "{{ message|escapejs }}");
+            {% endfor %}
+        {% endif %}
+    </script>
     <script src="{% static 'js/script.js' %}"></script>
  
 </body>

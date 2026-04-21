@@ -8,13 +8,33 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.models import Group, Permission
 from .generators import generate_timer
 from django.contrib.auth import get_user_model
-from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession
+from .models import Point, Match, Team_match, Team, Penalties, Volley_match, Player_match, Time_pause, Banner, Occurrence, UserSession, Player, ActivityLog
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.sessions.models import Session
 from django.utils import timezone
+from datetime import datetime
+import pytz
 
 User = get_user_model()
 default_photo_url = f"{settings.MEDIA_URL}defaults/team.png"
+
+@receiver(post_save, sender=Player)
+def log_player_save(sender, instance, created, **kwargs):
+    ActivityLog.objects.create(
+        user=instance.admin, 
+        action='CREATE' if created else 'UPDATE',
+        model_name='Player',
+        object_name=str(instance)
+    )
+
+@receiver(post_delete, sender=Player)
+def log_player_delete(sender, instance, **kwargs):
+    ActivityLog.objects.create(
+        user=instance.admin,
+        action='DELETE',
+        model_name='Player',
+        object_name=str(instance)
+    )
 
 def serialize_players(players_qs):
     result = []
@@ -540,12 +560,18 @@ def send_scoreboard_match(instance):
 
 @receiver(post_save, sender=User)
 def set_type_for_staff(sender, instance, created, **kwargs):
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+    now = datetime.now(brasilia_tz)
     if settings.DEBUG: print("chegouuu")
     if created and instance.is_staff:
         instance.type = 0
         instance.save()
     elif int(instance.type) == 1:
         group_name = "event coordinator"
+        group, _ = Group.objects.get_or_create(name=group_name)
+        instance.groups.add(group)
+    elif int(instance.type) == 2 and (instance.event_user.enrollment_init <= now <= instance.event_user.enrollment_end):
+        group_name = "add user common"
         group, _ = Group.objects.get_or_create(name=group_name)
         instance.groups.add(group)
     elif int(instance.type) == 2:
@@ -558,6 +584,7 @@ def set_type_for_staff(sender, instance, created, **kwargs):
         instance.groups.add(group)
     else:
         if settings.DEBUG: print(instance.type, " - ", type(instance.type), " - ", type(int(instance.type)))
+    
 
 @receiver(post_migrate)
 def create_user_common_group(sender, **kwargs):
@@ -633,7 +660,7 @@ def create_user_common_group(sender, **kwargs):
         if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
 
-    group_name = "user common"
+    group_name = "add user common"
     group, created = Group.objects.get_or_create(name=group_name)
 
     # Lista de permissões que você quer adicionar
@@ -647,6 +674,11 @@ def create_user_common_group(sender, **kwargs):
         "change_player",
         "delete_player",
         "view_player",
+
+        "add_voluntary",
+        "change_voluntary",
+        "delete_voluntary",
+        "view_voluntary",
 
         "add_player_team_sport",
         "change_player_team_sport",
@@ -668,11 +700,72 @@ def create_user_common_group(sender, **kwargs):
     else:
         if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
+    group_name = "user common"
+    group, created = Group.objects.get_or_create(name=group_name)
+
+    # Lista de permissões que você quer adicionar
+    permission_codenames = [
+        "view_attachments",
+        "view_event_sport",
+        "view_help",
+        "view_match",
+
+        "view_player",
+
+        "view_voluntary",
+
+        "view_player_team_sport",
+
+        "view_team_sport",
+
+    ]
+
+    permissions = Permission.objects.filter(codename__in=permission_codenames)
+
+    if permissions.exists():
+        group.permissions.set(permissions)
+        if settings.DEBUG: print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
+    else:
+        if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
+
+    group_name = "edit user common"
+    group, created = Group.objects.get_or_create(name=group_name)
+
+    permission_codenames = [
+        "view_attachments",
+        "view_event_sport",
+        "view_help",
+        "view_match",
+
+        "change_player",
+        "delete_player",
+        "view_player",
+
+        "change_voluntary",
+        "delete_voluntary",
+        "view_voluntary",
+
+        "change_player_team_sport",
+        "delete_player_team_sport",
+        "view_player_team_sport",
+
+        "change_team_sport",
+        "delete_team_sport",
+        "view_team_sport",
+
+    ]
+
+    permissions = Permission.objects.filter(codename__in=permission_codenames)
+
+    if permissions.exists():
+        group.permissions.set(permissions)
+        if settings.DEBUG: print(f"✅ Grupo '{group_name}' criado/atualizado com permissões.")
+    else:
+        if settings.DEBUG: print("⚠️ Nenhuma permissão encontrada. Verifique os codenames.")
 
     group_name = "score marker"
     group, created = Group.objects.get_or_create(name=group_name)
 
-    # Lista de permissões que você quer adicionar
     permission_codenames = [
         "view_volley_match",
         "view_match",

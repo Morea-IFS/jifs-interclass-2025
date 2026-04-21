@@ -87,6 +87,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django_user_agents.middleware.UserAgentMiddleware",
+    "app.middleware.AccessLogMiddleware",
 ]
 
 ROOT_URLCONF = 'interclasse.urls'

@@ -46,6 +46,9 @@
                     <th>FOTO</th>
                     <th>EMAIL</th>
                     {% if perms.app.change_customuser %}
+                    <th>SENHA</th>
+                    {% endif %}
+                    {% if perms.app.change_customuser %}
                     <th>EDITAR</th>
                     {% endif %}
                     {% if perms.app.delete_customuser %}
@@ -61,6 +64,25 @@
                     <td>{% if i.team %} {{i.team.name}} {% else %} ---- {% endif %}</td>
                     <td>{% if i.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
                     <td>{% if i.email %} {{i.email}} {% else %} ---- {% endif %}</td>
+                    {% if perms.app.change_customuser %}
+                    <td>
+                        {% if i.type == 2 or i.type == 3 %}
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <button data-confirm="Você realmente deseja gerar uma nova senha?" name="new_password" value="{{i.id}}" style="background-color: transparent; border: none; margin: 0;">
+                                <i style="font-size: 21px; color: rgb(0, 114, 6);" class="fa-solid fa-lock"></i>
+                            </button>
+                        </form>
+                        {% elif i.type == 1 %}
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <button data-confirm="Você realmente deseja gerar uma nova senha?" name="new_password" value="{{i.id}}" style="background-color: transparent; border: none; margin: 0;">
+                                <i style="font-size: 21px; color: rgb(0, 65, 206);" class="fa-solid fa-lock"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
                     <td>
                         {% if not i.type_i == 4 or user.is_staff %}
                             <img style="cursor: pointer;" onclick="openEditModal('{{ i.id }}','{{ i.username }}','{{ i.event_user.id }}','{{ i.type }}','{{ i.email }}','{{ i.telefone }}', '{% if i.photo %}{{ i.photo.url }}{% endif %}','{{ i.is_active }}','{% if i.team %}{{ i.team.id }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">
@@ -103,20 +125,21 @@
             <input type="tel" id="telephone" name="telephone" maxlength="15" placeholder="(00) 00000-0000" />
             <label for="photo">*Foto de Perfil (JPG, JPEG ou PNG)</label>
             <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" required>  
-            {% if user.type == 0 or user.is_staff %} 
-            <label for="event">*Evento</label>  
-            <select name="event" id="event" required>
-                <option value="0">Selecione o evento</option required>
-                {% for i in events %}
-                <option value="{{i.id}}">{{i.name}}</option>
-                {% endfor %}
-            </select>
+            {% if user.type == 0 or user.is_staff and select_event %} 
+            <input type="hidden" name="event" value="{{select_event}}">
             {% endif %}
             <label for="type">*Tipo de usuário</label>
             <select name="type" id="type" required>
                 <option selected disabled>Selecione o tipo</option required>
                 {% for value, name in type_user %}
                 <option value="{{value}}">{{name}} - {{value}}</option>
+                {% endfor %}
+            </select>
+            <label for="type">Unidade</label>
+            <select name="event_unit" id="type">
+                <option selected disabled>Selecione o tipo</option>
+                {% for i in event_unit %}
+                <option value="{{i.id}}">{{i.name}}</option>
                 {% endfor %}
             </select>
             <label for="team" {% if user.type == 0 or user.type == 1 or user.is_staff %} id="teamLabel" {% endif %} style="display: none;" >Time associado</label >

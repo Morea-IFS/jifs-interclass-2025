@@ -30,7 +30,7 @@
 <div class="all-block" style="flex-direction: column; display: flex; align-items: center;">
     {% if ins %}
     <div class="notices">
-        <marquee>O período de inscrições do JIFS vai até dia {{ins.end}}, não deixe para última hora!</marquee>
+        <marquee>O período de inscrições do JIFS vai de {{ins.init}} até {{ins.end}}, não deixe para última hora!</marquee>
     </div>
     {% endif %}
     {% if imagem %}
@@ -54,7 +54,7 @@
            <i class="fa-solid fa-circle-exclamation"></i> 
         </div>
         <div class="alert-text">
-            <p>As inscrições do {{user.event_user.name|lower}} irão até o dia {{user.event_user.enrollment_end}}.</p>
+            <p>As inscrições do {{user.event_user.name|lower}} irão ocorrer do dia {{user.event_user.enrollment_init}} até {{user.event_user.enrollment_end}}.</p>
         </div>
     </section>
     <br><br><br>

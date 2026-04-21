@@ -67,6 +67,11 @@
     .input-search-adm input{
         width: 100%;
     }
+    .all-block, .block1 {
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
 </style>
 {% endblock navbar %}
 
@@ -74,7 +79,7 @@
 <div class="all-block">
     <div class="block1">
         <div class="title-adm">
-            <h1>ATLETAS DO {{team_sport.team.name|upper}} {{team_sport.sport.get_sport_display|upper}} {{team_sport.get_sexo_display|upper}}</h1>
+            <h1>ATLETAS DO {{team_sport.team.name|upper}} — {{team_sport.sport.get_sport_display|upper}} {{team_sport.get_sexo_display|upper}}</h1>
             {% if perms.app.add_player_team_sport and perms.app.add_player %}
             <div class="title-buttons">
                 <span onclick="openModal()"><p>Novo</p></span>
@@ -88,18 +93,24 @@
         {% if perms.app.add_player_team_sport %}
         <form method="post" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
             {% csrf_token %}
-            <input name="search" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure pelo nome">
+            <input name="search" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure pelo nome ou matrícula">
         </form>
         {% endif %}
 
-        <section class="all-table" style="width: 100%; max-width: none; margin-top: 15px;">
+        <section class="all-table" style="width: 100%; max-width: 100%; margin-top: 15px;">
             <table id="search-table" style="width: 100%;">
                 <tr class="hidden">
                     <th>ID</th>
                     <th>NOME</th>
-                    <th>TURMA</th>
+                    {% if team_sport.team.event.general_need_unit %}<th>TURMA</th>{% endif %}
                     {% if team_sport.team.event.player_need_registration %}<th>MATRÍCULA</th>{% endif %}
-                    {% if team_sport.team.event.player_need_sexo %}<th>SEXO</th>{% endif %}
+                    {% if team_sport.team.event.player_need_cpf %}<th>CPF</th>{% endif %}
+                    {% if team_sport.team.event.player_need_course %}<th>CURSO</th>{% endif %}
+                    {% if team_sport.team.event.player_need_cep %}<th>CEP</th>{% endif %}
+                    {% if team_sport.team.event.player_need_municipality %}<th>MUNICÍPIO/UF</th>{% endif %}
+                    {% if team_sport.team.event.player_need_address %}<th>ENDEREÇO COMPLETO</th>{% endif %}
+                    {# Exibe coluna SEXO apenas em times mistos — em times de sexo fixo é redundante #}
+                    {% if team_sport.team.event.player_need_sexo and team_sport.sexo == 2 %}<th>SEXO</th>{% endif %}
                     {% if team_sport.team.event.player_need_date_nasc %}<th>DATA NASC.</th>{% endif %}
                     {% if team_sport.team.event.player_need_photo %}<th>FOTO</th>{% endif %}
                     {% if team_sport.team.event.player_need_bulletin %}<th>BOLETIM</th>{% endif %}
@@ -112,13 +123,37 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ i.player.name }}</td>
-                    {% if team_sport.team.event.general_need_unit %}<td>{{ i.player.unit.name }}</td>{% endif %}
-                    {% if team_sport.team.event.player_need_registration %}<td>{{i.player.registration}}</td>{% endif %}
-                    {% if team_sport.team.event.player_need_sexo %}<td>{{i.player.get_sexo_display}}</td>{% endif %}
-                    {% if team_sport.team.event.player_need_date_nasc %}<td>{{i.player.date_nasc}}</td>{% endif %}
-                    {% if team_sport.team.event.player_need_photo %}
-                        <td>{% if i.player.photo %}<img src="{% static 'images/icon-true.svg' %}">{% else %}<img src="{% static 'images/icon-false.svg' %}">{% endif %}</td>
+                    {% if team_sport.team.event.general_need_unit %}<td>{{ i.player.unit.name|default:"—" }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_registration %}<td>{{ i.player.registration }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_cpf %}<td>{{ i.player.cpf }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_course %}<td>{{ i.player.course }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_cep %}<td>{{ i.player.cep }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_municipality %}<td>{{ i.player.municipality }}</td>{% endif %}
+                    {% if team_sport.team.event.player_need_address %}
+                        <td>{{ i.player.address|default:"Não informado" }}</td>
                     {% endif %}
+
+                    {# Sexo: só exibe coluna em times mistos #}
+                    {% if team_sport.team.event.player_need_sexo and team_sport.sexo == 2 %}
+                        <td>
+                            {% if i.player.sexo == 0 %}Masculino
+                            {% elif i.player.sexo == 1 %}Feminino
+                            {% else %}<span style="color:#999;">—</span>{% endif %}
+                        </td>
+                    {% endif %}
+
+                    {% if team_sport.team.event.player_need_date_nasc %}<td>{{ i.player.date_nasc }}</td>{% endif %}
+
+                    {% if team_sport.team.event.player_need_photo %}
+                        <td>
+                            {% if i.player.photo %}
+                                <img src="{% static 'images/icon-true.svg' %}">
+                            {% else %}
+                                <img src="{% static 'images/icon-false.svg' %}">
+                            {% endif %}
+                        </td>
+                    {% endif %}
+
                     {% if team_sport.team.event.player_need_bulletin %}
                         <td>
                             {% if i.player.bulletin %}
@@ -130,6 +165,7 @@
                             {% endif %}
                         </td>
                     {% endif %}
+
                     {% if team_sport.team.event.player_need_rg %}
                         <td>
                             {% if i.player.rg %}
@@ -144,7 +180,25 @@
 
                     {% if perms.app.change_player_team_sport and perms.app.change_player %}
                     <td>
-                        <img style="cursor: pointer;" src="{% static 'images/icon-edit.svg' %}" onclick="openEditModal('{{ i.player.id|default:"" }}','{{ i.player.name|default:"" }}','{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:""}}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_sexo %}{{ i.player.sexo|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_photo and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% else %}{% endif %}','{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% else %}{% endif %}')">
+                        <img
+                            style="cursor: pointer;"
+                            src="{% static 'images/icon-edit.svg' %}"
+                            onclick="openEditModal(
+                                '{{ i.player.id|default:"" }}',
+                                '{{ i.player.name|default:"" }}',
+                                '{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_photo_goal and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_cpf %}{{ i.player.cpf|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_course %}{{ i.player.course|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_cep %}{{ i.player.cep|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_municipality %}{{ i.player.municipality|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_address %}{{ i.player.address|default:"" }}{% endif %}'
+                            )">
                     </td>
                     {% endif %}
 
@@ -152,7 +206,11 @@
                     <td>
                         <form method="POST">
                             {% csrf_token %}
-                            <button data-confirm="Você realmente deseja excluir este jogador?" name="player_delete" value="{{i.player.id}}" style="background-color: transparent; border: none; margin: 0;">
+                            <button
+                                data-confirm="Você realmente deseja excluir este jogador?"
+                                name="player_delete"
+                                value="{{ i.player.id }}"
+                                style="background-color: transparent; border: none; margin: 0;">
                                 <i style="font-size: 21px; color: red;" class="fa-solid fa-trash"></i>
                             </button>
                         </form>
@@ -160,7 +218,11 @@
                     {% endif %}
                 </tr>
                 {% empty %}
-                    <tr><td colspan="10" style="text-align:center;">NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.</td></tr>
+                    <tr>
+                        <td colspan="16" style="text-align:center;">
+                            NÃO HÁ NENHUM ATLETA CADASTRADO NESSE TIME.
+                        </td>
+                    </tr>
                 {% endfor %}
             </table>
         </section>
@@ -169,85 +231,97 @@
 
 {% if perms.app.add_player_team_sport and perms.app.add_player %}
 
+{# ── Modal: Novo atleta ─────────────────────────────────────────────────── #}
 <div id="newModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2>Adicionar atleta</h2>
-        <form method="post" enctype="multipart/form-data" id="editForm">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="nome">Nome completo do atleta</label>
-            <input type="text" autocomplete="on" autocorrect="on" id="name" name="name" placeholder="Nome*"
-                required>
+
+            <label for="name">Nome completo do atleta</label>
+            <input type="text" autocomplete="on" id="name" name="name" placeholder="Nome*" required>
 
             {% if team_sport.team.event.general_need_unit and not user.type == 2 %}
             <label for="unit">Unidade/turma</label>
             <select id="unit" name="unit" required>
                 {% for i in events_unit %}
-                <option value="{{i.id}}">{{i.name}}</option>
+                <option value="{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
             </select>
-            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
+            <p style="color:#6d6c6c;font-size:14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
             {% endif %}
-            
+
             {% if team_sport.team.event.player_need_date_nasc %}
-            <label for="date" >Data de nascimento</label>
-            <input type="date" autocomplete="on" autocorrect="on" name="date" id="date"
-                placeholder="Data de nascimento*" required>
+            <label for="date">Data de nascimento</label>
+            <input type="date" name="date" id="date" required>
             {% endif %}
-            
+
             {% if team_sport.team.event.player_need_registration %}
             <label for="registration">Matrícula</label>
-            <input type="text" autocomplete="on" autocorrect="on" id="registration" name="registration"
-                placeholder="Matrícula*" required>
+            <input type="text" id="registration" name="registration" placeholder="Matrícula*" required>
             {% endif %}
-            
+
             {% if team_sport.team.event.player_need_cpf %}
-            <label for="registration">CPF</label>
-            <input type="text" id="cpf" name="cpf"
-                placeholder="CPF*" required maxlength="14">
+            <label for="cpf">CPF</label>
+            <input type="text" id="cpf" name="cpf" placeholder="CPF*" required maxlength="14">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_course %}
+            <label for="course">Curso</label>
+            <input type="text" id="course" name="course" placeholder="Curso*" required maxlength="100">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_cep %}
+            <label for="cep">CEP</label>
+            <input type="text" id="cep" name="cep" placeholder="CEP* (Somente números)" required maxlength="10">
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_municipality %}
+            <label for="municipality">Município/UF</label>
+            <input type="text" id="municipality" name="municipality" placeholder="Ex: LAGARTO/SE*" required maxlength="100">
             {% endif %}
 
             {% if team_sport.team.event.player_need_address %}
-
-            <label for="description">Endereço</label>
-            <textarea name="description" id="description" maxlength="200"></textarea>
-
+            <label for="address">Endereço completo</label>
+            <textarea name="address" id="address" placeholder="Rua, Bairro e Número*" required maxlength="200"></textarea>
             {% endif %}
 
-            {% if team_sport.sport.sport == 2 and team_sport.team.event.player_need_sexo %}
+            {% if team_sport.sexo == 2 %}
             <label for="sexos">Sexo</label>
-            <select id="sexos" name="sexo">
-                <option selected disabled value="None">Selecione o sexo</option>
+            <select id="sexos" name="sexo" required>
+                <option selected disabled value="">Selecione o sexo</option>
                 <option value="0">Masculino</option>
                 <option value="1">Feminino</option>
             </select>
             {% endif %}
 
             {% if team_sport.team.event.player_need_bulletin %}
-            <label for="Boletin">Boletim (PDF)</label>
+            <label for="bulletin">Boletim (PDF)</label>
             <input type="file" name="bulletin" id="bulletin" accept=".pdf" required>
             {% endif %}
 
             {% if team_sport.team.event.player_need_photo %}
-            <label for="Fotografia">Fotografia (JPG, JPEG ou PNG)</label>
-            <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png" required>
+            <label for="fotos">Fotografia (JPG, JPEG ou PNG)</label>
+            <input type="file" name="photo" id="fotos" accept=".jpg,.jpeg,.png" required>
             {% endif %}
 
             {% if team_sport.team.event.player_need_photo_goal %}
-            <label for="Fotografia">Fotografia gol (JPG, JPEG ou PNG)</label>
-            <input type="file" name="photo_goal" id="fotos" accept=".jpg, .jpeg, .png" required>
+            <label for="fotos_goal">Fotografia gol (JPG, JPEG ou PNG)</label>
+            <input type="file" name="photo_goal" id="fotos_goal" accept=".jpg,.jpeg,.png" required>
             {% endif %}
 
             {% if team_sport.team.event.player_need_rg %}
-            <label for="Rg">RG (PDF, JPG, JPEG ou PNG)</label>
+            <label for="general-register">RG (PDF, JPG, JPEG ou PNG)</label>
             <input type="file" name="rg" id="general-register" required>
             {% endif %}
 
-            <button class="button-modal" type="submit">Salvar Alterações</button>
+            <button class="button-modal" type="submit">Salvar</button>
         </form>
     </div>
 </div>
 
+{# ── Modal: Editar atleta ───────────────────────────────────────────────── #}
 <div id="editModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeEditModal()">&times;</span>
@@ -255,66 +329,82 @@
         <form method="post" enctype="multipart/form-data" id="editForm">
             {% csrf_token %}
             <input type="hidden" id="editPlayerId" name="edit-player-id">
+
             <label>Nome Completo</label>
             <input id="editPlayerName" type="text" name="edit-name" required>
 
             {% if team_sport.team.event.general_need_unit %}
-            <label for="unit">Unidade/turma</label>
+            <label for="editUnit">Unidade/turma</label>
             <select name="edit-unit" id="editUnit" required>
                 {% for i in events_unit %}
-                <option value="{{i.id}}">{{i.name}}</option>
+                <option value="{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
             </select>
-            <p style="color: #6d6c6c; font-size: 14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
+            <p style="color:#6d6c6c;font-size:14px;">*Ex: 1º, 2º ou 3º IRC/ LAGARTO/ SALGADO.</p>
             {% endif %}
 
             {% if team_sport.team.event.player_need_registration %}
-            <label>Matrícula, siape ou CPF</label>
+            <label>Matrícula / SIAPE / CPF</label>
             <input id="editPlayerRegistration" type="text" name="edit-registration" required>
-            <p style="color: #6d6c6c; font-size: 14px;">*Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.</p>
+            <p style="color:#6d6c6c;font-size:14px;">*Matrícula para aluno, SIAPE para servidores e CPF para estagiário.</p>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_cpf %}
+            <label>CPF</label>
+            <input id="editPlayerCpf" type="text" name="edit-cpf" maxlength="14" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_course %}
+            <label>Curso</label>
+            <input id="editPlayerCourse" type="text" name="edit-course" maxlength="100" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_cep %}
+            <label>CEP</label>
+            <input id="editPlayerCep" type="text" name="edit-cep" maxlength="10" placeholder="Somente números" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_municipality %}
+            <label>Município/UF</label>
+            <input id="editPlayerMunicipality" type="text" name="edit-municipality" maxlength="100" placeholder="Ex: LAGARTO/SE" required>
+            {% endif %}
+
+            {% if team_sport.team.event.player_need_address %}
+            <label>Endereço Completo</label>
+            <textarea id="editPlayerAddress" name="edit-address" placeholder="Rua, Bairro e Número*" maxlength="200" required></textarea>
             {% endif %}
 
             {% if team_sport.team.event.player_need_date_nasc %}
-            <label>Data nasc.</label>
+            <label>Data de Nascimento</label>
             <input id="editPlayerDate" type="date" name="edit-date" required>
-            {% endif %}
-
-            {% if team_sport.team.event.player_need_sexo %}
-            <label>Sexo</label>
-            <select name="edit-sexo" id="editPlayerSexo" required>
-                <option disabled>Selecione a função</option>
-                {% for value, name in sexos %}
-                <option value="{{ value }}">{{ name }}</option>
-                {% endfor %}
-            </select>
             {% endif %}
 
             {% if team_sport.team.event.player_need_photo %}
             <label for="edit-photo">Foto de Perfil</label>
-            <input type="file" name="edit-photo" id="edit-photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
-            <p style="color: #6d6c6c; font-size: 15px;">*Anexe uma nova Fotografia apenas se quiser trocá-la.</p>
-            <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
-            <img id="preview" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
+            <input type="file" name="edit-photo" id="edit-photo" accept=".jpg,.jpeg,.png" onchange="previewFoto()">
+            <p style="color:#6d6c6c;font-size:15px;">*Anexe uma nova foto apenas se quiser trocá-la.</p>
+            <p id="preview-name" style="margin-top:10px;color:#444;">Fotografia atual:</p>
+            <img id="preview" src="" alt="Foto atual" style="max-width:150px;display:block;margin-top:5px;">
             {% endif %}
 
             {% if team_sport.team.event.player_need_photo_goal %}
-            <label for="edit-photo-goal">Foto gol</label>
-            <input type="file" name="edit-photo-goal" id="edit-photo-goal" accept=".jpg, .jpeg, .png" onchange="previewGoalFoto()" />
-            <p style="color: #6d6c6c; font-size: 15px;">*Anexe uma nova Fotografia apenas se quiser trocá-la.</p>
-            <p id="preview-goal-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
-            <img id="preview-goal" src="" alt="Foto atual" style="max-width: 150px; display: block; margin-top: 5px;" />
+            <label for="edit-photo-goal">Foto Gol</label>
+            <input type="file" name="edit-photo-goal" id="edit-photo-goal" accept=".jpg,.jpeg,.png" onchange="previewGoalFoto()">
+            <p style="color:#6d6c6c;font-size:15px;">*Anexe uma nova foto apenas se quiser trocá-la.</p>
+            <p id="preview-goal-name" style="margin-top:10px;color:#444;">Fotografia atual:</p>
+            <img id="preview-goal" src="" alt="Foto atual" style="max-width:150px;display:block;margin-top:5px;">
             {% endif %}
 
             {% if team_sport.team.event.player_need_bulletin %}
             <label for="editPlayerBulletin">Boletim</label>
-            <input type="file" name="edit-bulletin" id="editPlayerBulletin" accept=".jpg, .jpeg, .png" />
-            <p style="color: #6d6c6c; font-size: 15px;">*Anexe um novo boletim apenas se quiser trocar.</p>
+            <input type="file" name="edit-bulletin" id="editPlayerBulletin" accept=".pdf">
+            <p style="color:#6d6c6c;font-size:15px;">*Anexe um novo boletim apenas se quiser trocar.</p>
             {% endif %}
 
             {% if team_sport.team.event.player_need_rg %}
             <label for="editPlayerRG">RG</label>
-            <input type="file" name="edit-rg" id="editPlayerRG" accept=".jpg, .jpeg, .png" />
-            <p style="color: #6d6c6c; font-size: 15px;">*Anexe um novo RG apenas se quiser trocar.</p>
+            <input type="file" name="edit-rg" id="editPlayerRG">
+            <p style="color:#6d6c6c;font-size:15px;">*Anexe um novo RG apenas se quiser trocar.</p>
             {% endif %}
 
             <button class="button-modal" type="submit">Salvar Alterações</button>
@@ -323,6 +413,8 @@
 </div>
 
 <script>
+    // ── Modais ──────────────────────────────────────────────────────────────
+
     function openModal() {
         document.getElementById("newModal").style.display = "block";
     }
@@ -331,154 +423,104 @@
         document.getElementById("newModal").style.display = "none";
     }
 
-let originalPhotoUrl = '';
+    let originalPhotoUrl    = '';
+    let originalPhotoUrlGol = '';
 
-function openEditModal(id, name, unit, registration, sexo, data_nasc, photoUrl, photoGoalUrl, bulletinUrl, rgUrl) {
- 
-    originalPhotoUrl = photoUrl || '';
-    originalPhotoUrlgol = photoGoalUrl || '';
-    const form = document.getElementById('editForm');
-    form.reset();
+    function openEditModal(id, name, unit, registration, data_nasc,
+                           photoUrl, photoGoalUrl, bulletinUrl, rgUrl,
+                           cpf, course, cep, municipality, address) {
 
-    document.getElementById("editPlayerId").value = id || '';
-    document.getElementById("editPlayerName").value = name || '';
-    if(document.getElementById("editPlayerClassroom")) {
-        document.getElementById("editPlayerClassroom").value = classroom || '';
+        originalPhotoUrl    = photoUrl    || '';
+        originalPhotoUrlGol = photoGoalUrl || '';
+
+        const form = document.getElementById('editForm');
+        form.reset();
+
+        document.getElementById("editPlayerId").value    = id   || '';
+        document.getElementById("editPlayerName").value  = name || '';
+
+        setIfExists("editPlayerRegistration", registration);
+        setIfExists("editPlayerCpf",          cpf);
+        setIfExists("editPlayerCourse",        course);
+        setIfExists("editPlayerCep",           cep);
+        setIfExists("editPlayerMunicipality",  municipality);
+        setIfExists("editPlayerAddress",       address);
+
+        const dateInput = document.getElementById("editPlayerDate");
+        if (dateInput) dateInput.value = data_nasc || '';
+
+        // seleciona unidade
+        const unitSelect = document.getElementById("editUnit");
+        if (unitSelect) {
+            Array.from(unitSelect.options).forEach(opt => {
+                opt.selected = opt.value === String(unit);
+            });
+        }
+
+        // preview foto perfil
+        setPreview('preview', 'preview-name', originalPhotoUrl, 'Fotografia atual:', 'Nenhuma fotografia cadastrada');
+
+        // preview foto gol
+        setPreview('preview-goal', 'preview-goal-name', originalPhotoUrlGol, 'Fotografia atual:', 'Nenhuma fotografia cadastrada');
+
+        document.getElementById("editModal").style.display = "block";
     }
-    if(document.getElementById("editPlayerRegistration")) {
-        document.getElementById("editPlayerRegistration").value = registration || '';
+
+    function setIfExists(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
     }
 
-    const dateInput = document.getElementById("editPlayerDate");
-    if(dateInput) dateInput.value = data_nasc || '';
-
-    const sexoSelect = document.getElementById("editPlayerSexo");
-    if(sexoSelect) {
-        Array.from(sexoSelect.options).forEach(option => {
-            option.selected = option.value === sexo;
-        });
-    }
-
-    const unitSelect = document.getElementById("editUnit");
-    if(unitSelect) {
-        Array.from(unitSelect.options).forEach(option => {
-            option.selected = option.value === unit;
-        });
-    }
-
-    const preview = document.getElementById('preview');
-    const previewName = document.getElementById('preview-name');
-    if (preview) {
-        if (originalPhotoUrl) {
-            preview.src = originalPhotoUrl;
-            preview.style.display = 'block';
-            previewName.textContent = "Fotografia atual:";
+    function setPreview(imgId, labelId, url, labelCom, labelSem) {
+        const img   = document.getElementById(imgId);
+        const label = document.getElementById(labelId);
+        if (!img) return;
+        if (url) {
+            img.src           = url;
+            img.style.display = 'block';
+            if (label) label.textContent = labelCom;
         } else {
-            preview.src = '';
-            preview.style.display = 'none';
-            previewName.textContent = "Nenhuma fotografia cadastrada";
+            img.src           = '';
+            img.style.display = 'none';
+            if (label) label.textContent = labelSem;
         }
     }
 
-    const previewgoal = document.getElementById('preview-goal');
-    const previewNamegoal = document.getElementById('preview-goal-name');
-    if (previewgoal) {
-        if (originalPhotoUrlgol) {
-            previewgoal.src = originalPhotoUrlgol;
-            previewgoal.style.display = 'block';
-            previewNamegoal.textContent = "Fotografia atual:";
+    function previewFoto() {
+        const input = document.getElementById('edit-photo');
+        if (input && input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => setPreview('preview', 'preview-name', e.target.result, 'Nova fotografia:', '');
+            reader.readAsDataURL(input.files[0]);
         } else {
-            previewgoal.src = '';
-            previewgoal.style.display = 'none';
-            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
+            setPreview('preview', 'preview-name', originalPhotoUrl, 'Fotografia atual:', 'Nenhuma fotografia cadastrada');
         }
     }
 
-    document.getElementById("editModal").style.display = "block";
-}
-
-function previewFoto() {
-    const input = document.getElementById('edit-photo');
-    const preview = document.getElementById('preview');
-    const previewName = document.getElementById('preview-name');
-
-    if(input && input.files && input.files[0]){
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            previewName.textContent = "Nova fotografia:";
-        };
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        if(originalPhotoUrl) {
-            preview.src = originalPhotoUrl;
-            preview.style.display = 'block';
-            previewName.textContent = "Fotografia atual:";
+    function previewGoalFoto() {
+        const input = document.getElementById('edit-photo-goal');
+        if (input && input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => setPreview('preview-goal', 'preview-goal-name', e.target.result, 'Nova fotografia:', '');
+            reader.readAsDataURL(input.files[0]);
         } else {
-            preview.src = '';
-            preview.style.display = 'none';
-            previewName.textContent = "Nenhuma fotografia cadastrada";
-        }
-    }
-}
-
-function previewGoalFoto() {
-    const inputgoal = document.getElementById('edit-photo-goal');
-    const previewgoal = document.getElementById('preview-goal');
-    const previewNamegoal = document.getElementById('preview-goal-name');
-
-    if(inputgoal && inputgoal.files && inputgoal.files[0]){
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewgoal.src = e.target.result;
-            previewgoal.style.display = 'block';
-            previewNamegoal.textContent = "Nova fotografia:";
-        };
-        reader.readAsDataURL(inputgoal.files[0]);
-    } else {
-        if (originalPhotoUrlgol) {
-            previewgoal.src = originalPhotoUrlgol;
-            previewgoal.style.display = 'block';
-            previewNamegoal.textContent = "Fotografia atual:";
-        } else {
-            previewgoal.src = '';
-            previewgoal.style.display = 'none';
-            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
+            setPreview('preview-goal', 'preview-goal-name', originalPhotoUrlGol, 'Fotografia atual:', 'Nenhuma fotografia cadastrada');
         }
     }
 
+    function closeEditModal() {
+        const modal = document.getElementById("editModal");
+        if (modal) modal.style.display = "none";
 
-    if (previewgoal) {
-        if (originalPhotoUrlgol) {
-            previewgoal.src = originalPhotoUrlgol;
-            previewgoal.style.display = 'block';
-            previewNamegoal.textContent = "Fotografia atual:";
-        } else {
-            previewgoal.src = '';
-            previewgoal.style.display = 'none';
-            previewNamegoal.textContent = "Nenhuma fotografia cadastrada";
-        }
+        const form = document.getElementById("editForm");
+        if (form) form.reset();
+
+        setPreview('preview',      'preview-name',      '', '', 'Nenhuma fotografia selecionada');
+        setPreview('preview-goal', 'preview-goal-name', '', '', 'Nenhuma fotografia selecionada');
+
+        originalPhotoUrl    = '';
+        originalPhotoUrlGol = '';
     }
-}
-
-function closeEditModal() {
-    const modal = document.getElementById("editModal");
-    if(modal) modal.style.display = "none";
-
-    const form = document.getElementById("editForm");
-    if(form) form.reset();
-
-    const preview = document.getElementById('preview');
-    const previewName = document.getElementById('preview-name');
-    const photoInput = document.getElementById('edit-photo');
-    
-    if(photoInput) photoInput.value = '';
-    if(preview) preview.style.display = 'none';
-    if(previewName) previewName.textContent = "Nenhuma fotografia selecionada";
-
-    originalPhotoUrl = '';
-}
 </script>
 {% endif %}
 {% endblock content %}

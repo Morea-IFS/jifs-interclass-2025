@@ -6,6 +6,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.timezone import localtime
 from django.utils import timezone
 from django.conf import settings
+from django.db import models
+from django.contrib.sessions.models import Session
 
 # Create your models here.
 
@@ -133,6 +135,16 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.ip_address or 'desconhecido'}"
+    
+class ActivityLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    action = models.CharField(max_length=50)  # CREATE, UPDATE, DELETE
+    model_name = models.CharField(max_length=100)
+    object_name = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.model_name} - {self.timestamp}"
 
 class Event(models.Model):
     name = models.CharField(max_length=100)
@@ -147,7 +159,8 @@ class Event(models.Model):
     active = models.BooleanField(default=True) 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     regulation = models.FileField(upload_to='events/', blank=True, null=True)
-    age = models.IntegerField(default=99)
+    age = models.IntegerField(default=0)
+    age_max = models.IntegerField(default=99)
 
     player_need_instagram = models.BooleanField(default=True) 
     player_need_photo = models.BooleanField(default=True) 
@@ -159,13 +172,21 @@ class Event(models.Model):
     player_need_cpf = models.BooleanField(default=True) 
     player_need_date_nasc = models.BooleanField(default=True) 
     player_need_address = models.BooleanField(default=True) 
+    player_need_course = models.BooleanField(default=True) 
+    player_need_cep = models.BooleanField(default=True) 
+    player_need_municipality = models.BooleanField(default=True) 
 
     team_need_description = models.BooleanField(default=True) 
     team_need_color = models.BooleanField(default=True) 
+    team_need_technician = models.BooleanField(default=True) 
 
     general_need_terms = models.BooleanField(default=True) 
     general_need_authorization = models.BooleanField(default=True) 
     general_need_unit = models.BooleanField(default=True) 
+
+    upload_intro_text = models.TextField(blank=True, null=True)
+    terms_intro_text = models.TextField(blank=True, null=True)
+    terms_declaration_text = models.TextField(blank=True, null=True)
 
 
     def __str__(self):
@@ -183,6 +204,15 @@ class Event_sport(models.Model):
 
     def __str__(self):
         return f"{self.event.name} | {self.get_sport_display()}"
+
+class Event_badge(models.Model):
+    name = models.CharField(max_length=100 ,null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="badge_set")
+    number = models.CharField(max_length=1 ,null=True, blank=True)
+    file = models.FileField(upload_to='events/', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.event.name} | {self.name} | {self.number} | {self.file}"
     
 class Event_unit(models.Model):
     name = models.CharField(max_length=100 ,null=True, blank=True)
@@ -230,6 +260,9 @@ class Player(models.Model):
     instagram = models.CharField(max_length=100, blank=True, null=True)
     unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
     address = models.CharField(max_length=300, blank=True, null=True)
+    course = models.CharField(max_length=100, blank=True, null=True)
+    cep = models.CharField(max_length=8, blank=True, null=True)
+    municipality = models.CharField(max_length=100, blank=True, null=True)
     photo = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     photo_goal = models.ImageField(upload_to='photo_player/', default='defaults/person.png', blank=True, null=True)
     bulletin = models.FileField(upload_to='bulletins/', blank=True, null=True)
@@ -484,3 +517,37 @@ class Statement_user(models.Model):
     statement = models.ForeignKey(Statement, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+
+# DASHBOARD AQ EMBAIXO
+class AccessLog(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="access_logs"
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="access_logs"
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="access_logs"
+    )
+    accessed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-accessed_at"]
+        verbose_name = "Log de acesso"
+        verbose_name_plural = "Logs de acesso"
+
+    def __str__(self):
+        event_name = self.event.name if self.event else "Sem evento"
+        return f"{self.user} | {event_name} | {self.accessed_at:%d/%m/%Y %H:%M}"
