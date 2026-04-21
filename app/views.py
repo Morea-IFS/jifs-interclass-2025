@@ -49,6 +49,76 @@ from .models import AccessLog, Event
 
 User = get_user_model()
 
+# ─── helpers de gênero ──────────────────────────────────────────────────────
+
+SEXO_NAMES = {0: "masculino", 1: "feminino", 2: "misto"}
+
+def _check_gender_compatibility(player, team_sport, user):
+    """
+    Verifica se o jogador pode entrar no team_sport.
+    Retorna (ok: bool, erro: str | None).
+    Superusuários passam direto.
+    """
+    if user.is_superuser:
+        return True, None
+
+    team_sexo = team_sport.sexo  # 0 masc | 1 fem | 2 misto
+
+    # time misto aceita qualquer sexo
+    if team_sexo == 2:
+        return True, None
+
+    # se o jogador já tem sexo definido, ele deve bater com o time
+    if player.sexo is not None and player.sexo != team_sexo:
+        return False, (
+            f"O atleta '{player.name}' é do sexo "
+            f"{SEXO_NAMES.get(player.sexo, '?')} e não pode ser adicionado "
+            f"a um time {SEXO_NAMES.get(team_sexo, '?')}."
+        )
+
+    # verifica vínculos existentes: se o jogador já está num time
+    # de sexo diferente (e não misto), bloqueia
+    conflito = (
+        Player_team_sport.objects
+        .filter(player=player)
+        .exclude(team_sport=team_sport)
+        .exclude(team_sport__sexo=2)          # ignora times mistos
+        .exclude(team_sport__sexo=team_sexo)  # ignora times do mesmo sexo
+        .select_related("team_sport__team")
+        .first()
+    )
+    if conflito:
+        return False, (
+            f"O atleta '{player.name}' já participa do time "
+            f"'{conflito.team_sport.team.name}' "
+            f"({SEXO_NAMES.get(conflito.team_sport.sexo, '?')}) "
+            f"e não pode entrar num time {SEXO_NAMES.get(team_sexo, '?')}."
+        )
+
+    return True, None
+
+
+def _player_queryset_for_team(team_sport, user, event, admin_user=None):
+    """
+    Retorna queryset de Player compatível com o sexo do team_sport.
+    admin_user restringe por quem cadastrou (para tipo 2).
+    """
+    qs = Player.objects.filter(event=event)
+
+    if admin_user:
+        qs = qs.filter(admin=admin_user)
+
+    sexo = team_sport.sexo
+    if sexo in (0, 1) and not user.is_superuser:
+        # exclui jogadores com sexo INCOMPATÍVEL (nulo é permitido ainda)
+        qs = qs.exclude(sexo__in=[s for s in (0, 1) if s != sexo])
+        # exclui jogadores já vinculados a times de sexo oposto
+        qs = qs.exclude(
+            player_team_sport__team_sport__sexo__in=[s for s in (0, 1) if s != sexo]
+        )
+
+    return qs.distinct()
+
 def events_list(request):
     if request.method == 'GET':
         events = Event.objects.all().order_by('-id')
@@ -885,201 +955,285 @@ def team_edit(request, id):
         except Exception as e: messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('team_manage') 
 
+def calcular_idade(data_nasc):
+    hoje = date.today()
+    return hoje.year - data_nasc.year - (
+        (hoje.month, hoje.day) < (data_nasc.month, data_nasc.day)
+    )
+
 @time_restriction()
 @login_required(login_url="login")
 @terms_accept_required
 @permission_required('app.view_player_team_sport', raise_exception=True)
 def team_players_manage(request, id):
-        team_sport = get_object_or_404(Team_sport, id=id)
-        if len(Player_team_sport.objects.filter(team_sport=team_sport)) >= team_sport.sport.min_sport and team_sport.status == False:
-            team_sport.status = True
-            team_sport.save()
-        elif len(Player_team_sport.objects.filter(team_sport=team_sport)) < team_sport.sport.min_sport and team_sport.status == True:
+    team_sport = get_object_or_404(Team_sport, id=id)
+
+    # atualiza status de inscrição
+    count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+    if count_players >= team_sport.sport.min_sport and not team_sport.status:
+        team_sport.status = True
+        team_sport.save()
+    elif count_players < team_sport.sport.min_sport and team_sport.status:
+        team_sport.status = False
+        team_sport.save()
+
+    user = User.objects.get(id=request.user.id)
+
+    if request.method == "GET":
+        player_team_sport = (
+            Player_team_sport.objects
+            .select_related('player', 'team_sport')
+            .filter(team_sport=id)
+        )
+        context = {
+            'player_team_sport': player_team_sport,
+            'sexos': Sexo_types.choices,
+            'team_sport': team_sport,
+            'events': Event.objects.all(),
+            'events_unit': Event_unit.objects.filter(event=team_sport.event),
+        }
+        return render(request, 'team/team_players_manage.html', context)
+
+    # ── POST ──────────────────────────────────────────────────────────────────
+
+    # ── remover jogador ───────────────────────────────────────────────────────
+    if request.POST.get("player_delete"):
+        player_id = request.POST.get('player_delete')
+        Player_team_sport.objects.filter(team_sport=id, player=player_id).delete()
+        if not Player_team_sport.objects.filter(player=player_id).exists():
+            Player.objects.filter(id=player_id).delete()
+        count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+        if count_players < team_sport.sport.min_sport and team_sport.status:
             team_sport.status = False
             team_sport.save()
-        user = User.objects.get(id=request.user.id)
-        if request.method == "GET":
-            player_team_sport = Player_team_sport.objects.select_related('player', 'team_sport').filter(team_sport=id) 
-            context = {
-                'player_team_sport': player_team_sport,
-                'sexos': Sexo_types.choices,
-                'team_sport': team_sport, 
-                'events': Event.objects.all(), 
-                'events_unit': Event_unit.objects.filter(event=team_sport.event)
-                }   
-            print(context)
-            return render(request, 'team/team_players_manage.html', context)
-        else:
-            print(request.POST)
-            if request.POST.get("player_delete"):
-                print(request.POST)
-                player = request.POST.get('player_delete')
-                Player_team_sport.objects.get(team_sport=id, player=player).delete()
-                if not Player_team_sport.objects.filter(player=player).exists():
-                    Player.objects.get(id=player).delete()
-                if len(Player_team_sport.objects.filter(team_sport=team_sport)) < team_sport.sport.min_sport and team_sport.status == True:
-                    team_sport.status = False
-                    team_sport.save()
-            elif request.POST.get("edit-name"):
-                player = Player.objects.get(id=request.POST.get("edit-player-id"))
-                player.name = request.POST.get("edit-name")
-                if team_sport.team.event.general_need_unit:
-                    player.unit = Event_unit.objects.get(id=int(request.POST.get('edit-unit')))
-                if team_sport.team.event.player_need_address:
-                    player.address = request.POST.get('edit-address')
-                if team_sport.team.event.player_need_registration:
-                    player.registration = request.POST.get("edit-registration")
-                if team_sport.team.event.player_need_date_nasc:
-                    date_nasc = datetime.strptime(request.POST.get("edit-date"), "%Y-%m-%d")
-                    date_today = date.today()
-                    if (date_today.year - date_nasc.year) < team_sport.team.event.age:
-                        messages.error(request, "Não conseguimos atualizar a data de nascimento por conta da idade mínima :(")
-                    else:
-                        player.date_nasc = request.POST.get("edit-date")
-                if team_sport.team.event.player_need_sexo:
-                    player.sexo = request.POST.get("edit-sexo")
-                if team_sport.team.event.player_need_photo:
-                    if request.FILES.get("edit-photo"):
-                        player.photo = request.FILES.get("edit-photo")
-                if team_sport.team.event.player_need_course:
-                    if request.POST.get("edit-course"):
-                        player.course = request.POST.get('edit-course')
-                if team_sport.team.event.player_need_cep:
-                    cep = request.POST.get('edit-cep')
-                    player.cep = cep.replace("-","").replace(".","").replace(" ","")
-                if team_sport.team.event.player_need_municipality:
-                    player.municipality = request.POST.get('edit-municipality')
-                if team_sport.team.event.player_need_photo:
-                    if request.FILES.get("edit-photo-goal"):
-                        player.photo_goal = request.FILES.get("edit-photo-goal")
-                if team_sport.team.event.player_need_bulletin:
-                    if request.FILES.get("edit-bulletin"):
-                        player.bulletin = request.FILES.get("edit-bulletin")
-                if team_sport.team.event.player_need_rg:
-                    if request.FILES.get("edit-rg"):
-                        player.rg = request.FILES.get("edit-rg")
-                player.save()
-                messages.success(request, "Atleta atualizado com sucesso!")
-            elif 'search' in request.POST: 
-                print("oiii")
-                number_players = len(Player_team_sport.objects.filter(team_sport=team_sport))
-                if number_players >= team_sport.sport.max_sport:
-                    messages.error(request, "O seu time atingiu o limite de atletas nessa modalidade!")
-                    print("O seu time atingiu o limite de atletas nessa modalidade!")
-                    return redirect('team_players_manage', team_sport.id)
-                qe = request.POST.get('search')
-                if request.user.type == 0 or request.user.type == 1:
-                    if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event=team_sport.team.event)
-                    else: player_filter = Player.objects.filter(name__icontains=qe, event=team_sport.team.event)
-                else:
-                    if qe.isdigit(): player_filter = Player.objects.filter(registration=int(qe), event=team_sport.team.event, admin=user)
-                    else: player_filter = Player.objects.filter(name__icontains=qe, event=team_sport.team.event, admin=user)
-                if len(player_filter) > 1:
-                    messages.error(request, f"{len(player_filter)} atletas foram encontrados, seja mais preciso, você pode buscar pelo nome e pela matrícula!")
-                elif len(player_filter) == 0:
-                    messages.error(request, "O atleta não foi encontrado!")
-                    return redirect('team_players_manage', team_sport.id)
-                else:
-                    player = Player.objects.get(id=player_filter.first().id)
-                    if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
-                        Player_team_sport.objects.create(player=player, team_sport=team_sport)        
-                        messages.success(request, f"O atleta {player.name} foi cadastrado na modalidade com sucesso!")
-                        return redirect('team_players_manage', team_sport.id)
-                    else:
-                        messages.info(request, f"O atleta {player.name} já está cadastrado, tá?!")
-                        return redirect('team_players_manage', team_sport.id)
-            elif 'name' in request.POST:
-                number_players = len(Player_team_sport.objects.filter(team_sport=team_sport))
-                if number_players >= team_sport.sport.max_sport:
-                    messages.error(request, "O seu time atingiu o limite de atletas nessa modalidade!")
-                    print("O seu time atingiu o limite de atletas nessa modalidade!")
-                    return redirect('team_players_manage', team_sport.id)
-                if len(Player_team_sport.objects.filter(team_sport=team_sport)) >= team_sport.sport.min_sport and team_sport.status == False:
-                    team_sport.status = True
-                    team_sport.save()
+        return redirect('team_players_manage', team_sport.id)
 
-                if team_sport.team.event.player_need_date_nasc:
-                    date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d")
-                    date_today = date.today()
-                    print(date.today(), date_today.year - date_nasc.year)
-                    if (date_today.year - date_nasc.year) < team_sport.team.event.age and (date_today.year - date_nasc.year) > team_sport.team.event.age_max:
-                        messages.error(request, "O atleta não pode ser cadastrado por conta da idade :(")
-                        print("O atleta não pode ser cadastrado por conta da idade :(")
-                        return redirect('team_players_manage', team_sport.id)
-                    
-                if team_sport.team.event.player_need_photo:
-                    photo = request.FILES.get('photo')
-                    if photo:
-                        status = type_file(request, ['.png','.jpg','.jpeg'], photo, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                        if status: return redirect('team_players_manage', team_sport.id)
+    # ── editar jogador existente ───────────────────────────────────────────────
+    elif request.POST.get("edit-name"):
+        player = Player.objects.get(id=request.POST.get("edit-player-id"))
+        player.name = request.POST.get("edit-name")
 
-                if team_sport.team.event.player_need_photo_goal:
-                    photo_goal = request.FILES.get('photo_goal')
-                    if photo_goal:
-                        status = type_file(request, ['.png','.jpg','.jpeg'], photo_goal, 'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                        if status: return redirect('team_players_manage', team_sport.id)
+        if team_sport.team.event.general_need_unit:
+            player.unit = Event_unit.objects.get(id=int(request.POST.get('edit-unit')))
 
-                if team_sport.team.event.player_need_bulletin:
-                    bulletin = request.FILES.get('bulletin')
-                    if bulletin: 
-                        status = type_file(request, ['.pdf'], bulletin, 'O boletim escolar anexado não é do tipo pdf, que é o tipo aceito.')
-                        if status: return redirect('team_players_manage', team_sport.id)
-                if team_sport.team.event.player_need_rg:
-                    rg = request.FILES.get('rg')
-                    if rg: 
-                        status = type_file(request, ['.png','.jpg','.jpeg','.pdf','docx'], rg, 'O RG anexado não é faz parte dos tipos aceito, os tipos são png, jpg, jpeg, pdf ou docs.')
-                        if status: return redirect('team_players_manage', team_sport.id)
+        if team_sport.team.event.player_need_address:
+            player.address = request.POST.get('edit-address')
 
-                name = request.POST.get('name')
-                print("aleratorio")
+        if team_sport.team.event.player_need_registration:
+            player.registration = request.POST.get("edit-registration")
+            
+        if team_sport.team.event.player_need_date_nasc:
+            date_nasc = datetime.strptime(request.POST.get("edit-date"), "%Y-%m-%d").date()
+            idade = calcular_idade(date_nasc)
 
-                if not Player.objects.filter(name=name, admin=user, event=team_sport.event).exists():
-                    player = Player.objects.create(name=name, admin=user, event=team_sport.event)
-                    print("criando novo atleta")
-                else:
-                    player = Player.objects.get(name=name, admin=user, event=team_sport.event)
-                if team_sport.team.event.general_need_unit:
-                    if request.user.type == 2:
-                        player.unit = Event_unit.objects.get(id=request.user.unit.id)
-                        print("A: ",player.unit)
-                    else:
-                        player.unit = Event_unit.objects.get(id=int(request.POST.get('unit')))
-                if team_sport.team.event.player_need_date_nasc:
-                    player.date_nasc = date_nasc
-                if team_sport.team.event.player_need_address:
-                    player.address = request.POST.get('address')
-                if team_sport.team.event.player_need_registration:
-                    player.registration = request.POST.get('registration')
-                if team_sport.team.event.player_need_cpf:
-                    cpf = request.POST.get('cpf')
-                    player.cpf = cpf.replace("-","").replace(".","")
-                if team_sport.team.event.player_need_photo:
-                    player.photo = photo
-                if team_sport.team.event.player_need_course:
-                    player.course = request.POST.get('course')
-                if team_sport.team.event.player_need_cep:
-                    cep = request.POST.get('cep')
-                    player.cep = cep.replace("-","").replace(".","").replace(" ","")
-                if team_sport.team.event.player_need_municipality:
-                    player.municipality = request.POST.get('municipality')
-                if team_sport.team.event.player_need_photo_goal:
-                    player.photo_goal = photo_goal
-                if team_sport.team.event.player_need_bulletin:
-                    player.bulletin = bulletin
-                if team_sport.team.event.player_need_sexo:
-                    player.sexo = team_sport.sexo
-                if team_sport.team.event.player_need_rg:
-                    player.rg = rg
+            if idade < team_sport.team.event.age:
+                messages.error(request, "Não foi possível atualizar: idade abaixo do mínimo.")
+                return redirect('team_players_manage', team_sport.id)
 
-                player.save()
+            if idade > team_sport.team.event.age_max:
+                messages.error(request, "Não foi possível atualizar: idade acima do máximo permitido.")
+                return redirect('team_players_manage', team_sport.id)
 
-                if not Player_team_sport.objects.filter(player=player, team_sport=team_sport):          
-                    Player_team_sport.objects.create(player=player, team_sport=team_sport)        
-                    messages.success(request, "O jogador foi cadastrado no sistema com sucesso!")
-                    print("O jogador foi cadastrado no sistema com sucesso!")
-                else:
-                    messages.info(request, "O jogador já está cadastrado nessa modalidade, tá?!")
+            player.date_nasc = date_nasc
+
+        if team_sport.team.event.player_need_photo and request.FILES.get("edit-photo"):
+            player.photo = request.FILES.get("edit-photo")
+
+        if team_sport.team.event.player_need_course and request.POST.get("edit-course"):
+            player.course = request.POST.get('edit-course')
+
+        if team_sport.team.event.player_need_cpf:
+            player.cpf = (request.POST.get('edit-cpf') or '').replace("-", "").replace(".", "")
+
+        if team_sport.team.event.player_need_cep:
+            player.cep = (request.POST.get('edit-cep') or '').replace("-", "").replace(".", "").replace(" ", "")
+
+        if team_sport.team.event.player_need_municipality:
+            player.municipality = request.POST.get('edit-municipality')
+
+        if team_sport.team.event.player_need_photo_goal and request.FILES.get("edit-photo-goal"):
+            player.photo_goal = request.FILES.get("edit-photo-goal")
+
+        if team_sport.team.event.player_need_bulletin and request.FILES.get("edit-bulletin"):
+            player.bulletin = request.FILES.get("edit-bulletin")
+
+        if team_sport.team.event.player_need_rg and request.FILES.get("edit-rg"):
+            player.rg = request.FILES.get("edit-rg")
+
+        player.save()
+        messages.success(request, "Atleta atualizado com sucesso!")
+        return redirect('team_players_manage', team_sport.id)
+
+    # ── buscar jogador existente no sistema ────────────────────────────────────
+    elif 'search' in request.POST:
+        count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+        if count_players >= team_sport.sport.max_sport:
+            messages.error(request, "O time atingiu o limite de atletas nessa modalidade!")
             return redirect('team_players_manage', team_sport.id)
+
+        qe = request.POST.get('search')
+        admin_filter = None if user.type in (0, 1) else user
+
+        base_qs = _player_queryset_for_team(
+            team_sport, user, team_sport.team.event, admin_user=admin_filter
+        )
+
+        if qe.isdigit():
+            player_filter = base_qs.filter(registration=int(qe))
+        else:
+            player_filter = base_qs.filter(name__icontains=qe)
+
+        if player_filter.count() > 1:
+            messages.error(
+                request,
+                f"{player_filter.count()} atletas encontrados — seja mais preciso "
+                f"(use nome completo ou matrícula)."
+            )
+        elif not player_filter.exists():
+            messages.error(request, "Atleta não encontrado ou incompatível com o sexo do time.")
+        else:
+            player = player_filter.first()
+
+            # verificação final de compatibilidade
+            ok, err = _check_gender_compatibility(player, team_sport, user)
+            if not ok:
+                messages.error(request, err)
+            elif Player_team_sport.objects.filter(player=player, team_sport=team_sport).exists():
+                messages.info(request, f"O atleta '{player.name}' já está nessa modalidade.")
+            else:
+                Player_team_sport.objects.create(player=player, team_sport=team_sport)
+                messages.success(request, f"Atleta '{player.name}' adicionado com sucesso!")
+
+        return redirect('team_players_manage', team_sport.id)
+
+    # ── criar novo jogador ─────────────────────────────────────────────────────
+    elif 'name' in request.POST:
+        count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+        if count_players >= team_sport.sport.max_sport:
+            messages.error(request, "O time atingiu o limite de atletas nessa modalidade!")
+            return redirect('team_players_manage', team_sport.id)
+
+        # validações de arquivo
+        if team_sport.team.event.player_need_date_nasc:
+            date_nasc = datetime.strptime(request.POST.get('date'), "%Y-%m-%d").date()
+            idade = calcular_idade(date_nasc)
+
+            if idade < team_sport.team.event.age:
+                messages.error(request, "O atleta não pode ser cadastrado: idade abaixo do mínimo.")
+                return redirect('team_players_manage', team_sport.id)
+
+            if idade > team_sport.team.event.age_max:
+                messages.error(request, "O atleta não pode ser cadastrado: idade acima do máximo permitido.")
+                return redirect('team_players_manage', team_sport.id)
+
+        for field, exts, label in [
+            ('photo',      ['.png', '.jpg', '.jpeg'], 'A foto deve ser PNG, JPG ou JPEG.'),
+            ('photo_goal', ['.png', '.jpg', '.jpeg'], 'A foto gol deve ser PNG, JPG ou JPEG.'),
+            ('bulletin',   ['.pdf'],                  'O boletim deve ser PDF.'),
+            ('rg',         ['.png', '.jpg', '.jpeg', '.pdf', '.docx'], 'Formato de RG inválido.'),
+        ]:
+            if team_sport.team.event.__dict__.get(f'player_need_{field}', False):
+                f = request.FILES.get(field)
+                if f and type_file(request, exts, f, label):
+                    return redirect('team_players_manage', team_sport.id)
+
+        # sexo do jogador
+        sexo_jogador = None
+
+        if team_sport.sexo in (0, 1):
+            # time masculino ou feminino: herda automaticamente
+            sexo_jogador = team_sport.sexo
+        else:
+            # time misto: sexo é obrigatório
+            raw = request.POST.get('sexo')
+            if raw in (None, '', 'None'):
+                messages.error(request, "Em times mistos, selecione o sexo do atleta.")
+                return redirect('team_players_manage', team_sport.id)
+
+            try:
+                sexo_jogador = int(raw)
+            except (TypeError, ValueError):
+                messages.error(request, "Selecione um sexo válido para o atleta.")
+                return redirect('team_players_manage', team_sport.id)
+
+            if sexo_jogador not in (0, 1):
+                messages.error(request, "Selecione um sexo válido para o atleta.")
+                return redirect('team_players_manage', team_sport.id)
+
+        # validação de gênero antes de criar
+        if not user.is_superuser:
+            if team_sport.sexo in (0, 1) and sexo_jogador != team_sport.sexo:
+                messages.error(
+                    request,
+                    f"O sexo do atleta é incompatível com o time "
+                    f"({SEXO_NAMES[team_sport.sexo]})."
+                )
+                return redirect('team_players_manage', team_sport.id)
+
+        name = request.POST.get('name')
+        photo      = request.FILES.get('photo')
+        photo_goal = request.FILES.get('photo_goal')
+        bulletin   = request.FILES.get('bulletin')
+        rg         = request.FILES.get('rg')
+
+        player, created = Player.objects.get_or_create(
+            name=name, admin=user, event=team_sport.event,
+        )
+
+        if team_sport.team.event.general_need_unit:
+            if user.type == 2:
+                player.unit = Event_unit.objects.get(id=user.unit.id)
+            else:
+                player.unit = Event_unit.objects.get(id=int(request.POST.get('unit')))
+
+        if team_sport.team.event.player_need_date_nasc:
+            player.date_nasc = date_nasc
+        if team_sport.team.event.player_need_address:
+            player.address = request.POST.get('address')
+        if team_sport.team.event.player_need_registration:
+            player.registration = request.POST.get('registration')
+        if team_sport.team.event.player_need_cpf:
+            player.cpf = (request.POST.get('cpf') or '').replace("-", "").replace(".", "")
+        if team_sport.team.event.player_need_photo and photo:
+            player.photo = photo
+        if team_sport.team.event.player_need_course:
+            player.course = request.POST.get('course')
+        if team_sport.team.event.player_need_cep:
+            player.cep = (request.POST.get('cep') or '').replace("-", "").replace(".", "").replace(" ", "")
+        if team_sport.team.event.player_need_municipality:
+            player.municipality = request.POST.get('municipality')
+        if team_sport.team.event.player_need_photo_goal and photo_goal:
+            player.photo_goal = photo_goal
+        if team_sport.team.event.player_need_bulletin and bulletin:
+            player.bulletin = bulletin
+        if team_sport.team.event.player_need_rg and rg:
+            player.rg = rg
+
+        player.sexo = sexo_jogador
+
+        if player.sexo is None:
+            messages.error(request, "Não foi possível cadastrar o atleta sem sexo definido.")
+            return redirect('team_players_manage', team_sport.id)
+
+        player.save()
+
+        _, vínculo_criado = Player_team_sport.objects.get_or_create(
+            player=player, team_sport=team_sport
+        )
+        if vínculo_criado:
+            messages.success(request, "Atleta cadastrado com sucesso!")
+        else:
+            messages.info(request, "O atleta já estava nessa modalidade.")
+
+        # reavalia status
+        count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+        if count_players >= team_sport.sport.min_sport and not team_sport.status:
+            team_sport.status = True
+            team_sport.save()
+
+        return redirect('team_players_manage', team_sport.id)
+
+    return redirect('team_players_manage', team_sport.id)
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -3290,222 +3444,359 @@ def generator_certificate(request):
         messages.error(request, f'Um erro inesperado aconteceu: {str(e)}')
     return redirect('certificate')
 
+# =============================================================================
+# Substitua APENAS a função generator_data no views.py
+# =============================================================================
+
 @login_required(login_url="login")
 @terms_accept_required
 def generator_data(request):
     user = User.objects.get(id=request.user.id)
     current_get_params = request.GET.urlencode()
+
+    # ── GET ───────────────────────────────────────────────────────────────────
     if request.method == "GET":
-        if request.user.is_staff: 
-            team_sport = Team_sport.objects.filter(players__isnull=False).distinct().order_by('sport','-sexo')
-        elif request.user.type == 1: 
-            team_sport = Team_sport.objects.all().filter(players__isnull=False, event=user.event_user).order_by('sport','-sexo')
-        else: 
-            team_sport = Team_sport.objects.all().filter(players_isnull=False, team_unit=user.unit).order_by('sport','-sexo')
+        if request.user.is_staff:
+            team_sport = Team_sport.objects.filter(
+                players__isnull=False
+            ).distinct().order_by('sport', '-sexo')
+        elif request.user.type == 1:
+            team_sport = Team_sport.objects.filter(
+                players__isnull=False, event=user.event_user
+            ).order_by('sport', '-sexo')
+        else:
+            team_sport = Team_sport.objects.filter(
+                players__isnull=False, team__unit=user.unit
+            ).order_by('sport', '-sexo')
+
         context = {
             'sexo': Sexo_types.choices,
             'team_sport': team_sport,
             'sports_general': Sport_types.choices,
-            'events': Event.objects.all()
+            'events': Event.objects.all(),
         }
-        if 'e' in request.GET and request.GET.get('e') != '':
-            event = Event.objects.get(id=request.GET.get('e'))
-            context['event'] = event
-            context['teams'] = Team.objects.filter(event__id=request.GET.get('e'))
-            context['event_sports'] = Event_sport.objects.filter(event__id=request.GET.get('e'))
-        
-        print(context)
+
+        # ── popula event / teams / event_sports por tipo de usuário ──────────
+        if user.type == 0:
+            # admin: precisa selecionar o evento via ?e=
+            if 'e' in request.GET and request.GET.get('e') != '':
+                event = Event.objects.get(id=request.GET.get('e'))
+                context['event']        = event
+                context['teams']        = Team.objects.filter(event=event).order_by('name')
+                context['event_sports'] = Event_sport.objects.filter(event=event)
+
+        elif user.type == 1:
+            # coordenador: sempre vê o próprio evento, sem precisar de ?e=
+            event = user.event_user
+            if event:
+                context['event']        = event
+                context['teams']        = Team.objects.filter(event=event).order_by('name')
+                context['event_sports'] = Event_sport.objects.filter(event=event)
+
+        else:
+            # usuário comum (type=2): vê o próprio evento, sem botões de campus
+            if user.event_user:
+                context['event']        = user.event_user
+                context['event_sports'] = Event_sport.objects.filter(event=user.event_user)
+            # não passa 'teams': tipo 2 não tem botão de campus individual
+
         return render(request, 'data.html', context)
+
+    # ── POST ──────────────────────────────────────────────────────────────────
+    cont = {
+        'now':       timezone.now(),
+        'user':      user,
+        'logo_morea': request.build_absolute_uri('/static/images/logo_atum.png'),
+    }
+    status = False
+
+    # resolve evento do POST
+    event_id = request.POST.get('event_data')
+    if not event_id or event_id == '0':
+        messages.error(request, "Evento não identificado.")
+        return redirect('data')
+
+    try:
+        event = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        messages.error(request, "Evento não encontrado.")
+        return redirect('data')
+
+    # ── validação de acesso por tipo ─────────────────────────────────────────
+    if user.type in (1, 2) and event != user.event_user:
+        messages.error(request, "Você não tem permissão para acessar este evento.")
+        return redirect('data')
+
+    # ── cabeçalho do PDF (logo do evento) ────────────────────────────────────
+    if event.logo:
+        cont['logo_ifs'] = request.build_absolute_uri(event.logo.url)
     else:
-        print(request.POST)
-        
-        cont = {
-            'now': timezone.now(),
-            'user': user,
-            'logo_morea': request.build_absolute_uri('/static/images/logo_atum.png')
-        }
-        status = False
-        event = Event.objects.get(id=request.POST.get('event_data'))
-        
-        if event:
-            cont['logo_ifs'] = request.build_absolute_uri(event.logo.url)
-            cont['event'] = event
-        else:
-            cont['logo_ifs'] = request.build_absolute_uri('/static/images/logo-jiifs-2025.jpg')
-        logo_ifs = cont['logo_ifs']
+        cont['logo_ifs'] = request.build_absolute_uri('/static/images/logo-jiifs-2025.jpg')
+    cont['event'] = event
 
-        img = ImageReader(logo_ifs)
-        largura, altura = img.getSize()
+    logo_ifs = cont['logo_ifs']
+    img = ImageReader(logo_ifs)
+    largura, altura = img.getSize()
+    if largura == altura:
+        cont['logo_event_type'] = 0
+    elif largura > altura:
+        cont['logo_event_type'] = 1
+    else:
+        cont['logo_event_type'] = 2
 
-        if largura == altura:
-            print("Quadrada")
-            cont['logo_event_type'] = 0
-        elif largura > altura:
-            print("Retangular horizontal")
-            cont['logo_event_type'] = 1
-        else:
-            print("Retangular vertical")
-            cont['logo_event_type'] = 2
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: dados gerais (admin + coordenador)
+    # ─────────────────────────────────────────────────────────────────────────
+    if 'all_data' in request.POST:
+        if user.type not in (0, 1) and not user.is_staff:
+            messages.error(request, "Sem permissão para este relatório.")
+            return redirect('data')
 
-        if 'all_data' in request.POST:
-            name_html = 'data-general'
-            name_pdf = 'dados_gerais'
-            
-            qnt_players = Player.objects.filter(event=event).count()
-            qnt_players_fem = Player.objects.filter(sexo=1, event=event).count()
-            qnt_players_masc = Player.objects.filter(sexo=0, event=event).count()
-            cont['qnt_players'] = qnt_players
-            cont['qnt_players_fem'] = qnt_players_fem
-            cont['qnt_players_masc'] = qnt_players_masc
-            cont['qnt_teams'] = Team_sport.objects.filter(event=event).count()
-            cont['qnt_voluntary_0'] = Voluntary.objects.filter(type_voluntary=0, event=event).count()
-            cont['qnt_voluntary_1'] = Voluntary.objects.filter(type_voluntary=1, event=event).count()
-            cont['qnt_voluntary_2'] = Voluntary.objects.filter(type_voluntary=2, event=event).count()
-            cont['qnt_voluntary_3'] = Voluntary.objects.filter(type_voluntary=3, event=event).count()
-            cont['qnt_voluntary_4'] = Voluntary.objects.filter(type_voluntary=4, event=event).count()
+        name_html = 'data-general'
+        name_pdf  = 'dados_gerais'
 
+        qnt_players      = Player.objects.filter(event=event).count()
+        qnt_players_fem  = Player.objects.filter(sexo=1, event=event).count()
+        qnt_players_masc = Player.objects.filter(sexo=0, event=event).count()
 
-            cont['porcent_fem'] = (qnt_players_fem * 100) / qnt_players
+        cont['qnt_players']      = qnt_players
+        cont['qnt_players_fem']  = qnt_players_fem
+        cont['qnt_players_masc'] = qnt_players_masc
+        cont['qnt_teams']        = Team_sport.objects.filter(event=event).count()
+        cont['qnt_voluntary_0']  = Voluntary.objects.filter(type_voluntary=0, event=event).count()
+        cont['qnt_voluntary_1']  = Voluntary.objects.filter(type_voluntary=1, event=event).count()
+        cont['qnt_voluntary_2']  = Voluntary.objects.filter(type_voluntary=2, event=event).count()
+        cont['qnt_voluntary_3']  = Voluntary.objects.filter(type_voluntary=3, event=event).count()
+        cont['qnt_voluntary_4']  = Voluntary.objects.filter(type_voluntary=4, event=event).count()
+
+        # guarda divisão por zero
+        if qnt_players > 0:
+            cont['porcent_fem']  = (qnt_players_fem  * 100) / qnt_players
             cont['porcent_masc'] = (qnt_players_masc * 100) / qnt_players
-    
-        elif 'enrollment' in request.POST:
-            name_html = 'data-base-enrollment'
-            name_pdf = 'relatório de inscrições'
-            teams = Team_sport.objects.prefetch_related('players').filter(team__event=event).order_by('team','sport','-sexo')
-            if len(teams) == 0:
-                messages.error(request, "Não há equipes em modalidades ou atletas cadastrados.")
-                status = True
-            cont['teams'] = teams
+        else:
+            cont['porcent_fem']  = 0
+            cont['porcent_masc'] = 0
 
-        elif 'all_team' in request.POST:
-            name_html = 'data-base-campus'
-            name_pdf = 'dados_campus'
-            if user.is_staff or user.type == 0 or user.type == 1: teams = Team_sport.objects.prefetch_related('players').filter(event=event).order_by('sport','-sexo')
-            else: teams = Team_sport.objects.prefetch_related('players').filter(team__unit=user.unit, event=event).order_by('sport','-sexo')
-            if len(teams) == 0:
-                messages.error(request, "Você não está cadastrado em alguma modalidade ou não há atletas cadastrados.")
-                status = True
-            cont['teams'] = teams
-            cont['infor'] = "campus x modalidade x atletas"
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: inscrições (admin + coordenador)
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'enrollment' in request.POST:
+        if user.type not in (0, 1) and not user.is_staff:
+            messages.error(request, "Sem permissão para este relatório.")
+            return redirect('data')
 
-        elif 'all_match' in request.POST:
-            name_html = 'data-base-match'
-            name_pdf = 'partidas_jifs'
-            matchs = Match.objects.filter(event=event).prefetch_related('teams__team')
-            sport = Sport_types.choices
-            context = [
-                {
-                    'match': match,
-                    'sport':sport,
-                    'times': list(match.teams.all()),
-                }
-                for match in matchs
-            ]
-            if len(matchs) == 0:
-                messages.error(request, "Não há nenhuma partida programada.")
-                status = True
-            cont['context'] = context
+        name_html = 'data-base-enrollment'
+        name_pdf  = 'relatório_de_inscrições'
+        teams = Team_sport.objects.prefetch_related('players').filter(
+            team__event=event
+        ).order_by('team', 'sport', '-sexo')
+        if not teams.exists():
+            messages.error(request, "Não há equipes em modalidades ou atletas cadastrados.")
+            status = True
+        cont['teams'] = teams
 
-        elif 'all_eqp' in request.POST:
-            name_html = 'data-base-eqp'
-            name_pdf = 'dados_equipe_jifs'
-            cont['infor'] = f"comissão técnica do {event.name}"
-            if user.is_staff or user.type == 0 or user.type == 1: voluntary = Voluntary.objects.filter(event=event).order_by('-type_voluntary')
-            else: voluntary = Voluntary.objects.filter(admin=user, event=event).order_by('-type_voluntary')
-            if len(voluntary) == 0:
-                messages.error(request, "Não há voluntários, técnicos, atletas ou chefe de delegação cadastrados.")
-                status = True
-            cont['team'] = voluntary
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: dados dos times (todos por campus)
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_team' in request.POST:
+        name_html = 'data-base-campus'
+        name_pdf  = 'dados_campus'
 
-        elif 'all_players' in request.POST:
-            name_html = 'data-base'
-            name_pdf = 'dados_atletas'
-            cont['infor'] = "atletas"
-            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(event=event).order_by('-sexo')
-            else: players = Player.objects.filter(unit=user.unit, event=event).order_by('-sexo')
-            if len(players) == 0:
-                messages.error(request, "Não há atletas cadastrados.")
-                status = True  
-            cont['players'] = players
+        if user.is_staff or user.type in (0, 1):
+            teams = Team_sport.objects.prefetch_related('players').filter(
+                event=event
+            ).order_by('sport', '-sexo')
+        else:
+            teams = Team_sport.objects.prefetch_related('players').filter(
+                team__unit=user.unit, event=event
+            ).order_by('sport', '-sexo')
 
-        elif 'all_players_fem' in request.POST:
-            name_html = 'data-base'
-            name_pdf = 'dados_atletas'
-            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(sexo=1,event=event).order_by('-sexo')
-            else: players = Player.objects.filter(sexo=1, unit=user.unit, event=event).order_by('-sexo')
-            if len(players) == 0:
-                messages.error(request, "Não há atletas do sexo feminino cadastrados.")
-                status = True
-            cont['players'] = players
-            cont['infor'] = "atletas do sexo feminino"
-            cont['type'] = True
+        if not teams.exists():
+            messages.error(request, "Não há equipes ou atletas cadastrados.")
+            status = True
+        cont['teams'] = teams
+        cont['infor'] = "campus x modalidade x atletas"
 
-        elif 'all_players_masc' in request.POST:
-            name_html = 'data-base'
-            name_pdf = 'dados_atletas'
-            if user.is_staff or user.type == 0 or user.type == 1: players = Player.objects.filter(sexo=0, event=event).order_by('-sexo')
-            else: players = Player.objects.filter(sexo=0, unit=user.unit, event=event).order_by('-sexo')
-            if len(players) == 0:
-                messages.error(request, "Não há atletas do sexo masculino cadastrados.")
-                status = True
-            cont['players'] = players
-            cont['infor'] = "atletas do sexo masculino"
-            cont['type'] = True
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: partidas (admin + coordenador)
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_match' in request.POST:
+        if user.type not in (0, 1) and not user.is_staff:
+            messages.error(request, "Sem permissão para este relatório.")
+            return redirect('data')
 
-        elif 'team_in' in request.POST and user.is_staff:
-            team_id = request.POST.get('team_in')
-            team = Team.objects.get(id=team_id)
-            cont['team'] = team
-            name_html = 'data-base-campus-individual'
-            name_pdf = f'atletas_{team.name}'
-            players = Player_team_sport.objects.filter(team_sport_team=team, player_event=event).order_by('-team_sport')
-            if len(players) == 0:
-                messages.error(request, "Não há atletas cadastrados.")
-                status = True
-            cont['players'] = players
-            cont['infor'] = "atletas"
-            cont['campus'] = f'{team.name}'
+        name_html = 'data-base-match'
+        name_pdf  = 'partidas'
+        matchs = Match.objects.filter(event=event).prefetch_related('teams__team')
+        sport  = Sport_types.choices
+        context_matchs = [
+            {
+                'match': match,
+                'sport': sport,
+                'times': list(match.teams.all()),
+            }
+            for match in matchs
+        ]
+        if not matchs.exists():
+            messages.error(request, "Não há nenhuma partida programada.")
+            status = True
+        cont['context'] = context_matchs
 
-        elif 'all_players_sport' in request.POST:
-            name_pdf = 'dados_atletas'
-            data = request.POST.get('all_players_sport')
-            event_sport = Event_sport.objects.get(id=data)
-            if user.is_staff:
-                print("uaii")
-                name_html = 'data-base-campus'
-                teams = Team_sport.objects.filter(sport=event_sport, event=event).prefetch_related('players').order_by('-sport','-sexo')
-                if len(teams) == 0:
-                    messages.error(request, "Não há equipes em modalidades ou atletas cadastrados.")
-                    status = True
-                cont['teams'] = teams
-            else:
-                name_html = 'data-base-campus'
-                teams = Team_sport.objects.filter(sport=event_sport, admin=user, event=event).prefetch_related('players').order_by('-sport','-sexo')
-                if len(teams) == 0:
-                    messages.error(request, "Não há equipes em modalidades ou atletas cadastrados.")
-                    status = True
-                cont['teams'] = teams
-                #players = Player_team_sport.objects.filter(team_sport_sport=data, team_sport_admin=user)
-                #if len(players) == 0:
-                #    messages.error(request, f'Não há atletas cadastrados no {name_sport}.')
-                #    return redirect('data')
-                #cont['players'] = players
-                #if players:
-                #    cont['infor'] = f'atletas da modalidade {players[0].team_sport.get_sport_display()}'
-        if status:
-            if current_get_params:
-                return redirect(f"{reverse('data')}?{current_get_params}")
-            else:
-                return redirect('data')
-        html_string = render_to_string(f'generator/{name_html}.html', cont)
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: comissão técnica
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_eqp' in request.POST:
+        name_html = 'data-base-eqp'
+        name_pdf  = 'dados_equipe'
+        cont['infor'] = f"comissão técnica do {event.name}"
 
-        response = HttpResponse(content_type='application/pdf')
-        #response['Content-Disposition'] = f'inline; filename="{name_pdf}.pdf"'
-        response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
+        if user.is_staff or user.type in (0, 1):
+            voluntary = Voluntary.objects.filter(event=event).order_by('-type_voluntary')
+        else:
+            voluntary = Voluntary.objects.filter(admin=user, event=event).order_by('-type_voluntary')
 
-        HTML(string=html_string).write_pdf(response)
+        if not voluntary.exists():
+            messages.error(request, "Não há membros da comissão cadastrados.")
+            status = True
+        cont['team'] = voluntary
 
-        return response
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: todos os atletas
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_players' in request.POST:
+        name_html = 'data-base'
+        name_pdf  = 'dados_atletas'
+        cont['infor'] = "atletas"
+
+        if user.is_staff or user.type in (0, 1):
+            players = Player.objects.filter(event=event).order_by('-sexo')
+        else:
+            players = Player.objects.filter(unit=user.unit, event=event).order_by('-sexo')
+
+        if not players.exists():
+            messages.error(request, "Não há atletas cadastrados.")
+            status = True
+        cont['players'] = players
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: atletas femininas
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_players_fem' in request.POST:
+        name_html = 'data-base'
+        name_pdf  = 'dados_atletas_femininas'
+
+        if user.is_staff or user.type in (0, 1):
+            players = Player.objects.filter(sexo=1, event=event).order_by('name')
+        else:
+            players = Player.objects.filter(sexo=1, unit=user.unit, event=event).order_by('name')
+
+        if not players.exists():
+            messages.error(request, "Não há atletas do sexo feminino cadastradas.")
+            status = True
+        cont['players'] = players
+        cont['infor']   = "atletas do sexo feminino"
+        cont['type']    = True
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: atletas masculinos
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_players_masc' in request.POST:
+        name_html = 'data-base'
+        name_pdf  = 'dados_atletas_masculinos'
+
+        if user.is_staff or user.type in (0, 1):
+            players = Player.objects.filter(sexo=0, event=event).order_by('name')
+        else:
+            players = Player.objects.filter(sexo=0, unit=user.unit, event=event).order_by('name')
+
+        if not players.exists():
+            messages.error(request, "Não há atletas do sexo masculino cadastrados.")
+            status = True
+        cont['players'] = players
+        cont['infor']   = "atletas do sexo masculino"
+        cont['type']    = True
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: campus individual (admin + coordenador)
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'team_in' in request.POST:
+        if user.type not in (0, 1) and not user.is_staff:
+            messages.error(request, "Sem permissão para este relatório.")
+            return redirect('data')
+
+        team_id = request.POST.get('team_in')
+        try:
+            team = Team.objects.get(id=team_id, event=event)
+        except Team.DoesNotExist:
+            messages.error(request, "Campus não encontrado neste evento.")
+            return redirect('data')
+
+        name_html = 'data-base-campus-individual'
+        name_pdf  = f'atletas_{team.name}'
+
+        players = (
+            Player_team_sport.objects
+            .filter(team_sport__team=team, player__event=event)
+            .select_related('player', 'team_sport__team', 'team_sport__sport')
+            .order_by('player__name')
+        )
+
+        if not players.exists():
+            messages.error(request, "Não há atletas cadastrados neste campus.")
+            status = True
+
+        cont['team']   = team
+        cont['players'] = players
+        cont['infor']   = "atletas"
+        cont['campus']  = team.name
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BLOCO: por modalidade
+    # ─────────────────────────────────────────────────────────────────────────
+    elif 'all_players_sport' in request.POST:
+        data = request.POST.get('all_players_sport')
+        event_sport = get_object_or_404(Event_sport, id=data, event=event)
+
+        name_html = 'data-base-campus'
+        name_pdf  = f'atletas_{event_sport.get_sport_display()}'
+
+        if user.is_staff or user.type in (0, 1):
+            teams = (
+                Team_sport.objects
+                .filter(sport=event_sport, event=event)
+                .prefetch_related('players')
+                .order_by('-sport', '-sexo')
+            )
+        else:
+            # usuário comum: apenas times da sua unidade
+            teams = (
+                Team_sport.objects
+                .filter(sport=event_sport, event=event, team__unit=user.unit)
+                .prefetch_related('players')
+                .order_by('-sport', '-sexo')
+            )
+
+        if not teams.exists():
+            messages.error(request, "Não há equipes ou atletas cadastrados nessa modalidade.")
+            status = True
+        cont['teams'] = teams
+
+    else:
+        messages.error(request, "Nenhum relatório foi selecionado.")
+        return redirect('data')
+
+    # ── gera o PDF ────────────────────────────────────────────────────────────
+    if status:
+        if current_get_params:
+            return redirect(f"{reverse('data')}?{current_get_params}")
+        return redirect('data')
+
+    html_string = render_to_string(f'generator/{name_html}.html', cont)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{name_pdf}.pdf"'
+    HTML(string=html_string).write_pdf(response)
+
+    return response
 
 def generate_spreadsheet(players, event_name, label):
     wb = Workbook()

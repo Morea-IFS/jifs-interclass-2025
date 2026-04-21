@@ -115,7 +115,7 @@
                                 {% if user.type != 3 %}
                                 <a href="{% url 'data' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-chart-line"></i>RELATÓRIOS</a>
                                 {% endif %}
-                                {% if user.type == 1 or user.type == 2 %}
+                                {% if user.type != 3 %}
                                 <a href="{% url 'spreadsheet' %}">
                                     <span class="submenu-marker">└─</span>
                                     <i class="fa-solid fa-file-excel"></i>PLANILHAS

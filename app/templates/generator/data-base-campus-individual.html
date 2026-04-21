@@ -100,7 +100,7 @@
                 {% if team.event.player_need_sexo %}
                 <td>{{i.player.get_sexo_display}}</td>
                 {% endif %}
-                <td>{{i.player.unit}}</td>
+                <td>{{i.player.unit.name|upper}}</td>
                 <td>{{i.team_sport.sport.get_sport_display}}</td>
                 {% if team.event.player_need_date_nasc %}
                 <td>{{i.player.date_nasc|date:"d/m/Y"}}</td>
