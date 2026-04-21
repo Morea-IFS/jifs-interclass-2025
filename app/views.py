@@ -2048,106 +2048,204 @@ def user_manage(request):
 @permission_required('app.view_voluntary', raise_exception=True)
 def voluntary_manage(request):
     user = User.objects.get(id=request.user.id)
+ 
+    # tipos disponíveis para cadastro (chefe de delegação só para staff)
     if user.is_staff:
         types = Type_service.choices
     else:
         types = [choice for choice in Type_service.choices if choice[0] != 4]
+ 
+    # ── GET ───────────────────────────────────────────────────────────────────
     if request.method == "GET":
         context = {
             'types': types,
             'users': User.objects.all(),
         }
-        if not request.user.event_user: context['events'] = Event.objects.all()
-        if 'e' in request.GET and request.GET['e'] != '' and 'q' in request.GET:
-            context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event__id=request.GET['e'])
-            context['events_unit'] = Event_unit.objects.filter(event__id=request.GET['e'])
-        elif 'e' in request.GET and request.GET['e'] != '':
-            context['voluntarys'] = Voluntary.objects.filter(event__id=request.GET['e'])
-            context['select_event'] = request.GET['e']
-            context['events_unit'] = Event_unit.objects.filter(event__id=request.GET['e'])
-        elif 'q' in request.GET and request.GET['q'] != '':
-            if request.user.event_user: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'], event=request.user.event_user)
-            else: context['voluntarys'] = Voluntary.objects.filter(name__icontains=request.GET['q'])
-        elif user.type != 0:
-            context['voluntarys'] = Voluntary.objects.filter(event=request.user.event_user)
-
-        print(context)
+ 
+        # ── type=0 (admin): escolhe evento via ?e= ────────────────────────────
+        if user.type == 0:
+            context['events'] = Event.objects.all()
+ 
+            e = request.GET.get('e', '').strip()
+            q = request.GET.get('q', '').strip()
+ 
+            if e:
+                context['select_event'] = e
+                context['events_unit'] = Event_unit.objects.filter(event__id=e)
+ 
+                qs = Voluntary.objects.filter(event__id=e)
+                if q:
+                    qs = qs.filter(name__icontains=q)
+ 
+                # filtra por unidade específica se ?u= for passado
+                u_param = request.GET.get('u', '').strip()
+                if u_param:
+                    qs = qs.filter(unit__id=u_param)
+                    context['select_unit'] = u_param
+ 
+                context['voluntarys'] = qs.order_by('unit__name', 'type_voluntary', 'name')
+ 
+        # ── type=1 (coordenador): vê todas as unidades do próprio evento ──────
+        elif user.type == 1:
+            event = user.event_user
+            if event:
+                context['event'] = event
+                context['events_unit'] = Event_unit.objects.filter(event=event)
+ 
+                q = request.GET.get('q', '').strip()
+                qs = Voluntary.objects.filter(event=event)
+ 
+                if q:
+                    qs = qs.filter(name__icontains=q)
+ 
+                # filtro opcional por unidade
+                u_param = request.GET.get('u', '').strip()
+                if u_param:
+                    qs = qs.filter(unit__id=u_param)
+                    context['select_unit'] = u_param
+ 
+                context['voluntarys'] = qs.order_by('unit__name', 'type_voluntary', 'name')
+ 
+        # ── type=2 (usuário comum): vê apenas a própria unidade ───────────────
+        else:
+            event = user.event_user
+            if event and user.unit:
+                context['event'] = event
+ 
+                q = request.GET.get('q', '').strip()
+                qs = Voluntary.objects.filter(event=event, unit=user.unit)
+ 
+                if q:
+                    qs = qs.filter(name__icontains=q)
+ 
+                context['voluntarys'] = qs.order_by('type_voluntary', 'name')
+ 
         return render(request, 'voluntary/voluntary_manage.html', context)
-    else:
-        print(request.POST, "aa", request.FILES)
-        get_param = request.GET.get('e') or request.POST.get('event') or ''
-        redirect_url = f"{reverse('voluntary_manage')}?e={get_param}"
-        if 'voluntary_delete' in request.POST:
-            voluntary_id = request.POST.get('voluntary_delete')
-            voluntary_delete = Voluntary.objects.get(id=voluntary_id)
-
-            status = verificar_foto(str(voluntary_delete.photo))
-            if status:
-                voluntary_delete.photo.delete()
-            voluntary_delete.delete()
-
-            messages.success(request, f"{voluntary_delete.get_type_voluntary_display()} removido do sistema com sucesso!")
-
-        elif 'voluntary_id' in request.POST:
-            voluntary = get_object_or_404(Voluntary, id=request.POST.get("voluntary_id"))
-            voluntary.name = request.POST.get('name')
-            voluntary.registration = request.POST.get('registration')
-            voluntary.type_voluntary = request.POST.get('type_voluntary')
-
-            if request.user.is_staff:
-                voluntary.admin = User.objects.get(id=request.POST.get('user'))
-                voluntary.event = Event.objects.get(id=request.POST.get('event'))
-
-            photo = request.FILES.get('photo')
-            if photo:
-                status = type_file(request, ['.png', '.jpg', '.jpeg'], photo,
-                                   'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                if status:
-                    return redirect(redirect_url)
-
-                if voluntary.photo:
-                    status_photo = verificar_foto(str(voluntary.photo))
-                    if status_photo:
-                        voluntary.photo.delete()
-
-                voluntary.photo = request.FILES.get('photo')
-
-            voluntary.save()
-
-        elif 'name' in request.POST:
-            name = request.POST.get('name')
-            registration = request.POST.get('registration')
-
-            if not request.POST.get('type_voluntary'):
-                messages.error(request, "Você não enviou todos os dados solicitados, confira e reenvie!")
+ 
+    # ── POST ──────────────────────────────────────────────────────────────────
+    # monta URL de redirect preservando filtros
+    e_param  = request.GET.get('e') or request.POST.get('event') or ''
+    u_param  = request.GET.get('u', '')
+    redirect_url = f"{reverse('voluntary_manage')}?e={e_param}"
+    if u_param:
+        redirect_url += f"&u={u_param}"
+ 
+    # ── deletar ───────────────────────────────────────────────────────────────
+    if 'voluntary_delete' in request.POST:
+        if not request.user.has_perm('app.delete_voluntary'):
+            messages.error(request, "Você não tem permissão para remover.")
+            return redirect(redirect_url)
+ 
+        voluntary_id = request.POST.get('voluntary_delete')
+        voluntary_delete = get_object_or_404(Voluntary, id=voluntary_id)
+ 
+        # type=2 só pode deletar da sua unidade
+        if user.type == 2 and voluntary_delete.unit != user.unit:
+            messages.error(request, "Você não tem permissão para remover membros de outra unidade.")
+            return redirect(redirect_url)
+ 
+        # type=1 só pode deletar do seu evento
+        if user.type == 1 and voluntary_delete.event != user.event_user:
+            messages.error(request, "Você não tem permissão para remover membros de outro evento.")
+            return redirect(redirect_url)
+ 
+        status = verificar_foto(str(voluntary_delete.photo))
+        if status:
+            voluntary_delete.photo.delete()
+        voluntary_delete.delete()
+        messages.success(request, f"{voluntary_delete.get_type_voluntary_display()} removido com sucesso!")
+ 
+    # ── editar ────────────────────────────────────────────────────────────────
+    elif 'voluntary_id' in request.POST:
+        voluntary = get_object_or_404(Voluntary, id=request.POST.get("voluntary_id"))
+ 
+        # validação de escopo
+        if user.type == 2 and voluntary.unit != user.unit:
+            messages.error(request, "Você não pode editar membros de outra unidade.")
+            return redirect(redirect_url)
+        if user.type == 1 and voluntary.event != user.event_user:
+            messages.error(request, "Você não pode editar membros de outro evento.")
+            return redirect(redirect_url)
+ 
+        voluntary.name             = request.POST.get('name')
+        voluntary.registration     = request.POST.get('registration')
+        voluntary.type_voluntary   = request.POST.get('type_voluntary')
+ 
+        # admin pode trocar usuário responsável e evento
+        if user.is_staff:
+            voluntary.admin = User.objects.get(id=request.POST.get('user'))
+            voluntary.event = Event.objects.get(id=request.POST.get('event'))
+ 
+        # atualiza unidade se enviada
+        unit_id = request.POST.get('unit')
+        if unit_id:
+            voluntary.unit = get_object_or_404(Event_unit, id=unit_id)
+ 
+        photo = request.FILES.get('photo')
+        if photo:
+            err = type_file(request, ['.png', '.jpg', '.jpeg'], photo,
+                            'A foto deve ser PNG, JPG ou JPEG.')
+            if err:
                 return redirect(redirect_url)
-
-            type_voluntary = request.POST.get('type_voluntary')
-            photo = request.FILES.get('photo')
-
-            if photo:
-                status = type_file(request, ['.png', '.jpg', '.jpeg'], photo,
-                                   'A photo anexada não é do tipo png, jpg ou jpeg, considere converte-la em um desses tipos.')
-                if status:
-                    return redirect(redirect_url)
-
-            if request.user.is_staff:
-                event = Event.objects.get(id=request.POST.get('event'))
-                admin = User.objects.get(id=request.POST.get('user'))
-            else:
-                admin = user
-                event = request.user.event_user
-
-            Voluntary.objects.create(
-                type_voluntary=type_voluntary,
-                name=name,
-                registration=registration,
-                admin=admin,
-                photo=photo,
-                event=event
-            )
-            messages.success(request, "Parabéns, você cadastrou mais um membro da comissão técnica!")
-        return redirect(redirect_url)
+            if voluntary.photo:
+                if verificar_foto(str(voluntary.photo)):
+                    voluntary.photo.delete()
+            voluntary.photo = photo
+ 
+        voluntary.save()
+        messages.success(request, "Membro da comissão atualizado com sucesso!")
+ 
+    # ── criar ─────────────────────────────────────────────────────────────────
+    elif 'name' in request.POST:
+        name         = request.POST.get('name')
+        registration = request.POST.get('registration')
+ 
+        if not request.POST.get('type_voluntary'):
+            messages.error(request, "Informe a função do membro.")
+            return redirect(redirect_url)
+ 
+        type_voluntary = request.POST.get('type_voluntary')
+        photo = request.FILES.get('photo')
+ 
+        if photo:
+            err = type_file(request, ['.png', '.jpg', '.jpeg'], photo,
+                            'A foto deve ser PNG, JPG ou JPEG.')
+            if err:
+                return redirect(redirect_url)
+ 
+        # resolve evento e admin conforme tipo de usuário
+        if user.is_staff:
+            event = Event.objects.get(id=request.POST.get('event'))
+            admin = User.objects.get(id=request.POST.get('user'))
+        elif user.type == 1:
+            event = user.event_user
+            admin = user
+        else:
+            # type=2
+            event = user.event_user
+            admin = user
+ 
+        # resolve unidade
+        if user.type == 2:
+            # usuário comum: sempre a sua própria unidade
+            unit = user.unit
+        else:
+            # admin e coordenador: unidade enviada no form (opcional)
+            unit_id = request.POST.get('unit')
+            unit = get_object_or_404(Event_unit, id=unit_id) if unit_id else None
+ 
+        Voluntary.objects.create(
+            type_voluntary=type_voluntary,
+            name=name,
+            registration=registration,
+            admin=admin,
+            photo=photo,
+            event=event,
+            unit=unit,
+        )
+        messages.success(request, "Membro da comissão técnica cadastrado com sucesso!")
+ 
+    return redirect(redirect_url)
 
 
 @login_required(login_url="login")
@@ -2423,7 +2521,7 @@ def terms_use(request):
                 unit=user.unit,
                 admin=request.user,
                 event=user.event_user,
-                type_voluntary=2
+                type_voluntary=4
             )
 
             return redirect('Home')
@@ -3257,39 +3355,60 @@ def scoreboard_projector(request, event_id):
 def generator_badge(request):
     current_get_params = request.GET.urlencode()
     user = User.objects.get(id=request.user.id)
+
     if request.method == "GET":
         context = {}
+
         if request.user.is_staff or request.user.type == 0:
             context['events'] = Event.objects.all()
             if 'e' in request.GET and request.GET.get('e') != '':
                 event = Event.objects.get(id=request.GET.get('e'))
-                context['event'] = event 
+                context['event'] = event
                 context['teams'] = Team.objects.filter(event__id=request.GET.get('e')).order_by('name')
-                context['teams_sport'] = Team_sport.objects.filter(team__event__id=request.GET.get('e')).order_by('team','sport','-sexo')   
+                context['teams_sport'] = Team_sport.objects.filter(
+                    team__event__id=request.GET.get('e')
+                ).order_by('team', 'sport', '-sexo')
                 context['event_sports'] = Event_sport.objects.filter(event__id=request.GET.get('e'))
         else:
             context['event'] = user.event_user
             context['teams'] = Team.objects.filter(unit=user.unit, event=user.event_user).order_by('name')
-            context['teams_sport'] = Team_sport.objects.filter(team__unit=user.unit, team__event=user.event_user).order_by('team','sport','-sexo')   
+            context['teams_sport'] = Team_sport.objects.filter(
+                team__unit=user.unit,
+                team__event=user.event_user
+            ).order_by('team', 'sport', '-sexo')
             context['event_sports'] = Event_sport.objects.filter(event=user.event_user)
+
         return render(request, 'badge.html', context)
+
     else:
         print(request.POST)
         event = Event.objects.get(id=request.POST.get('event_data'))
-        if 'team_sport_in' in request.POST: 
+
+        if 'team_sport_in' in request.POST:
             print('team_sport_in')
-            players = Player_team_sport.objects.filter(team_sport__id=request.POST.get('team_sport_in'), team_sport__event=event)
-            team_sport_badge = Team_sport.objects.get(id=request.POST.get('team_sport_in'), event=event)
+            players = Player_team_sport.objects.filter(
+                team_sport__id=request.POST.get('team_sport_in'),
+                team_sport__event=event
+            )
+            team_sport_badge = Team_sport.objects.get(
+                id=request.POST.get('team_sport_in'),
+                event=event
+            )
+
             if len(players) == 0:
                 messages.error(request, "Não tem nenhum atleta cadastrado!")
                 print('team_sport_in-zero')
             else:
-                namebadge = f'{ team_sport_badge.sport.get_sport_display() }-{ team_sport_badge.team.name }-jifs'
+                namebadge = f'{team_sport_badge.sport.get_sport_display()}-{team_sport_badge.team.name}-jifs'
                 print('team_sport_in-criar')
-                return generate_badges(players, '7',namebadge, event.id)
-        elif 'team_in' in request.POST: 
-            print('team_sport_in')
-            players_qs = Player_team_sport.objects.filter(team_sport__team__id=request.POST.get('team_in'), team_sport__event=event)
+                return generate_badges(players, '7', namebadge, event.id)
+
+        elif 'team_in' in request.POST:
+            print('team_in')
+            players_qs = Player_team_sport.objects.filter(
+                team_sport__team__id=request.POST.get('team_in'),
+                team_sport__event=event
+            )
             team = Team.objects.get(id=request.POST.get('team_in'))
 
             seen_players = set()
@@ -3304,79 +3423,106 @@ def generator_badge(request):
                 messages.error(request, "Não tem nenhum atleta cadastrado!")
                 print('team_in-zero')
             else:
-                namebadge = f'{ team.name }-jifs'
+                namebadge = f'{team.name}-jifs'
                 print('team_in-criar')
-                return generate_badges(players, '7',namebadge, event.id)
+                return generate_badges(players, '7', namebadge, event.id)
+
         elif 'all_voluntary' in request.POST:
             print('all_voluntary')
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=0, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=0, admin=user, event=event)
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=0, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=0, admin=user, event=event)
+
             if len(voluntary) == 0:
                 messages.error(request, "Não tem nenhum voluntário cadastrado!")
                 print('all_voluntary-zero')
             else:
-                print("a: ",voluntary)
                 namebadge = 'voluntarios-jifs'
-                return generate_badges(voluntary, '0',namebadge, event.id)
+                return generate_badges(voluntary, '0', namebadge, event.id)
+
+        elif 'all_technician' in request.POST:
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=1, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=1, admin=user, event=event)
+
+            if len(voluntary) == 0:
+                messages.error(request, "Não tem nenhum técnico cadastrado!")
+            else:
+                namebadge = 'tecnico-modalidade-jifs'
+                return generate_badges(voluntary, '1', namebadge, event.id)
+
         elif 'all_support' in request.POST:
-            print('all_support-zero')
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=2, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=2, admin=user, event=event)
+            print('all_support')
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=2, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=2, admin=user, event=event)
+
             if len(voluntary) == 0:
                 messages.error(request, "Não tem nenhum membro do apoio cadastrado!")
                 print('all_support-zero')
             else:
                 namebadge = 'apoio-jifs'
-                return generate_badges(voluntary, '2',namebadge, event.id)
-        elif 'all_organization' in request.POST:
-            print('all_organization-zero')
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=5, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=5, admin=user, event=event)
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum membro da organização cadastrado!")
-                print('all_organization-zero')
-            else:
-                namebadge = 'apoio-jifs'
-                return generate_badges(voluntary, '5',namebadge, event.id)
+                return generate_badges(voluntary, '2', namebadge, event.id)
+
         elif 'all_trainee' in request.POST:
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=3, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=3, admin=user, event=event)
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=3, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=3, admin=user, event=event)
+
             if len(voluntary) == 0:
                 messages.error(request, "Não tem nenhum estagiário cadastrado!")
             else:
                 namebadge = 'estagiario-jifs'
-                return generate_badges(voluntary, '3',namebadge, event.id)
-        elif 'all_technician' in request.POST:
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=1, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=1, admin=user, event=event)
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum técnico cadastrado!")
-            else:
-                namebadge = 'tecnico-modalidade-jifs'
-                return generate_badges(voluntary, '1',namebadge, event.id)
+                return generate_badges(voluntary, '3', namebadge, event.id)
+
         elif 'all_head' in request.POST:
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=4, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=4, admin=user, event=event)
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=4, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=4, admin=user, event=event)
+
             if len(voluntary) == 0:
                 messages.error(request, "Não tem nenhum chefe de delegação cadastrado!")
             else:
                 namebadge = 'chefe-delegacao-jifs'
-                return generate_badges(voluntary, '4',namebadge, event.id)
+                return generate_badges(voluntary, '4', namebadge, event.id)
+
+        elif 'all_organization' in request.POST:
+            print('all_organization')
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=5, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=5, admin=user, event=event)
+
+            if len(voluntary) == 0:
+                messages.error(request, "Não tem nenhum membro da comissão técnica cadastrado!")
+                print('all_organization-zero')
+            else:
+                namebadge = 'comissao-tecnica-jifs'
+                return generate_badges(voluntary, '5', namebadge, event.id)
+
         elif 'all_arbitrator' in request.POST:
-            if user.is_staff: voluntary = Voluntary.objects.filter(type_voluntary=6, event=event)
-            else: voluntary = Voluntary.objects.filter(type_voluntary=6, admin=user, event=event)
+            if user.is_staff:
+                voluntary = Voluntary.objects.filter(type_voluntary=6, event=event)
+            else:
+                voluntary = Voluntary.objects.filter(type_voluntary=6, admin=user, event=event)
+
             if len(voluntary) == 0:
                 messages.error(request, "Não tem nenhum árbitro cadastrado!")
             else:
-                namebadge = 'chefe-delegacao-jifs'
-                return generate_badges(voluntary, '6',namebadge, event.id)
+                namebadge = 'arbitragem-jifs'
+                return generate_badges(voluntary, '6', namebadge, event.id)
+
     if current_get_params:
         print('com url-zero')
         return redirect(f"{reverse('badge')}?{current_get_params}")
     else:
         print('sem url-zero')
         return redirect('badge')
-
 
 @login_required(login_url="login")
 @terms_accept_required

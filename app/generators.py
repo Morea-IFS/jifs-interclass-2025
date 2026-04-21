@@ -78,156 +78,96 @@ def draw_circular_image(c, image_path, center_x, center_y, diameter):
     
 def generate_badges(players, t, namebadge, event):
     print('gerar crachá')
-    if t == '7':
-        buffer = BytesIO()
-        w, h = A4
-        nametag_width = (w - 3 * 20) / 2
-        nametag_height = (h - 3 * 20) / 2
-        positions = [
-            (20, h - 20 - nametag_height),
-            (20 * 2 + nametag_width, h - 20 - nametag_height),
-            (20, 20),
-            (20 * 2 + nametag_width, 20),
-        ]
-        c = canvas.Canvas(buffer, pagesize=A4)
 
-        for j, user in enumerate(players):
-            print(j, user, " - a")
-            if j % 4 == 0 and j > 0:
-                c.showPage()
-            x, y = positions[j % 4]
+    buffer = BytesIO()
+    w, h = A4
+    nametag_width = (w - 3 * 20) / 2
+    nametag_height = (h - 3 * 20) / 2
+    positions = [
+        (20, h - 20 - nametag_height),
+        (20 * 2 + nametag_width, h - 20 - nametag_height),
+        (20, 20),
+        (20 * 2 + nametag_width, 20),
+    ]
 
-            c.rect(x, y, nametag_width, nametag_height)
-            
-            #base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
-            if Event_badge.objects.filter(event=Event.objects.get(id=event), number=t):
-                base_nametag_path = Event_badge.objects.get(event=Event.objects.get(id=event), number=t).file.path
-            else:
-                base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
-            base_nametag = ImageReader(base_nametag_path)
-            c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+    c = canvas.Canvas(buffer, pagesize=A4)
 
-            if hasattr(user, 'player'):
-                photo = user.player.photo
-                name = user.player.name
-                registration = user.player.registration
-                description = f"TIME: {user.team_sport.team.name}"
-            else:
-                photo = user.photo
-                name = user.name
-                registration = user.registration
-                description = f"TIME: {user.team_sport.team.name}"
+    event_obj = Event.objects.get(id=event)
 
-            if photo:
-                try:
-                    photo_diameter = nametag_width / 2 + 20
-                    center_x = x + nametag_width / 2
-                    center_y = y + nametag_height - photo_diameter + 43
-                    draw_circular_image(c, photo, center_x, center_y, photo_diameter)
-                except Exception as e:
-                    print("Erro ao carregar foto:", e)
-
-            """
-            imag = user.team_sport.team.event.logo_badge
-            if imag:
-                try:
-                    imag = imag.path
-                    center_x = x + nametag_width / 2 - 41
-                    center_y = y + nametag_height - photo_diameter - 220
-                    c.drawImage(imag, center_x, center_y, width=67, height=36)
-                except Exception as e:
-                    print("Erro ao carregar foto:", e)"""
-
-            
-
-            c.setFont("Helvetica-Bold", 28)
-            short_name = (
-                name.upper()
-                if len(name) < 15
-                else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de', 'da', 'dos', 'das', 'do']), '')}"
-            )
-            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
-
-            c.setFont("Helvetica", 18)
-            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
-
-            c.setFont("Helvetica-Bold", 18)
-            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, description)
+    if Event_badge.objects.filter(event=event_obj, number=t):
+        base_nametag_path = Event_badge.objects.get(
+            event=event_obj,
+            number=t
+        ).file.path
     else:
-        buffer = BytesIO()
-        w, h = A4
-        nametag_width = (w - 3 * 20) / 2
-        nametag_height = (h - 3 * 20) / 2
-        positions = [
-            (20, h - 20 - nametag_height),
-            (20 * 2 + nametag_width, h - 20 - nametag_height),
-            (20, 20),
-            (20 * 2 + nametag_width, 20),
-        ]
-        c = canvas.Canvas(buffer, pagesize=A4)
+        base_nametag_path = os.path.join(
+            settings.BASE_DIR,
+            f'static/images/generators/base_nametag__{t}.png'
+        )
 
-        for j, user in enumerate(players):
-            print(j, user, " - a")
-            if j % 4 == 0 and j > 0:
-                c.showPage()
-            x, y = positions[j % 4]
+    for j, user in enumerate(players):
 
-            c.rect(x, y, nametag_width, nametag_height)
-            #base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
-            if Event_badge.objects.filter(event=Event.objects.get(id=event), number=t):
-                base_nametag_path = Event_badge.objects.get(event=Event.objects.get(id=event), number=t).file.path
+        if j % 4 == 0 and j > 0:
+            c.showPage()
+
+        x, y = positions[j % 4]
+
+        c.rect(x, y, nametag_width, nametag_height)
+
+        base_nametag = ImageReader(base_nametag_path)
+        c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+
+        # ================= IDENTIFICA =================
+        if hasattr(user, 'player'):
+            photo = user.player.photo
+            name = user.player.name
+            registration = user.player.registration
+            description = f"TIME: {user.team_sport.team.name}"
+        else:
+            photo = user.photo
+            name = user.name
+            registration = user.registration
+
+            # 🔴 AQUI MUDA PARA UNIDADE
+            if user.unit:
+                description = user.unit.name.upper()
             else:
-                base_nametag_path = os.path.join(settings.BASE_DIR,f'static/images/generators/base_nametag__{t}.png')
-            base_nametag = ImageReader(base_nametag_path)
-            c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+                description = "SEM UNIDADE"
+        # ============================================
 
-            if hasattr(user, 'player'):
-                photo = user.player.photo
-                imag = user.team_sport.team.event.logo_badge
-                name = user.player.name
-                registration = user.player.registration
-            else:
-                photo = user.photo
-                imag = user.event.logo_badge
-                name = user.name
-                registration = user.registration
+        # ================= FOTO =================
+        if photo:
+            try:
+                photo_diameter = nametag_width / 2 + 20
+                center_x = x + nametag_width / 2
+                center_y = y + nametag_height - photo_diameter + 43
+                photo_path = photo.path if hasattr(photo, 'path') else photo
+                draw_circular_image(c, photo_path, center_x, center_y, photo_diameter)
+            except Exception as e:
+                print("Erro ao carregar foto:", e)
 
-            if photo:
-                try:
-                    photo_diameter = nametag_width / 2 + 20
-                    center_x = x + nametag_width / 2
-                    center_y = y + nametag_height - photo_diameter + 43
-                    draw_circular_image(c, photo, center_x, center_y, photo_diameter)
-                except Exception as e:
-                    print("Erro ao carregar foto:", e)
-                    
-            """
-            if imag:
-                try:
-                    imag = imag.path
-                    center_x = x + nametag_width / 2 - 41
-                    center_y = y + nametag_height - photo_diameter - 220
-                    c.drawImage(imag, center_x, center_y, width=67, height=36)
-                except Exception as e:
-                    print("Erro ao carregar foto:", e)
+        # ================= NOME =================
+        short_name = (
+            name.upper()
+            if len(name) < 15
+            else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de','da','dos','das','do']), '')}"
+        )
 
-            c.setFont("Helvetica-Bold", 28)"""
-            short_name = (
-                name.upper()
-                if len(name) < 15
-                else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de', 'da', 'dos', 'das', 'do']), '')}"
-            )
-            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
 
-            c.setFont("Helvetica", 18)
-            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
+        # ================= MATRÍCULA =================
+        c.setFont("Helvetica", 18)
+        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
 
-    print('criar c')
+        # ================= DESCRIÇÃO =================
+        c.setFont("Helvetica-Bold", 18)
+        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, description)
+
     c.save()
     buffer.seek(0)
 
     response = HttpResponse(buffer, content_type='application/pdf')
-    #response['Content-Disposition'] = f'inline; filename="CRACHA_{unidecode(namebadge)}.pdf"'
     response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
     return response
 

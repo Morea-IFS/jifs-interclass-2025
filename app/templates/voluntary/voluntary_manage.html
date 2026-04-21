@@ -7,7 +7,6 @@
 {% endblock head %}
 
 {% block navbar %}
-
 <style>
     .title-adm{
         display: flex;
@@ -31,7 +30,6 @@
             padding-inline: 4vw;
         }
     }
-
     .title-buttons{
         width: 20em;
         height: auto;
@@ -68,6 +66,23 @@
     .input-search-adm input{
         width: 100%;
     }
+    /* filtro de unidade: alinha ao lado da busca sem quebrar layout */
+    .input-search-adm.with-unit-filter {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .input-search-adm.with-unit-filter input[type="search"] {
+        flex: 1;
+        min-width: 0;
+    }
+    .input-search-adm.with-unit-filter select {
+        height: 100%;
+        font-size: 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        width: fit-content;
+    }
 </style>
 {% endblock navbar %}
 
@@ -77,34 +92,70 @@
         <div class="title-adm">
             <h1>
                 COMISSÃO TÉCNICA
+                {% if user.type == 2 %}
+                    — {% if user.unit %} {{ user.unit.name|upper }}{% endif %}
+                {% endif %}
             </h1>
+
             {% if perms.app.add_voluntary %}
             <div class="title-buttons">
-                {% if user.event_user or select_event %}
+                {% if event or select_event %}
                 <span onclick="openModal()"><p>Novo</p></span>
                 {% else %}
                 <h3>ATUM SPORTS</h3>
                 {% endif %}
+
                 {% if user.type == 0 %}
+                {# Admin: dropdown de evento #}
                 <form method="get">
                     <select name="e" onchange="this.form.submit();">
                         <option value="">Evento</option>
                         {% for i in events %}
-                            <option value="{{ i.id }}" {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                            <option value="{{ i.id }}"
+                                {% if select_event|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>
+                                {{ i.name }}
+                            </option>
                         {% endfor %}
                     </select>
                 </form>
+                {% elif user.type == 1 %}
+                <h3>{{ user.event_user.name }}</h3>
                 {% else %}
-                <h3>
-                    {{user.event_user.name}}
-                </h3>
+                {# type=2: mostra nome do evento #}
+                <h3>{% if user.event_user %}{{ user.event_user.name }}{% endif %}</h3>
                 {% endif %}
             </div>
             {% endif %}
         </div>
-        <form method="get" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
-            <input name="q" type="search" placeholder="Procure pelos membros da comissão técnica">
+
+        {# ── Barra de busca ─────────────────────────────────────────────────── #}
+        {# Admin com evento selecionado e coordenador: busca + filtro de unidade #}
+        {% if user.type == 0 and select_event or user.type == 1 %}
+        <form method="get" class="input-search-adm with-unit-filter">
+            {% if user.type == 0 %}
+            <input type="hidden" name="e" value="{{ select_event }}">
+            {% endif %}
+            <select name="u" onchange="this.form.submit();">
+                <option value="">Todas as unidades</option>
+                {% for unit in events_unit %}
+                    <option value="{{ unit.id }}"
+                        {% if select_unit|stringformat:"s" == unit.id|stringformat:"s" %}selected{% endif %}>
+                        {{ unit.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input name="q" type="search" placeholder="Procure pelos membros da comissão técnica"
+                value="{{ request.GET.q|default:'' }}">
         </form>
+
+        {# Usuário comum: busca simples igual ao original #}
+        {% else %}
+        <form method="get" class="input-search-adm">
+            <input name="q" type="search" placeholder="Procure pelos membros da comissão técnica"
+                value="{{ request.GET.q|default:'' }}">
+        </form>
+        {% endif %}
+
         {% if voluntarys or voluntarys is not None %}
         <section class="all-table" style="width: 100%; max-width: none; margin-top: 25px;">
             <table id="search-table" style="width: 100%;">
@@ -114,42 +165,67 @@
                     {% if not user.type == 3 %}
                     <th>MATRÍCULA/SIAPE</th>
                     {% endif %}
+                    {# Coluna de unidade só para admin e coordenador #}
+                    {% if user.type == 0 or user.type == 1 %}
+                    <th>UNIDADE</th>
+                    {% endif %}
                     <th>FOTO</th>
                     {% if perms.app.change_voluntary %}
                     <th>EDITAR</th>
                     {% endif %}
                     {% if perms.app.delete_voluntary %}
-                    <th>DELETAR</th> 
+                    <th>DELETAR</th>
                     {% endif %}
                 </tr>
+
                 {% for voluntary in voluntarys %}
                 <tr>
+                    <td>{{ voluntary.name }}</td>
+                    <td>{{ voluntary.get_type_voluntary_display }}</td>
+                    {% if not user.type == 3 %}
+                    <td>{{ voluntary.registration }}</td>
+                    {% endif %}
+                    {% if user.type == 0 or user.type == 1 %}
                     <td>
-                        {% if not voluntary.type_voluntary == 4 or user.is_staff %}
-                        <a>{{ voluntary.name }}</a>
+                        {% if voluntary.unit %}
+                            {{ voluntary.unit.name }}
                         {% else %}
-                        <a>{{ voluntary.name }}</a>
+                            <span style="color:#999;">—</span>
                         {% endif %}
                     </td>
-                    <td>{{voluntary.get_type_voluntary_display}}</td>
-                    {% if not user.type == 3 %}
-                    <td>{{voluntary.registration}}</td>
                     {% endif %}
-                    <td>{% if voluntary.photo %} <img src="{% static 'images/icon-true.svg' %}"> {% else %} <img src="{% static 'images/icon-false.svg' %}"> {% endif %}</td>
+                    <td>
+                        {% if voluntary.photo %}
+                            <img src="{% static 'images/icon-true.svg' %}">
+                        {% else %}
+                            <img src="{% static 'images/icon-false.svg' %}">
+                        {% endif %}
+                    </td>
                     {% if perms.app.change_voluntary %}
                     <td>
-                        {% if not voluntary.type_voluntary == 4 or user.is_staff or user.type == 0 %}
-                        <img style="cursor: pointer;" onclick="openEditModal('{{ voluntary.id }}','{{ voluntary.name }}','{{ voluntary.registration }}','{{ voluntary.type_voluntary }}','{{ voluntary.admin.id }}','{{ voluntary.event.id }}', '{% if voluntary.photo %}{{ voluntary.photo.url }}{% endif %}')" src="{% static 'images/icon-edit.svg' %}">        
-                        {% endif %}
+                        <img style="cursor: pointer;"
+                            src="{% static 'images/icon-edit.svg' %}"
+                            onclick="openEditModal(
+                                '{{ voluntary.id }}',
+                                '{{ voluntary.name }}',
+                                '{{ voluntary.registration }}',
+                                '{{ voluntary.type_voluntary }}',
+                                '{{ voluntary.admin.id }}',
+                                '{{ voluntary.event.id }}',
+                                '{% if voluntary.unit %}{{ voluntary.unit.id }}{% endif %}',
+                                '{% if voluntary.photo %}{{ voluntary.photo.url }}{% endif %}'
+                            )">
                     </td>
                     {% endif %}
                     {% if perms.app.delete_voluntary %}
                     <td>
-                        {% if not voluntary.type_voluntary == 4 or user.is_staff or user.type == 0 %}
+                        {% if voluntary.type_voluntary != 4 or user.type == 0 or user.type == 1 %}
                         <form method="POST" action="">
                             {% csrf_token %}
-                            <button data-confirm="Você realmente deseja excluir este membro da comissão técnica" name="voluntary_delete" value="{{voluntary.id}}" style="background-color: transparent; border: none;">
-                                <img src="{% static 'images/icon-trash.svg' %}" style="color: blue;" alt="">
+                            <button data-confirm="Você realmente deseja excluir este membro da comissão técnica?"
+                                name="voluntary_delete" value="{{ voluntary.id }}"
+                                style="background-color: transparent; border: none; margin: 0;">
+                                <img src="{% static 'images/icon-trash.svg' %}" alt="">
                             </button>
                         </form>
                         {% endif %}
@@ -157,15 +233,13 @@
                     {% endif %}
                 </tr>
                 {% empty %}
-                <style>
-                    .hidden {
-                        display: none;
-                    }
-                </style>
+                <style>.hidden { display: none; }</style>
                 <section class="alert-page">
-                    <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                    <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
                     <div class="alert-text">
-                        <p>NÃO HÁ NENHUM MEMBRO DA COMISSÃO TÉCNICA.</p>
+                        <p>NÃO HÁ NENHUM MEMBRO DA COMISSÃO TÉCNICA
+                        {% if user.type == 2 and user.unit %}DA UNIDADE {{ user.unit.name|upper }}{% endif %}
+                        CADASTRADO.</p>
                     </div>
                 </section>
                 {% endfor %}
@@ -174,7 +248,7 @@
         {% else %}
             {% if user.type == 0 %}
             <section class="alert-page">
-                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
+                <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
                 <div class="alert-text">
                     <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
                 </div>
@@ -184,52 +258,69 @@
     </div>
 </div>
 
+{# ── Modal: Cadastrar ────────────────────────────────────────────────────── #}
 <div id="eventModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2>Cadastrar comissão técnica</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+
             <label for="nome">*Nome Completo</label>
-            <input type="text" autocomplete="on" autocorrect="on" name="name" placeholder="Insira o nome" required>
-            <label for="nome">*Matrícula, siape ou CPF</label>
+            <input type="text" autocomplete="on" autocorrect="on" name="name"
+                placeholder="Insira o nome" required>
+
+            <label for="registration">*Matrícula, siape ou CPF</label>
             <input type="text" autocomplete="on" autocorrect="on" name="registration"
-            placeholder="Matrícula, siape ou CPF.">
-            <p style="color: #6d6c6c; font-size: 15px;">*Matricula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.</p>
-            <label for="nome">*Função</label>
-            <select name="type_voluntary">
-                <option selected disabled>Selecione a função</option>
+                placeholder="Matrícula, siape ou CPF.">
+            <p style="color: #6d6c6c; font-size: 15px;">*Matrícula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.</p>
+
+            <label for="type_voluntary">*Função</label>
+            <select name="type_voluntary" required>
+                <option selected disabled value="">Selecione a função</option>
                 {% for value, name in types %}
-                <option value="{{value}}">{{name}}</option>
+                <option value="{{ value }}">{{ name }}</option>
                 {% endfor %}
             </select>
+
             {% if user.is_staff %}
-            <label for="nome">*Usuário</label>
-            <select id="user_admin" name="user">
+            <label for="user">*Usuário</label>
+            <select name="user" required>
                 <option selected disabled>Selecione o usuário admin</option>
                 {% for i in users %}
-                <option value="{{i.id}}">{{i}}</option>
+                <option value="{{ i.id }}">{{ i }}</option>
                 {% endfor %}
             </select>
             {% endif %}
-            {% if not user.unit %}
-            <label for="nome">Unidade</label>
-            <select id="user_admin" name="unit">
-                <option selected disabled>Selecione a unidade (Não obrigatório)</option>
+
+            {# Unidade: admin e coordenador escolhem; type=2 herda automaticamente #}
+            {% if user.type == 0 or user.type == 1 %}
+            <label for="unit">Unidade (opcional)</label>
+            <select name="unit">
+                <option value="">Nenhuma unidade</option>
                 {% for i in events_unit %}
-                <option value="{{i.id}}">{{i.name}}</option>
+                <option value="{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
             </select>
             {% endif %}
-            <input type="hidden" name="event" {% if user.event_user %} value="{{user.event_user.id}}" {% else %} value="{{select_event}}" {% endif %}>
-            <label for="imagem">*Fotografia</label>
+
+            {# Evento oculto #}
+            {% if user.type == 0 %}
+            <input type="hidden" name="event" value="{{ select_event }}">
+            {% else %}
+            <input type="hidden" name="event"
+                value="{% if user.event_user %}{{ user.event_user.id }}{% endif %}">
+            {% endif %}
+
+            <label for="fotos">*Fotografia</label>
             <input type="file" name="photo" id="fotos" accept=".jpg, .jpeg, .png">
+
             <button class="button-modal" type="submit">Cadastrar</button>
         </form>
     </div>
 </div>
 
-<!-- Modal Editar Voluntário -->
+{# ── Modal: Editar ───────────────────────────────────────────────────────── #}
 <div id="editModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeEditModal()">&times;</span>
@@ -249,7 +340,12 @@
 
             <label>*Função</label>
             <select name="type_voluntary" id="editTypeVoluntary" required>
-                <option disabled>Selecione a função</option>
+                <option disabled value="">Selecione a função</option>
+
+                {% if not user.is_staff %}
+                <option value="4" id="type_4">Chefe de delegação</option>
+                {% endif %}
+
                 {% for value, name in types %}
                 <option value="{{ value }}" id="type_{{ value }}">{{ name }}</option>
                 {% endfor %}
@@ -258,32 +354,45 @@
             {% if user.is_staff %}
             <label>*Usuário</label>
             <select name="user" id="editUserSelect">
-                <option disabled>Selecione o usuário admin</option>
+                <option disabled value="">Selecione o usuário admin</option>
                 {% for i in users %}
                 <option value="{{ i.id }}" id="user_{{ i.id }}">{{ i.username }}</option>
                 {% endfor %}
             </select>
             {% endif %}
 
-            {% if not user.event_user %}
-            <label>*Evento</label>
-            <select name="event" id="editEventSelect">
-                <option disabled>Selecione o evento</option>
-                {% for e in events %}
-                <option value="{{ e.id }}" id="event_{{ e.id }}">{{ e.name }}</option>
+            {# Unidade: admin e coordenador podem alterar #}
+            {% if user.type == 0 or user.type == 1 %}
+            <label>Unidade</label>
+            <select name="unit" id="editUnitSelect">
+                <option value="">Nenhuma unidade</option>
+                {% for i in events_unit %}
+                <option value="{{ i.id }}" id="unit_{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
             </select>
             {% endif %}
 
+            {# Evento: admin pode alterar; demais ficam fixos #}
+            {% if not user.event_user %}
+            <label>*Evento</label>
+            <select name="event" id="editEventSelect">
+                <option disabled value="">Selecione o evento</option>
+                {% for e in events %}
+                <option value="{{ e.id }}" id="event_{{ e.id }}">{{ e.name }}</option>
+                {% endfor %}
+            </select>
+            {% else %}
+            <input type="hidden" name="event" value="{{ user.event_user.id }}">
+            {% endif %}
+
             <label for="photo">*Foto de Perfil</label>
-            <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
+            <input type="file" name="photo" id="photo" accept=".jpg, .jpeg, .png" onchange="previewFoto()">
             <p style="color: #6d6c6c; font-size: 15px;">
                 *Anexe uma nova Fotografia apenas se quiser troca-la.
             </p>
-
             <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
-            <img id="preview" src="{{ voluntary.photo.url }}" alt="Foto atual"
-                style="max-width: 150px; display: block; margin-top: 5px;" />
+            <img id="preview" src="" alt="Foto atual"
+                style="max-width: 150px; display: none; margin-top: 5px;">
 
             <button class="button-modal" type="submit">Salvar Alterações</button>
         </form>
@@ -294,92 +403,84 @@
     function openModal() {
         document.getElementById("eventModal").style.display = "block";
     }
-
     function closeModal() {
         document.getElementById("eventModal").style.display = "none";
     }
 
     window.onclick = function(event) {
         const modal = document.getElementById("eventModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
+        if (event.target == modal) modal.style.display = "none";
     }
 
-    // Variável para guardar a URL da imagem original
     let originalPhotoUrl = '';
 
-    function openEditModal(id, name, registration, typeVoluntary, userId, eventId, photoUrl) {
-        // Guarda a URL original
+    function openEditModal(id, name, registration, typeVoluntary, userId, eventId, unitId, photoUrl) {
+        const typeSelect = document.getElementById("editTypeVoluntary");
+        const canEditChiefRole = {{ user.type|default:"null" }} === 0 || {{ user.type|default:"null" }} === 1 || {{ user.is_staff|yesno:"true,false" }};
+
+        if (String(typeVoluntary) === "4" && !canEditChiefRole) {
+            typeSelect.disabled = true;
+        } else {
+            typeSelect.disabled = false;
+        }
+
         originalPhotoUrl = photoUrl || '';
-        
-        // Resetar o input de foto
+
         const photoInput = document.getElementById('photo');
-        photoInput.value = '';
-        
-        // Preencher os campos do formulário
-        document.getElementById("editUserId").value = id;
-        document.getElementById("editUserName").value = name;
+        if (photoInput) photoInput.value = '';
+
+        document.getElementById("editUserId").value           = id;
+        document.getElementById("editUserName").value         = name;
         document.getElementById("editUserRegistration").value = registration;
 
-        // Configurar selects
-        const typeSelect = document.getElementById("editTypeVoluntary");
-        if (typeSelect) {
-            Array.from(typeSelect.options).forEach(option => {
-                option.selected = option.value === typeVoluntary;
-            });
-        }
+        setSelectById("editTypeVoluntary", typeVoluntary);
+        setSelectById("editUserSelect",    userId);
+        setSelectById("editEventSelect",   eventId);
+        setSelectById("editUnitSelect",    unitId);
 
-        const userSelect = document.getElementById("editUserSelect");
-        if (userSelect) {
-            Array.from(userSelect.options).forEach(option => {
-                option.selected = option.value === userId;
-            });
-        }
-
-        const eventSelect = document.getElementById("editEventSelect");
-        if (eventSelect) {
-            Array.from(eventSelect.options).forEach(option => {
-                option.selected = option.value === eventId;
-        });
-        }
-
-        // Mostrar a imagem original
-        const preview = document.getElementById('preview');
+        const preview     = document.getElementById('preview');
         const previewName = document.getElementById('preview-name');
-        
+
         if (originalPhotoUrl) {
-            preview.src = originalPhotoUrl;
+            preview.src           = originalPhotoUrl;
             preview.style.display = 'block';
             previewName.textContent = "Fotografia atual:";
         } else {
+            preview.src           = '';
             preview.style.display = 'none';
             previewName.textContent = "Nenhuma fotografia cadastrada";
         }
-
         document.getElementById("editModal").style.display = "block";
     }
 
+    function setSelectById(selectId, value) {
+        const sel = document.getElementById(selectId);
+        if (!sel || value === undefined || value === null || value === '') return;
+        Array.from(sel.options).forEach(opt => {
+            opt.selected = opt.value === String(value);
+        });
+    }
+
     function previewFoto() {
-        const input = document.getElementById('photo');
-        const preview = document.getElementById('preview');
+        const input       = document.getElementById('photo');
+        const preview     = document.getElementById('preview');
         const previewName = document.getElementById('preview-name');
 
-        if (input.files && input.files[0]) {
-            // Mostrar nova imagem selecionada
+        if (input && input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.src = e.target.result;
+                preview.src           = e.target.result;
                 preview.style.display = 'block';
                 previewName.textContent = "Nova fotografia:";
             };
             reader.readAsDataURL(input.files[0]);
         } else {
             if (originalPhotoUrl) {
-                preview.src = originalPhotoUrl;
+                preview.src           = originalPhotoUrl;
                 preview.style.display = 'block';
                 previewName.textContent = "Fotografia atual:";
             } else {
+                preview.src           = '';
                 preview.style.display = 'none';
                 previewName.textContent = "Nenhuma fotografia cadastrada";
             }
@@ -388,26 +489,28 @@
 
     function closeEditModal() {
         const modal = document.getElementById("editModal");
-        modal.style.display = "none";
+        if (modal) modal.style.display = "none";
 
-        // Resetar tudo
         const form = document.getElementById("editForm");
-        form.reset();
-        
-        const preview = document.getElementById('preview');
+        if (form) form.reset();
+
+        const preview     = document.getElementById('preview');
         const previewName = document.getElementById('preview-name');
-        const photoInput = document.getElementById('photo');
-        
-        photoInput.value = '';
-        preview.style.display = 'none';
-        previewName.textContent = "Nenhuma fotografia selecionada";
+        const photoInput  = document.getElementById('photo');
+
+        if (photoInput)  photoInput.value      = '';
+        if (preview)     preview.style.display = 'none';
+        if (previewName) previewName.textContent = "Nenhuma fotografia selecionada";
+
         originalPhotoUrl = '';
 
-        // Resetar selects
-        ['editTypeVoluntary', 'editUserSelect', 'editEventSelect'].forEach(id => {
-            const select = document.getElementById(id);
-            if (select) select.selectedIndex = 0;
-        });
     }
+    document.getElementById("editForm").addEventListener("submit", function() {
+        const typeSelect = document.getElementById("editTypeVoluntary");
+
+        if (typeSelect.disabled) {
+            typeSelect.disabled = false;
+        }
+    });
 </script>
 {% endblock content %}
