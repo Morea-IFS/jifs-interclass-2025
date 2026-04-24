@@ -173,6 +173,9 @@
             <input type="email" id="editUserEmail" name="email" placeholder="exemplo@dominio.com" />
             <label for="telephone">Telefone</label>
             <input type="tel" id="editUserTelephone" name="telephone" maxlength="15" placeholder="(00) 00000-0000" />
+            <label>SIAPE / Matrícula</label>
+            <input type="text" name="registration" maxlength="20"
+                value="{% for v in terms %}{% if v.admin == user_edit and v.type_voluntary == 4 %}{{ v.registration }}{% endif %}{% endfor %}">
             <label for="photo">*Foto de Perfil</label>
             <input type="file" name="photo" id="editUserPhoto" accept=".jpg, .jpeg, .png" onchange="previewFoto()" />
             <p id="preview-name" style="margin-top: 10px; color: #444;">Fotografia atual:</p>
