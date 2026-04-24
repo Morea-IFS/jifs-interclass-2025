@@ -274,7 +274,14 @@
 
             {% if team_sport.team.event.player_need_cep %}
             <label for="cep">CEP</label>
-            <input type="text" id="cep" name="cep" placeholder="CEP* (Somente números)" required maxlength="10">
+            <input
+                type="text"
+                id="cep"
+                name="cep"
+                placeholder="CEP* (Somente números)"
+                required
+                maxlength="8"
+                oninput="this.value = this.value.replace(/\D/g, '').slice(0, 8)">
             {% endif %}
 
             {% if team_sport.team.event.player_need_municipality %}
@@ -361,7 +368,14 @@
 
             {% if team_sport.team.event.player_need_cep %}
             <label>CEP</label>
-            <input id="editPlayerCep" type="text" name="edit-cep" maxlength="10" placeholder="Somente números" required>
+            <input
+                id="editPlayerCep"
+                type="text"
+                name="edit-cep"
+                maxlength="8"
+                placeholder="Somente números"
+                required
+                oninput="this.value = this.value.replace(/\D/g, '').slice(0, 8)">
             {% endif %}
 
             {% if team_sport.team.event.player_need_municipality %}
