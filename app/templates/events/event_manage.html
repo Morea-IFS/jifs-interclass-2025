@@ -281,6 +281,86 @@
         margin-top: 5px;
     }
 
+    .notifications .toast span {
+        color: black !important;
+    }
+
+    .badge-list {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e5e5;
+    }
+
+    .badge-list-title {
+        color: #273c75 !important;
+        margin-bottom: 12px;
+    }
+
+    .badge-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        padding: 14px;
+        margin-bottom: 10px;
+        background: #f7f9fc;
+        border: 1px solid #dde3ee;
+        border-radius: 8px;
+    }
+
+    .badge-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .badge-info strong {
+        color: #273c75;
+        font-size: 15px;
+    }
+
+    .badge-info span {
+        color: #555;
+        font-size: 13px;
+    }
+
+    .badge-reset-form {
+        margin: 0;
+    }
+
+    .badge-reset-btn {
+        margin: 0;
+        padding: 8px 12px;
+        background: #c0392b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .badge-reset-btn:hover {
+        background: #962d22;
+    }
+
+    .badge-empty {
+        padding: 14px;
+        background: #f7f9fc;
+        border: 1px dashed #bbb;
+        border-radius: 8px;
+        color: #555 !important;
+    }
+
+    @media (max-width: 600px) {
+        .badge-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .badge-reset-btn {
+            width: 100%;
+        }
+    }
+
     @media (max-width: 768px) {
         .step-nav-wrapper {
             grid-template-columns: repeat(2, 1fr);
@@ -611,8 +691,45 @@
             <label for="image_badge">Crachá (Arquivo imagem):</label>
             <input type="file" name="image_badge" required>
             
-            <button type="submit">Cadastrar unidade</button>
+            <button type="submit">Cadastrar crachá</button>
         </form>
+        <div class="badge-list">
+            <h3 class="badge-list-title">Crachás personalizados cadastrados</h3>
+
+            {% for badge in event_badges %}
+                <div class="badge-card">
+                    <div class="badge-info">
+                        <strong>{{ badge.event.name }}</strong>
+                        <span>
+                            Tipo:
+                            {% if badge.number == 0 or badge.number == "0" %}Voluntário{% endif %}
+                            {% if badge.number == 1 or badge.number == "1" %}Técnico de modalidade esportiva{% endif %}
+                            {% if badge.number == 2 or badge.number == "2" %}Apoio{% endif %}
+                            {% if badge.number == 3 or badge.number == "3" %}Estagiário{% endif %}
+                            {% if badge.number == 4 or badge.number == "4" %}Chefe de delegação{% endif %}
+                            {% if badge.number == 5 or badge.number == "5" %}Organização{% endif %}
+                            {% if badge.number == 6 or badge.number == "6" %}Árbitro{% endif %}
+                            {% if badge.number == 7 or badge.number == "7" %}Atleta{% endif %}
+                        </span>
+                    </div>
+
+                    <form method="post" class="badge-reset-form">
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            name="reset_badge"
+                            value="{{ badge.id }}"
+                            class="badge-reset-btn"
+                            onclick="return confirm('Deseja resetar este crachá para o padrão?')"
+                        >
+                            Resetar para padrão
+                        </button>
+                    </form>
+                </div>
+            {% empty %}
+                <p class="badge-empty">Nenhum crachá personalizado cadastrado.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
