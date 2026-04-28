@@ -259,12 +259,13 @@
 
             {% if team_sport.team.event.player_need_registration %}
             <label for="registration">Matrícula</label>
-            <input type="text" id="registration" name="registration" placeholder="Matrícula*" required>
+            <input type="text" id="registration" name="registration" placeholder="Matrícula*" maxlength="15" required>
             {% endif %}
 
             {% if team_sport.team.event.player_need_cpf %}
             <label for="cpf">CPF</label>
-            <input type="text" id="cpf" name="cpf" placeholder="CPF*" required maxlength="14">
+            <input type="text" id="cpf" name="cpf" placeholder="CPF*" required maxlength="11"
+            oninput="this.value = this.value.replace(/\D/g, '').slice(0, 11)">
             {% endif %}
 
             {% if team_sport.team.event.player_need_course %}
@@ -352,13 +353,14 @@
 
             {% if team_sport.team.event.player_need_registration %}
             <label>Matrícula / SIAPE / CPF</label>
-            <input id="editPlayerRegistration" type="text" name="edit-registration" required>
+            <input id="editPlayerRegistration" type="text" name="edit-registration" maxlength="15" required>
             <p style="color:#6d6c6c;font-size:14px;">*Matrícula para aluno, SIAPE para servidores e CPF para estagiário.</p>
             {% endif %}
 
             {% if team_sport.team.event.player_need_cpf %}
             <label>CPF</label>
-            <input id="editPlayerCpf" type="text" name="edit-cpf" maxlength="14" required>
+            <input type="text" id="editPlayerCpf" name="edit-cpf" required maxlength="11"
+            oninput="this.value = this.value.replace(/\D/g, '').slice(0, 11)">
             {% endif %}
 
             {% if team_sport.team.event.player_need_course %}

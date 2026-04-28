@@ -94,17 +94,6 @@ def generate_badges(players, t, namebadge, event):
 
     event_obj = Event.objects.get(id=event)
 
-    if Event_badge.objects.filter(event=event_obj, number=t):
-        base_nametag_path = Event_badge.objects.get(
-            event=event_obj,
-            number=t
-        ).file.path
-    else:
-        base_nametag_path = os.path.join(
-            settings.BASE_DIR,
-            f'static/images/generators/base_nametag__{t}.png'
-        )
-
     for j, user in enumerate(players):
 
         if j % 4 == 0 and j > 0:
@@ -113,6 +102,23 @@ def generate_badges(players, t, namebadge, event):
         x, y = positions[j % 4]
 
         c.rect(x, y, nametag_width, nametag_height)
+
+        # ================= BASE DO CRACHÁ =================
+        if t is not None:
+            badge_type = str(t)
+        else:
+            badge_type = str(user.type_voluntary)
+
+        if Event_badge.objects.filter(event=event_obj, number=badge_type).exists():
+            base_nametag_path = Event_badge.objects.get(
+                event=event_obj,
+                number=badge_type
+            ).file.path
+        else:
+            base_nametag_path = os.path.join(
+                settings.BASE_DIR,
+                f'static/images/generators/base_nametag__{badge_type}.png'
+            )
 
         base_nametag = ImageReader(base_nametag_path)
         c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
@@ -128,7 +134,6 @@ def generate_badges(players, t, namebadge, event):
             name = user.name
             registration = user.registration
 
-            # 🔴 AQUI MUDA PARA UNIDADE
             if user.unit:
                 description = user.unit.name.upper()
             else:
