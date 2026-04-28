@@ -1138,7 +1138,13 @@ def team_players_manage(request, id):
             player.course = request.POST.get('edit-course')
 
         if team_sport.team.event.player_need_cpf:
-            player.cpf = (request.POST.get('edit-cpf') or '').replace("-", "").replace(".", "")
+            cpf = (request.POST.get('edit-cpf') or '').replace("-", "").replace(".", "").strip()
+
+            if len(cpf) != 11:
+                messages.error(request, "CPF inválido! Deve conter 11 números.")
+                return redirect('team_players_manage', team_sport.id)
+
+            player.cpf = cpf
 
         if team_sport.team.event.player_need_cep:
             player.cep = (request.POST.get('edit-cep') or '').replace("-", "").replace(".", "").replace(" ", "")
@@ -1288,7 +1294,14 @@ def team_players_manage(request, id):
         if team_sport.team.event.player_need_registration:
             player.registration = request.POST.get('registration')
         if team_sport.team.event.player_need_cpf:
-            player.cpf = (request.POST.get('cpf') or '').replace("-", "").replace(".", "")
+            cpf = (request.POST.get('cpf') or '').replace("-", "").replace(".", "").strip()
+
+            if len(cpf) != 11:
+                messages.error(request, "CPF inválido! Deve conter 11 números.")
+                return redirect('team_players_manage', team_sport.id)
+
+            player.cpf = cpf
+            
         if team_sport.team.event.player_need_photo and photo:
             player.photo = photo
         if team_sport.team.event.player_need_course:

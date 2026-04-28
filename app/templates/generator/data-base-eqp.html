@@ -68,20 +68,23 @@
     <br><br>
     <table>
         <tr>
-            <th style="width: 46%;">Nome</th>
+            <th style="width: 40%;">Nome</th>
             <th style="width: 12.5%;">Matrícula/siape/CPF</th>
             <th style="width: 12%;">Função</th>
+            <th style="width: 12%;">Unidade</th>
         </tr>
         {% for i in voluntarys %}
         <tr>
             <td>{{ i.name|upper }}</td>
             <td>{{ i.registration }}</td>
-            {% if i.type_voluntary == 4 %} <td>Chefe de del.</td> {% else %} <td>{{ i.get_type_voluntary_display}}</td> {% endif %}
+            {% if i.type_voluntary == 4 %}
+                <td>Chefe de del.</td>
+            {% else %}
+                <td>{{ i.get_type_voluntary_display }}</td>
+            {% endif %}
+            <td>{{ i.unit.name|upper|default:"—" }}</td>
         </tr>
         {% endfor %}
-
-        <!-- Exemplo de dados fictícios -->
-
     </table>
 </body>
 </html>
