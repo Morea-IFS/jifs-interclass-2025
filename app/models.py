@@ -137,7 +137,12 @@ class UserSession(models.Model):
         return f"{self.user.username} - {self.ip_address or 'desconhecido'}"
     
 class ActivityLog(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,  # ← não apaga o log quando o usuário é deletado
+        null=True,
+        blank=True,
+    )
     action = models.CharField(max_length=50)  # CREATE, UPDATE, DELETE
     model_name = models.CharField(max_length=100)
     object_name = models.CharField(max_length=255)

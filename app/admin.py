@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Certificate, CustomUser, Help, Event_badge, Event_unit, ActivityLog, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
+from . models import Certificate, CustomUser, Help, AccessLog, Event_badge, Event_unit, ActivityLog, Replacement, Match_referee, Authenticity, Group_phase, Phase,Settings_access, UserSession, Event_sport, Statement, Event, Statement_user, Volley_match, Attachments, Occurrence, Player, Voluntary, Assistance, Penalties, Time_pause, Team, Point, Team_sport, Player_team_sport, Match, Team_match, Player_match, Banner, Terms_Use
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
@@ -32,6 +32,11 @@ class Settings_accessAdmin(admin.ModelAdmin):
     list_display = ('id','start','end')
     search_fields = ('id','start','end')
 
+@admin.register(AccessLog)
+class AccessLogAdmin(admin.ModelAdmin):
+    list_display = ('id','event')
+    search_fields = ('id','event')
+
 @admin.register(Event_badge)
 class Event_badgeAdmin(admin.ModelAdmin):
     list_display = ('id','name','number','file')
@@ -46,6 +51,13 @@ class ActivityLogAdmin(admin.ModelAdmin):
 class Event_unitAdmin(admin.ModelAdmin):
     list_display = ('id','event','name')
     search_fields = ('id','event','name')
+
+    def delete_model(self, request, obj):
+        apagar_unidade_com_dados(obj)
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            apagar_unidade_com_dados(obj)
 
 @admin.register(Event_sport)
 class Event_sportAdmin(admin.ModelAdmin):
@@ -192,3 +204,34 @@ class TermsUseAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'name', 'siape', 'document', 'photo', 'accepted', 'accepted_at')
     search_fields = ('usuario', 'name', 'siape')
     list_filter = ('accepted',)
+
+def apagar_unidade_com_dados(unit):
+    players = Player.objects.filter(unit=unit)
+    voluntarios = Voluntary.objects.filter(unit=unit)
+    times = Team.objects.filter(unit=unit)
+
+    # usuário não apaga
+    CustomUser.objects.filter(unit=unit).update(unit=None)
+
+    # limpar dependências profundas
+    Assistance.objects.filter(player__player__in=players).delete()
+    Replacement.objects.filter(player_entry__player__in=players).delete()
+    Replacement.objects.filter(player_exit__player__in=players).delete()
+    Player_match.objects.filter(player__in=players).delete()
+    Player_team_sport.objects.filter(player__in=players).delete()
+    Point.objects.filter(player__in=players).delete()
+    Penalties.objects.filter(player__in=players).delete()
+
+    Match_referee.objects.filter(referee__in=voluntarios).delete()
+    Team_sport.objects.filter(technitian__in=voluntarios).update(technitian=None)
+
+    Team_match.objects.filter(team__in=times).delete()
+    Team_sport.objects.filter(team__in=times).delete()
+
+    # apagar principais
+    players.delete()
+    voluntarios.delete()
+    times.delete()
+
+    # apagar unidade
+    unit.delete()
