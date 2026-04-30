@@ -271,8 +271,16 @@
                 placeholder="Insira o nome" required>
 
             <label for="registration">*Matrícula, siape ou CPF</label>
-            <input type="text" autocomplete="on" autocorrect="on" name="registration"
-                placeholder="Matrícula, siape ou CPF.">
+            <input 
+                type="text" 
+                autocomplete="on" 
+                autocorrect="on" 
+                name="registration"
+                placeholder="Matrícula, SIAPE ou CPF"
+                maxlength="15"
+                required
+                oninput="this.value = this.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 15)"
+            >
             <p style="color: #6d6c6c; font-size: 15px;">*Matrícula para aluno, siape para servidores e CPF para estagiário ou servidor sem siape.</p>
 
             <label for="type_voluntary">*Função</label>
@@ -333,7 +341,14 @@
             <input id="editUserName" type="text" name="name" required>
 
             <label>*Matrícula, siape ou CPF</label>
-            <input id="editUserRegistration" type="text" name="registration" required>
+            <input 
+                id="editUserRegistration" 
+                type="text" 
+                name="registration" 
+                maxlength="15"
+                required
+                oninput="this.value = this.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 15)"
+            >
             <p style="color: #6d6c6c; font-size: 14px;">
                 *Matrícula para aluno, SIAPE para servidores e CPF para estagiário ou servidor sem SIAPE.
             </p>
