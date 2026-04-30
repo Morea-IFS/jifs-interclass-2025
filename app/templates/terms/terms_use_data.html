@@ -41,7 +41,13 @@
                             style="width: 100%; padding: 0.8em; margin-bottom: 2em; border-radius: 0.5em; border: 1px solid var(--global-third-color); outline-color: var(--global-primary-color);">
                             
                         <label for="registration" style="width: 100%; text-align: left;">SIAPE / Matrícula:</label>
-                        <input type="text" name="registration" id="registration" required
+                        <input 
+                            type="text" 
+                            name="registration" 
+                            id="registration" 
+                            maxlength="15" 
+                            required
+                            oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').slice(0,15)"
                             style="width: 100%; padding: 0.8em; margin-bottom: 1.5em; border-radius: 0.5em; border: 1px solid var(--global-third-color); outline-color: var(--global-primary-color);"
                             placeholder="Ex: 1234567">
                         
