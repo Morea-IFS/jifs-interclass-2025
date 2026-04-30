@@ -286,7 +286,7 @@ class Voluntary(models.Model):
     name = models.CharField(max_length=100)
     photo = models.ImageField(upload_to='photo_voluntary/', default='defaults/person.png', blank=True, null=True)
     unit = models.ForeignKey(Event_unit, on_delete=models.CASCADE, blank=True, null=True)
-    registration = models.CharField(max_length=11, default="00000000000", blank=True, null=True)
+    registration = models.CharField(max_length=15, default="00000000000", blank=True, null=True)
     admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type_voluntary = models.IntegerField(choices=Type_service.choices, default=Type_service.voluntary)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="voluntary_set")

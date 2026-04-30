@@ -4676,7 +4676,6 @@ def _build_user_dashboard_row(user, selected_date=None, event=None):
     }
 
 
-@permission_required("app.view_dashboard_acesso", raise_exception=True)
 @login_required(login_url="login")
 @terms_accept_required
 def dashboard_acesso(request):
