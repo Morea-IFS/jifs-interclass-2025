@@ -101,6 +101,8 @@
                             <p>{{ i.name }}</p>
                             <span class="badge-type-tag">Crachá Atleta</span>
                         </button>
+                        {% empty %}
+                        <p style="color:#ffffff;font-size:13px;">Nenhum campus cadastrado neste evento.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -117,6 +119,8 @@
                             <small>{{ i.sport.get_sport_display }} — {{ i.get_sexo_display }}</small>
                             <span class="badge-type-tag">Crachá Atleta</span>
                         </button>
+                        {% empty %}
+                        <p style="color:#ffffff;font-size:13px;">Nenhuma modalidade com atletas cadastrados.</p>
                         {% endfor %}
                     </div>
                 </div>

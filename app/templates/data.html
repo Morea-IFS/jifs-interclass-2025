@@ -116,6 +116,8 @@
                                 <p>{{ label }}</p>
                             </button>
                             {% endif %}
+                            {% empty %}
+                            <p style="color:#ffffff;font-size:13px;">Nenhum membro cadastrado neste evento.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -130,7 +132,7 @@
                             <p>{{ team.name }}</p>
                         </button>
                         {% empty %}
-                        <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhum campus cadastrado.</p>
+                        <p style="color:#ffffff;font-size:13px;">Nenhum campus cadastrado.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -161,7 +163,7 @@
                             </button>
                             {% endif %}
                         {% empty %}
-                        <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhuma modalidade com atletas.</p>
+                        <p style="color:#ffffff;font-size:13px;">Nenhuma modalidade com atletas.</p>
                         {% endfor %}
                     </div>
                 </div>
