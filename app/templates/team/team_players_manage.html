@@ -91,9 +91,26 @@
         </div>
 
         {% if perms.app.add_player_team_sport %}
-        <form method="post" onsubmit="adicionarCamposOcultos(this)" class="input-search-adm">
+        <form method="post" id="search-form" class="input-search-adm" onsubmit="return false;">
             {% csrf_token %}
-            <input name="search" type="search" id="search-input" onkeyup="search_table()" placeholder="Procure pelo nome ou matrícula">
+            <input
+                name="search"
+                type="search"
+                id="search-input"
+                onkeyup="search_table()"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();iniciarBusca();}"
+                placeholder="Procure pelo nome ou matrícula">
+            <button type="button" onclick="iniciarBusca()" style="
+                margin-top: 8px;
+                padding: 8px 20px;
+                background: var(--global-ninth-color);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+            ">🔍 Buscar e adicionar</button>
         </form>
         {% endif %}
 
@@ -428,6 +445,71 @@
     </div>
 </div>
 
+<div id="confirmarModal" style="
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+">
+    <div style="
+        background: var(--global-nav-color);
+        border-radius: 14px;
+        padding: 28px 28px 22px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    ">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <i class="fas fa-user-plus" style="font-size:20px; color:var(--global-color-white);"></i>
+            <h3 style="margin:0; color:var(--global-color-white); font-size:16px; font-weight:700;">Confirmar adição</h3>
+        </div>
+
+        <p style="color:rgba(255,255,255,0.7); font-size:13px; margin:0 0 6px 0;">Você está buscando e adicionando o atleta:</p>
+        <p id="confirmar-nome" style="
+            color:var(--global-color-white);
+            font-size:15px;
+            font-weight:600;
+            margin:0 0 20px 0;
+            padding:10px 14px;
+            background:rgba(255,255,255,0.06);
+            border-radius:8px;
+            border-left:3px solid var(--global-header-color);
+        "></p>
+
+        <p style="color:rgba(255,255,255,0.5); font-size:12px; margin:0 0 20px 0;">
+            Se o atleta for encontrado, ele será adicionado automaticamente à modalidade.
+        </p>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="fecharConfirmar()" style="
+                padding: 9px 20px;
+                background: rgba(255,255,255,0.08);
+                color: rgba(255,255,255,0.7);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+            ">Cancelar</button>
+            <button onclick="executarBusca()" style="
+                padding: 9px 20px;
+                background: var(--global-header-color);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+            ">Confirmar adição</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ── Modais ──────────────────────────────────────────────────────────────
 
@@ -537,6 +619,46 @@
         originalPhotoUrl    = '';
         originalPhotoUrlGol = '';
     }
+
+   const SEARCH_PREVIEW_URL = "{% url 'search_player_preview' team_sport.id %}";
+
+    function iniciarBusca() {
+        const val = document.getElementById('search-input').value.trim();
+        if (!val) {
+            alert('Digite o nome ou matrícula do atleta.');
+            return;
+        }
+
+        fetch(`${SEARCH_PREVIEW_URL}?q=${encodeURIComponent(val)}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.found) {
+                const info = data.registration ? `${data.name} — Mat. ${data.registration}` : data.name;
+                document.getElementById('confirmar-nome').textContent = info;
+                document.getElementById('confirmarModal').style.display = 'flex';
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(() => alert('Erro ao buscar atleta. Tente novamente.'));
+    }
+
+    function fecharConfirmar() {
+        document.getElementById('confirmarModal').style.display = 'none';
+    }
+
+    function executarBusca() {
+        fecharConfirmar();
+        const form = document.getElementById('search-form');
+        form.onsubmit = null;
+        form.submit();
+    }
+
+    document.getElementById('confirmarModal').addEventListener('click', function(e) {
+        if (e.target === this) fecharConfirmar();
+    }); 
 </script>
 {% endif %}
 {% endblock content %}

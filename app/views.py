@@ -4959,3 +4959,32 @@ def type_file(request, rest, file, text):
         return True
     return False
 
+@login_required(login_url="login")
+def search_player_preview(request, team_sport_id):
+    team_sport = get_object_or_404(Team_sport, id=team_sport_id)
+    q = request.GET.get('q', '').strip()
+
+    if not q:
+        return JsonResponse({'found': False, 'message': 'Digite o nome ou matrícula.'})
+
+    user = request.user
+    admin_filter = None if user.type in (0, 1) else user
+
+    base_qs = _player_queryset_for_team(
+        team_sport, user, team_sport.team.event, admin_user=admin_filter
+    )
+
+    if q.isdigit():
+        player_filter = base_qs.filter(registration=int(q))
+    else:
+        player_filter = base_qs.filter(name__icontains=q)
+
+    if player_filter.count() > 1:
+        return JsonResponse({'found': False, 'message': f'{player_filter.count()} atletas encontrados — seja mais preciso (use nome completo ou matrícula).'})
+    elif not player_filter.exists():
+        return JsonResponse({'found': False, 'message': 'Atleta não encontrado ou incompatível com o sexo do time.'})
+    else:
+        player = player_filter.first()
+        if Player_team_sport.objects.filter(player=player, team_sport=team_sport).exists():
+            return JsonResponse({'found': False, 'message': f"O atleta '{player.name}' já está nessa modalidade."})
+        return JsonResponse({'found': True, 'name': player.name, 'registration': player.registration or ''})
