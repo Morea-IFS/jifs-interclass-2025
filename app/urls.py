@@ -65,6 +65,7 @@ urlpatterns = [
 
     path('spreadsheet/', views.generator_spreadsheet, name='spreadsheet'),
 
+    path('search-player/<int:team_sport_id>/', views.search_player_preview, name='search_player_preview'),
 
     #API
     path('get_teams/', views.get_teams, name='get_teams'),
