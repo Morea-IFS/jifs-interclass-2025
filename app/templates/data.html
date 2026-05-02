@@ -5,31 +5,6 @@
     <title>RELATÓRIOS — ATUM ADMIN</title>
     <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
     <link rel="stylesheet" href="{% static 'css/modal.css' %}">
-    <style>
-        .relatorio-section {
-            width: 100%;
-            margin-bottom: 1.5rem;
-        }
-
-        .relatorio-section-title {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--color-text-secondary, #6b7280);
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1.5px solid var(--color-border, #e5e7eb);
-        }
-
-        .relatorio-section-title i {
-            font-size: 0.85rem;
-            opacity: 0.7;
-        }
-    </style>
 {% endblock head %}
 
 {% block navbar %}{% endblock navbar %}
@@ -78,80 +53,62 @@
             </div>
 
             {% if event %}
-            <form method="post">
+            <form method="post" class="relatorios-grid-wrapper">
                 {% csrf_token %}
                 <input type="hidden" name="event_data" value="{{ event.id }}">
 
-                {# ── Botões exclusivos de admin e coordenador ────────────────── #}
                 {% if user.is_staff or user.type == 1 %}
-                <div class="relatorio-section">
-                    <p class="relatorio-section-title">
-                        <i class="fas fa-chart-bar"></i> Gestão do evento
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-chart-bar"></i> Gestão do evento</h3>
                     <div class="relatorios-grid">
-
                         <button name="all_data" type="submit" class="relatorio-btn">
                             <i class="fas fa-database"></i>
                             <p>Dados gerais</p>
                         </button>
-
                         <button name="all_match" type="submit" class="relatorio-btn">
                             <i class="fas fa-volleyball-ball"></i>
                             <p>Partidas</p>
                         </button>
-
                         <button name="enrollment" type="submit" class="relatorio-btn">
                             <i class="fas fa-clipboard-list"></i>
                             <p>Inscrições</p>
                         </button>
-
                     </div>
                 </div>
                 {% endif %}
 
-                <div class="relatorio-section">
-                    <p class="relatorio-section-title">
+                <div class="badge-section">
+                    <h3 class="badge-section-title">
                         <i class="fas fa-layer-group"></i> Geral
-                        {% if user.type == 2 and my_team %}
-                            &nbsp;—&nbsp;(campus ou time) {{ my_team.name }}
-                        {% endif %}
-                    </p>
+                        {% if user.type == 2 and my_team %} — {{ my_team.name }}{% endif %}
+                    </h3>
                     <div class="relatorios-grid">
-
                         <button name="all_players" type="submit" class="relatorio-btn">
                             <i class="fas fa-users"></i>
                             <p>Todos os atletas</p>
                         </button>
-
                         <button name="all_players_masc" type="submit" class="relatorio-btn">
                             <i class="fas fa-male"></i>
                             <p>Atletas masculinos</p>
                         </button>
-
                         <button name="all_players_fem" type="submit" class="relatorio-btn">
                             <i class="fas fa-female"></i>
                             <p>Atletas femininas</p>
                         </button>
-
                         <button name="all_team" type="submit" class="relatorio-btn">
                             <i class="fas fa-university"></i>
                             <p>Dados do{% if user.type == 2 %} time{% else %}s times{% endif %}</p>
                         </button>
-
                     </div>
                 </div>
 
-                <div class="relatorio-section">
-                    <p class="relatorio-section-title">
-                        <i class="fas fa-chalkboard-teacher"></i> Voluntários / Comissão / Apoio
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-chalkboard-teacher"></i> Comissão / Voluntários / Apoio</h3>
                     <div class="relatorios-grid">
-
                         <button name="all_eqp" type="submit" class="relatorio-btn">
                             <i class="fas fa-users-cog"></i>
                             <p>Todos os membros</p>
                         </button>
-
                         {% for value, label in type_service %}
                             {% if value in available_voluntary_types %}
                             <button name="all_eqp_type" value="{{ value }}" type="submit" class="relatorio-btn">
@@ -160,38 +117,28 @@
                             </button>
                             {% endif %}
                         {% endfor %}
-
                     </div>
                 </div>
 
                 {% if user.type == 0 or user.type == 1 %}
-                <div class="relatorio-section">
-                    <p class="relatorio-section-title">
-                        <i class="fas fa-university"></i> Por campus / unidade
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-university"></i> Por campus / unidade</h3>
                     <div class="relatorios-grid">
-
                         {% for team in teams %}
                         <button name="team_in" value="{{ team.id }}" type="submit" class="relatorio-btn">
                             <i class="fas fa-shield-alt"></i>
                             <p>{{ team.name }}</p>
                         </button>
                         {% empty %}
-                        <p style="color: var(--color-text-secondary, #6b7280); font-size:0.85rem;">
-                            Nenhum campus cadastrado neste evento.
-                        </p>
+                        <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhum campus cadastrado.</p>
                         {% endfor %}
-
                     </div>
                 </div>
                 {% endif %}
 
-                <div class="relatorio-section">
-                    <p class="relatorio-section-title">
-                        <i class="fas fa-running"></i> Por modalidade
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-running"></i> Por modalidade</h3>
                     <div class="relatorios-grid">
-
                         {% for item in modalidades_relatorio %}
                             {% if item.has_full %}
                             <button name="all_players_sport" value="{{ item.event_sport.id }}" type="submit" class="relatorio-btn">
@@ -199,26 +146,23 @@
                                 <p>{{ item.event_sport.get_sport_display }}</p>
                             </button>
                             {% endif %}
-
                             {% if item.has_masc %}
                             <button name="all_players_sport_masc" value="{{ item.event_sport.id }}" type="submit" class="relatorio-btn">
                                 <i class="fas fa-male"></i>
-                                <p>{{ item.event_sport.get_sport_display }} — Masculino</p>
+                                <p>{{ item.event_sport.get_sport_display }}</p>
+                                <small>Masculino</small>
                             </button>
                             {% endif %}
-
                             {% if item.has_fem %}
                             <button name="all_players_sport_fem" value="{{ item.event_sport.id }}" type="submit" class="relatorio-btn">
                                 <i class="fas fa-female"></i>
-                                <p>{{ item.event_sport.get_sport_display }} — Feminino</p>
+                                <p>{{ item.event_sport.get_sport_display }}</p>
+                                <small>Feminino</small>
                             </button>
                             {% endif %}
                         {% empty %}
-                            <p style="color: var(--color-text-secondary, #6b7280); font-size:0.85rem;">
-                                Nenhuma modalidade com atletas cadastrados neste evento.
-                            </p>
+                        <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhuma modalidade com atletas.</p>
                         {% endfor %}
-
                     </div>
                 </div>
 
@@ -227,9 +171,7 @@
             {% else %}
             <section class="alert-page">
                 <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
-                <div class="alert-text">
-                    <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
-                </div>
+                <div class="alert-text"><p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p></div>
             </section>
             {% endif %}
 

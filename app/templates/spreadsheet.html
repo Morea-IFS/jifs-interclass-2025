@@ -5,45 +5,6 @@
     <title>PLANILHAS — ATUM ADMIN</title>
     <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
     <link rel="stylesheet" href="{% static 'css/modal.css' %}">
-    <style>
-        .planilha-section {
-            width: 100%;
-            margin-bottom: 1.5rem;
-        }
-
-        .planilha-section-title {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--color-text-secondary, #6b7280);
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 1.5px solid var(--color-border, #e5e7eb);
-        }
-
-        .planilha-section-title i {
-            font-size: 0.85rem;
-            opacity: 0.7;
-        }
-
-        /* badge verde nos botões de planilha */
-        .relatorio-btn .btn-badge {
-            display: inline-block;
-            font-size: 0.6rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            background: #16a34a;
-            color: #fff;
-            border-radius: 4px;
-            padding: 1px 5px;
-            margin-top: 3px;
-        }
-    </style>
 {% endblock head %}
 
 {% block navbar %}{% endblock navbar %}
@@ -91,53 +52,38 @@
             </div>
 
             {% if event %}
-            <form method="post">
+            <form method="post" class="relatorios-grid-wrapper">
                 {% csrf_token %}
                 <input type="hidden" name="event_data" value="{{ event.id }}">
 
-                <!-- SEÇÃO 1 — GERAL
-                   Disponível para todos os tipos de usuário.
-                   Técnico (type=2) verá apenas seus próprios atletas.-->
-                <div class="planilha-section">
-                    <p class="planilha-section-title">
+                <div class="badge-section">
+                    <h3 class="badge-section-title">
                         <i class="fas fa-layer-group"></i> Geral
-                        {% if user.type == 2 %}
-                            &nbsp;—&nbsp;(campus ou time) {{ my_team.name }}
-                        {% endif %}
-                    </p>
+                        {% if user.type == 2 %} — {{ my_team.name }}{% endif %}
+                    </h3>
                     <div class="relatorios-grid">
-
                         <button name="p_todos" type="submit" class="relatorio-btn">
                             <i class="fas fa-users"></i>
                             <p>Todos os atletas</p>
                             <span class="btn-badge">xlsx</span>
                         </button>
-
                         <button name="p_masc" type="submit" class="relatorio-btn">
                             <i class="fas fa-male"></i>
                             <p>Atletas masculinos</p>
                             <span class="btn-badge">xlsx</span>
                         </button>
-
                         <button name="p_fem" type="submit" class="relatorio-btn">
                             <i class="fas fa-female"></i>
                             <p>Atletas femininas</p>
                             <span class="btn-badge">xlsx</span>
                         </button>
-
                     </div>
                 </div>
 
-                <!-- SEÇÃO 2 — POR CAMPUS
-                   Visível apenas para superusuário (type=0) e coordenador (type=1).
-                   Técnico (type=2) não vê esta seção.-->
                 {% if user.type == 0 or user.type == 1 %}
-                <div class="planilha-section">
-                    <p class="planilha-section-title">
-                        <i class="fas fa-university"></i> Por (Campus ou Time)
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-university"></i> Por campus</h3>
                     <div class="relatorios-grid">
-
                         {% for team in teams %}
                         <button name="p_team" value="{{ team.id }}" type="submit" class="relatorio-btn">
                             <i class="fas fa-shield-alt"></i>
@@ -145,25 +91,15 @@
                             <span class="btn-badge">xlsx</span>
                         </button>
                         {% empty %}
-                        <p style="color: var(--color-text-secondary, #6b7280); font-size:0.85rem;">
-                            Nenhum campus cadastrado neste evento.
-                        </p>
+                        <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhum campus cadastrado.</p>
                         {% endfor %}
-
                     </div>
                 </div>
                 {% endif %}
 
-                   <!-- SEÇÃO 3 — POR MODALIDADE
-                   Superusuário / coordenador: todas as equipes do evento.
-                   Técnico: somente as modalidades (sport + sexo) do seu campus.-->
-                <div class="planilha-section">
-                    <p class="planilha-section-title">
-                        <i class="fas fa-running"></i> Por Modalidade
-                    </p>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-running"></i> Por modalidade</h3>
                     <div class="relatorios-grid">
-
-                        <!--{# ── Superusuário e coordenador: um botão por Event_sport ── #}-->
                         {% if user.type == 0 or user.type == 1 %}
                             {% for es in event_sports %}
                             <button name="p_sport" value="{{ es.id }}" type="submit" class="relatorio-btn">
@@ -172,41 +108,28 @@
                                 <span class="btn-badge">xlsx</span>
                             </button>
                             {% empty %}
-                            <p style="color: var(--color-text-secondary, #6b7280); font-size:0.85rem;">
-                                Nenhuma modalidade cadastrada neste evento.
-                            </p>
+                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">Nenhuma modalidade cadastrada.</p>
                             {% endfor %}
-
-                        <!--{# ── Técnico (type=2): um botão por Team_sport do campus ── #}-->
                         {% else %}
                             {% for ts in my_team_sports %}
                             <button name="p_team_sport" value="{{ ts.id }}" type="submit" class="relatorio-btn">
                                 <i class="fas fa-medal"></i>
-                                <p>
-                                    {{ ts.sport.get_sport_display }}
-                                    <br>
-                                    <small>{{ ts.get_sexo_display }}</small>
-                                </p>
+                                <p>{{ ts.sport.get_sport_display }}</p>
+                                <small>{{ ts.get_sexo_display }}</small>
                                 <span class="btn-badge">xlsx</span>
                             </button>
                             {% empty %}
-                            <p style="color: var(--color-text-secondary, #6b7280); font-size:0.85rem;">
-                                Seu campus não está inscrito em nenhuma modalidade ainda.
-                            </p>
+                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">Sem modalidades cadastradas.</p>
                             {% endfor %}
                         {% endif %}
-
                     </div>
                 </div>
 
             </form>
-
             {% else %}
             <section class="alert-page">
                 <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
-                <div class="alert-text">
-                    <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
-                </div>
+                <div class="alert-text"><p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p></div>
             </section>
             {% endif %}
 

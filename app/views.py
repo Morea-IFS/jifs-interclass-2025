@@ -364,6 +364,8 @@ def event_manage(request):
             terms_declaration_text = request.POST.get('terms_declaration_text', '').strip() or None
             upload_intro_text = request.POST.get('upload_intro_text', '').strip() or None
 
+            tutorial = request.POST.get('tutorial', '').strip() or None
+
             Event.objects.create(
                 name=name,
                 logo=logo,
@@ -404,6 +406,8 @@ def event_manage(request):
                 terms_intro_text=terms_intro_text,
                 terms_declaration_text=terms_declaration_text,
                 upload_intro_text=upload_intro_text,
+
+                tutorial=tutorial,
             )
 
         return redirect('event_manage')

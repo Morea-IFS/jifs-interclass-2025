@@ -193,6 +193,8 @@ class Event(models.Model):
     terms_intro_text = models.TextField(blank=True, null=True)
     terms_declaration_text = models.TextField(blank=True, null=True)
 
+    tutorial = models.CharField(max_length=500, blank=True, null=True)
+
 
     def __str__(self):
         return self.name

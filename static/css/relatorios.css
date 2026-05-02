@@ -1,76 +1,151 @@
+.all-block {
+    width: 100%;
+}
+
+/* ── Wrapper ── */
 .relatorios-wrapper {
     width: 100%;
-    background-color: var(--global-third-color);
+    padding: 24px 20px 48px;
+    box-sizing: border-box;
 }
 
-.relatorios-header {
-    text-align: center;
-    margin-bottom: 30px;
+/* ── Seções (card escuro) ── */
+.badge-section {
+    background: var(--global-nav-color);
+    border-radius: 10px;
+    padding: 16px;
 }
 
-.relatorios-header h1 {
-    font-size: 2em;
-    color: var(--global-header-color);
+.badge-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--global-color-white);
+    margin: 0 0 14px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.green-text {
-    color: #7bff00;
+.badge-section-title i {
+    font-size: 18px;
+    opacity: 0.8;
 }
 
+/* ── Wrapper de todas as seções ── */
+.relatorios-grid-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Grid dos botões ── */
 .relatorios-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    gap: 14px;
+    justify-content: flex-start;
 }
 
+/* ── Botão ── */
 .relatorio-btn {
-    width: 14em;
-    height: 14em;
-    background-color: var(--global-color-manage);
-    border-radius: 16px;
+    width: 148px;
+    min-height: 148px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
     color: white;
-    border: none;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: background 0.3s ease;
+    gap: 6px;
+    padding: 16px 12px;
     text-align: center;
+    box-sizing: border-box;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 .relatorio-btn:hover {
-    width: 14.5em;
-    height: 14.5em;
+    transform: translateY(-3px) scale(1.02);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.18);
+}
+
+.relatorio-btn:active {
+    transform: scale(0.97);
 }
 
 .relatorio-btn i {
-    font-size: 2em;
-    margin-bottom: 10px;
+    font-size: 27px;
+    opacity: 0.85;
+    line-height: 1;
 }
 
 .relatorio-btn p {
-    font-size: 1.1em;
+    font-size: 13px;
     font-weight: 600;
-    padding: 10px;
+    color: rgba(255,255,255,0.92);
+    margin: 0;
+    padding: 0 4px;
+    line-height: 1.4;
 }
 
-.relatorios-footer {
-    margin-top: 40px;
-    text-align: center;
+.relatorio-btn small {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.879);
+    line-height: 1.3;
+    font-weight: 500;
 }
 
-.btn-voltar {
-    background-color: #c0392b;
-    padding: 12px 20px;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background 0.3s ease;
+/* ── Tag azul (tipo de crachá) ── */
+.badge-type-tag {
+    margin-top: 2px;
+    padding: 3px 9px;
+    background: rgba(33,150,243,0.2);
+    border: 1px solid rgba(33,150,243,0.5);
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #90caf9;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
 }
 
-.btn-voltar:hover {
-    background-color: #a93226;
+/* ── Tag verde (xlsx) ── */
+.btn-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: rgba(34,197,94,0.18);
+    color: #86efac;
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-top: 2px;
+}
+
+/* ── Responsivo ── */
+
+@media screen and (max-width: 700px) {
+    .title-buttons {
+        flex-direction: column;
+        gap: 12px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .relatorios-grid {
+        gap: 10px;
+    }
+
+    .relatorio-btn {
+        width: calc(50% - 5px);
+        min-height: 120px;
+    }
 }

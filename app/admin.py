@@ -71,8 +71,40 @@ class UserSessionAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('id','name','logo')
-    search_fields = ('id','name','logo')
+    list_display = ('id', 'name', 'logo', 'tutorial')
+    search_fields = ('id', 'name')
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('name', 'logo', 'logo_badge', 'description', 'local', 'active', 'user')
+        }),
+        ('Datas', {
+            'fields': ('date_init', 'date_end', 'enrollment_init', 'enrollment_end')
+        }),
+        ('Faixa Etária', {
+            'fields': ('age', 'age_max')
+        }),
+        ('Arquivos', {
+            'fields': ('regulation', 'tutorial')
+        }),
+        ('Requisitos Gerais', {
+            'fields': ('general_need_terms', 'general_need_authorization', 'general_need_unit')
+        }),
+        ('Requisitos dos Times', {
+            'fields': ('team_need_description', 'team_need_color', 'team_need_technician')
+        }),
+        ('Requisitos dos Jogadores', {
+            'fields': (
+                'player_need_instagram', 'player_need_photo', 'player_need_photo_goal',
+                'player_need_bulletin', 'player_need_rg', 'player_need_sexo',
+                'player_need_registration', 'player_need_cpf', 'player_need_date_nasc',
+                'player_need_address', 'player_need_course', 'player_need_cep',
+                'player_need_municipality',
+            )
+        }),
+        ('Textos dos Termos', {
+            'fields': ('upload_intro_text', 'terms_intro_text', 'terms_declaration_text')
+        }),
+    )
 
 @admin.register(Phase)
 class PhaseAdmin(admin.ModelAdmin):
