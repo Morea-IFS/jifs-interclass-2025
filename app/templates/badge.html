@@ -41,70 +41,92 @@
             </div>
             
             {% if event %}
-            <form method="post" class="relatorios-grid">
+            <form method="post" class="relatorios-grid-wrapper">
                 {% csrf_token %}
-                <input type="hidden" name="event_data" {% if event %} value="{{event.id}}" {% else %} value="0" {% endif %}>
+                <input type="hidden" name="event_data" value="{{event.id}}">
 
-                <button name="all_voluntary" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Voluntários</p>
-                </button>
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-users"></i> Comissão Técnica</h3>
+                    <div class="relatorios-grid">
+                        <button name="all_voluntary" type="submit" class="relatorio-btn">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            <p>Voluntários</p>
+                            <span class="badge-type-tag">Crachá Voluntário</span>
+                        </button>
+                        <button name="all_technician" type="submit" class="relatorio-btn">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <p>Técnicos</p>
+                            <span class="badge-type-tag">Crachá Técnico</span>
+                        </button>
+                        <button name="all_support" type="submit" class="relatorio-btn">
+                            <i class="fas fa-tools"></i>
+                            <p>Apoio</p>
+                            <span class="badge-type-tag">Crachá Apoio</span>
+                        </button>
+                        <button name="all_trainee" type="submit" class="relatorio-btn">
+                            <i class="fas fa-user-graduate"></i>
+                            <p>Estagiários</p>
+                            <span class="badge-type-tag">Crachá Estagiário</span>
+                        </button>
+                        <button name="all_head" type="submit" class="relatorio-btn">
+                            <i class="fas fa-user-tie"></i>
+                            <p>C. delegação</p>
+                            <span class="badge-type-tag">Crachá Chefe Deleg.</span>
+                        </button>
+                        <button name="all_organization" type="submit" class="relatorio-btn">
+                            <i class="fas fa-sitemap"></i>
+                            <p>Organização</p>
+                            <span class="badge-type-tag">Crachá Organização</span>
+                        </button>
+                        <button name="all_arbitrator" type="submit" class="relatorio-btn">
+                            <i class="fas fa-user-shield"></i>
+                            <p>Arbitragem</p>
+                            <span class="badge-type-tag">Crachá Árbitro</span>
+                        </button>
+                        <button name="all_commission" type="submit" class="relatorio-btn">
+                            <i class="fas fa-users"></i>
+                            <p>Comissão técnica</p>
+                            <span class="badge-type-tag">Todos os tipos</span>
+                        </button>
+                    </div>
+                </div>
 
-                <button name="all_technician" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Técnicos</p>
-                </button>
+                {% if teams %}
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-university"></i> Atletas por Campus</h3>
+                    <div class="relatorios-grid">
+                        {% for i in teams %}
+                        <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>{{ i.name }}</p>
+                            <span class="badge-type-tag">Crachá Atleta</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
-                <button name="all_support" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Apoio</p>
-                </button>
+                {% if teams_sport %}
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-running"></i> Atletas por Modalidade</h3>
+                    <div class="relatorios-grid">
+                        {% for i in teams_sport %}
+                        <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
+                            <i class="fas fa-medal"></i>
+                            <p>{{ i.team.name }}</p>
+                            <small>{{ i.sport.get_sport_display }} — {{ i.get_sexo_display }}</small>
+                            <span class="badge-type-tag">Crachá Atleta</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
-                <button name="all_trainee" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Estagiários</p>
-                </button>
-
-                <button name="all_head" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>C. delegação</p>
-                </button>
-
-                <button name="all_organization" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Organização</p>
-                </button>
-
-                <button name="all_arbitrator" type="submit" class="relatorio-btn">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <p>Árbritagem</p>
-                </button>
-
-                <button name="all_commission" type="submit" class="relatorio-btn">
-                    <i class="fas fa-users"></i>
-                    <p>Comissão técnica</p>
-                </button>
-
-                {% for i in teams %}
-                <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
-                    <i class="fas fa-university"></i>
-                    <p> {{ i.name }}</p>
-                </button>
-                {% endfor %}
-
-                {% for i in teams_sport %}
-                <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn">
-                    <i class="fas fa-university"></i>
-                    <p> {{ i.team.name }} <br> {{ i.sport.get_sport_display }} <br> {{ i.get_sexo_display  }} </p>
-                </button>
-                {% endfor %}
             </form>
             {% else %}
             <section class="alert-page">
-                <div class="alert-img"> <i class="fa-solid fa-circle-exclamation"></i> </div>
-                <div class="alert-text">
-                    <p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p>
-                </div>
+                <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
+                <div class="alert-text"><p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p></div>
             </section>
             {% endif %}
         </div>
