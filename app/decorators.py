@@ -12,11 +12,11 @@ def time_restriction(redirect_page="Home"):
         @wraps(view_func)
         
         def wrapper(request, *args, **kwargs):
-            print("uaieo444")
+
             if request.user.type == 0 or request.user.type == 1 or request.user.is_staff:
                 return view_func(request, *args, **kwargs)
             else:
-                print("uaieo")
+
                 brasilia_tz = pytz.timezone('America/Sao_Paulo')
                 now = datetime.now(brasilia_tz)
                 
@@ -27,7 +27,7 @@ def time_restriction(redirect_page="Home"):
                         config.enrollment_init = brasilia_tz.localize(config.enrollment_init)
 
                     if not config or (config.enrollment_init <= now <= config.enrollment_end):
-                        print("vaaai")
+
                         request.user.groups.remove(Group.objects.get(name="user common"))
                         request.user.groups.add(Group.objects.get(name="add user common"))
                         return view_func(request, *args, **kwargs)
@@ -36,14 +36,14 @@ def time_restriction(redirect_page="Home"):
                         request.user.groups.add(Group.objects.get(name="user common"))
                         return view_func(request, *args, **kwargs)
             return view_func(request, *args, **kwargs)
-        print("uaieo444")
+
         return wrapper
-    print("uaieo444")
+
     return decorator
 
 def terms_accept_required(view_func):
     def wrapper(request, *args, **kwargs):
-        print("printe1")
+
         if not request.user.is_authenticated:
             return redirect('login')
 
