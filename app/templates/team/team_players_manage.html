@@ -202,19 +202,19 @@
                             src="{% static 'images/icon-edit.svg' %}"
                             onclick="openEditModal(
                                 '{{ i.player.id|default:"" }}',
-                                '{{ i.player.name|default:"" }}',
+                                '{{ i.player.name|default:""|escapejs }}',
                                 '{% if i.team_sport.team.event.general_need_unit %}{{ i.player.unit.id|default:"" }}{% endif %}',
-                                '{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_registration %}{{ i.player.registration|default:""|escapejs }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_date_nasc %}{{ i.player.date_nasc|date:"Y-m-d"|default:"" }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_photo and i.player.photo %}{{ i.player.photo.url }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_photo_goal and i.player.photo_goal %}{{ i.player.photo_goal.url }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_bulletin and i.player.bulletin %}{{ i.player.bulletin.url }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_rg and i.player.rg %}{{ i.player.rg.url }}{% endif %}',
-                                '{% if i.team_sport.team.event.player_need_cpf %}{{ i.player.cpf|default:"" }}{% endif %}',
-                                '{% if i.team_sport.team.event.player_need_course %}{{ i.player.course|default:"" }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_cpf %}{{ i.player.cpf|default:""|escapejs }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_course %}{{ i.player.course|default:""|escapejs }}{% endif %}',
                                 '{% if i.team_sport.team.event.player_need_cep %}{{ i.player.cep|default:"" }}{% endif %}',
-                                '{% if i.team_sport.team.event.player_need_municipality %}{{ i.player.municipality|default:"" }}{% endif %}',
-                                '{% if i.team_sport.team.event.player_need_address %}{{ i.player.address|default:"" }}{% endif %}'
+                                '{% if i.team_sport.team.event.player_need_municipality %}{{ i.player.municipality|default:""|escapejs }}{% endif %}',
+                                '{% if i.team_sport.team.event.player_need_address %}{{ i.player.address|default:""|escapejs }}{% endif %}'
                             )">
                     </td>
                     {% endif %}
