@@ -786,7 +786,9 @@ def player_edit(request, id):
             print(request.FILES)
 
             player.name = request.POST.get('name')
-            player.sexo = request.POST.get('sexo')
+            sexo_val = request.POST.get('sexo')
+            if sexo_val is not None and sexo_val != '':
+                player.sexo = sexo_val
             player.registration = request.POST.get('registration')
             player.cpf = request.POST.get('cpf')
             photo = request.FILES.get('photo')
@@ -1208,6 +1210,10 @@ def team_players_manage(request, id):
             else:
                 Player_team_sport.objects.create(player=player, team_sport=team_sport)
                 messages.success(request, f"Atleta '{player.name}' adicionado com sucesso!")
+                count_players = Player_team_sport.objects.filter(team_sport=team_sport).count()
+                if count_players >= team_sport.sport.min_sport and not team_sport.status:
+                    team_sport.status = True
+                    team_sport.save()
 
         return redirect('team_players_manage', team_sport.id)
 
@@ -4944,8 +4950,9 @@ def dashboard_acesso_user_detail(request, user_id):
     return JsonResponse(data)
 
 def verificar_foto(url_name):
-    print("url: ", url_name)
-    list = ['person.png','team.png']
+    if not url_name or url_name.strip() == '':
+        return False
+    list = ['person.png', 'team.png']
     url = url_name.split('/')
     delete_photo = url[len(url) - 1]
     if delete_photo in list:
