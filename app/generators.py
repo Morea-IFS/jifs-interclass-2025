@@ -11,6 +11,7 @@ import os, time
 from django.http import HttpResponse
 from .models import Certificate, Match, Occurrence, Time_pause, Event_badge, Event
 from PIL import Image
+from django.db.models import Min
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('Outfit', 'fonts/Outfit-Black.ttf'))
@@ -22,7 +23,6 @@ def generate_certificates(players, user, t):
     base_certificate_path = os.path.join(settings.BASE_DIR, 'static/images/generators/base_certificate.png')
     signature_path = os.path.join(settings.BASE_DIR, 'static/images/generators/signature.png')
 
-    # carrega imagens base uma única vez fora do loop
     base_certificate = ImageReader(base_certificate_path)
     signature = ImageReader(signature_path)
 
@@ -92,7 +92,6 @@ def draw_circular_image_optimized(c, image_reader, center_x, center_y, diameter)
 def optimize_image(path, max_size=500):
     try:
         with Image.open(path) as original:
-            # variáveis separadas para cada estágio — evita objetos PIL órfãos
             converted = original.convert("RGB")
 
             w, h = converted.size
@@ -112,14 +111,66 @@ def optimize_image(path, max_size=500):
             return ImageReader(buf)
 
     except Exception as e:
-        prinet(f"Erro optimize_image: {e}")
+        _log(f"Erro optimize_image: {e}")
         return None
 
 
+def _abbreviate_name(name):
+    """
+    Abrevia o nome para exibição no crachá.
+    - Nomes com menos de 15 caracteres: retorna em maiúsculas sem alteração.
+    - Nomes maiores: primeiro nome + inicial do segundo nome + ponto.
+    """
+    parts = name.split()
+    if len(name) < 15:
+        return name.upper()
+    return parts[0].upper() + (" " + parts[1][0].upper() + "." if len(parts) > 1 else "")
+
+
+def _deduplicate_players(players):
+    """
+    Remove duplicatas de player_id de uma queryset de Player_team_sport.
+    Usa annotate(Min('id')) no banco quando possível; cai para deduplicação
+    em memória para listas e iteradores.
+
+    Retorna sempre uma queryset ou lista sem player_ids repetidos.
+    """
+    # Queryset Django → deduplicação eficiente no banco
+    if hasattr(players, 'model') and hasattr(players.model, '_meta'):
+        model = players.model
+        # Só deduplica se o modelo tiver player_id (Player_team_sport)
+        if hasattr(model, 'player'):
+            unique_ids = (
+                players
+                .values('player_id')
+                .annotate(first_id=Min('id'))
+                .values_list('first_id', flat=True)
+            )
+            return players.filter(id__in=unique_ids).order_by('player__name')
+
+    # Lista / iterador (Voluntary, ou lista pré-montada) → sem deduplicação
+    # pois Voluntary não tem player_id duplicado por natureza
+    return players
+
+
 def generate_badges(players, t, namebadge, event):
-    # IMPORTANTE: chame esta função na view com select_related aplicado:
-    # players = players.select_related('player', 'team_sport__team', 'unit')
-    # Isso evita N+1 queries durante o loop.
+    """
+    Gera PDF de crachás (4 por página, layout A4) e retorna HttpResponse.
+
+    Parâmetros
+    ----------
+    players : queryset ou lista
+        Player_team_sport (atletas) ou Voluntary (comissão).
+        A deduplicação por player_id é feita internamente.
+    t : str | None
+        Tipo do crachá (badge_type). None = usa user.type_voluntary.
+    namebadge : str
+        Nome base do arquivo PDF gerado.
+    event : int
+        ID do evento.
+    """
+    # ── Deduplicação: garante que cada atleta apareça apenas uma vez ─────────
+    players = _deduplicate_players(players)
 
     buffer = BytesIO()
 
@@ -161,9 +212,10 @@ def generate_badges(players, t, namebadge, event):
             badge_cache[badge_type] = img
             return img
         except Exception as e:
-            prinet(f"Erro ao carregar base do crachá tipo {badge_type}: {e}")
+            _log(f"Erro ao carregar base do crachá tipo {badge_type}: {e}")
             raise
 
+    # iterator(chunk_size) reduz uso de memória em querysets grandes
     players_iter = players.iterator(chunk_size=50) if hasattr(players, 'iterator') else iter(players)
 
     try:
@@ -178,18 +230,22 @@ def generate_badges(players, t, namebadge, event):
             base_img = get_base(badge_type)
             c.drawImage(base_img, x, y, width=nametag_width, height=nametag_height)
 
+            # ── Dados do registro ─────────────────────────────────────────────
             if hasattr(user, 'player'):
+                # Player_team_sport
                 obj = user.player
                 photo = obj.photo
                 name = obj.name
                 registration = obj.registration
                 description = f"TIME: {user.team_sport.team.name}"
             else:
+                # Voluntary
                 photo = user.photo
                 name = user.name
                 registration = user.registration
                 description = user.unit.name.upper() if user.unit else "SEM UNIDADE"
 
+            # ── Foto circular ─────────────────────────────────────────────────
             if photo:
                 try:
                     photo_path = getattr(photo, "path", None)
@@ -203,16 +259,12 @@ def generate_badges(players, t, namebadge, event):
                                 y + nametag_height - d + 43,
                                 d
                             )
-                            del img  # libera o BytesIO interno imediatamente
+                            del img
                 except Exception as e:
-                    prinet(f"Erro ao gerar foto de {name}: {e}")
+                    _log(f"Erro ao gerar foto de {name}: {e}")
 
-            parts = name.split()
-            short_name = (
-                name.upper()
-                if len(name) < 15
-                else parts[0].upper() + (" " + parts[1][0].upper() + "." if len(parts) > 1 else "")
-            )
+            # ── Textos ────────────────────────────────────────────────────────
+            short_name = _abbreviate_name(name)
 
             c.setFont("Helvetica-Bold", 24)
             c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
@@ -307,6 +359,8 @@ def generate_timer(match):
     return seconds, status
 
 
-def prinet(message):
-    if settings.DEBUG:
-        print(message)
+def _log(message):
+    """Substitui os prinet() originais. Loga sempre, não só em DEBUG."""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(message)

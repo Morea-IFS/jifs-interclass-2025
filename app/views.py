@@ -4106,35 +4106,32 @@ def generator_data(request):
     # CAMPUS INDIVIDUAL
     # ─────────────────────────────────────────────────────────────────────────
     elif 'team_in' in request.POST:
-        if user.type not in (0, 1) and not user.is_staff:
-            messages.error(request, "Sem permissão para este relatório.")
+        team = get_object_or_404(Team, id=request.POST.get('team_in'))
+
+        if not _acesso_team(request.user, team):
+            messages.error(request, "Você não tem permissão para gerar crachás deste time.")
             return redirect('data')
 
-        team_id = request.POST.get('team_in')
-        try:
-            team = Team.objects.get(id=team_id, event=event)
-        except Team.DoesNotExist:
-            messages.error(request, "Campus não encontrado neste evento.")
-            return redirect('data')
-
-        name_html = 'data-base-campus-individual'
-        name_pdf = f'atletas_{team.name}'
-
-        players = (
+        players_qs = (
             Player_team_sport.objects
-            .filter(team_sport__team=team, player__event=event)
-            .select_related('player', 'team_sport__team', 'team_sport__sport')
-            .order_by('player__name')
+            .filter(team_sport__team=team, team_sport__event=event)
+            .select_related('player', 'team_sport__team', 'team_sport__team__unit')
+            .order_by('player_id')
         )
 
-        if not players.exists():
-            messages.error(request, "Não há atletas cadastrados neste campus.")
-            status = True
+        # deduplicação: mesmo atleta em múltiplos esportes gera apenas 1 crachá
+        seen = set()
+        players = []
+        for pts in players_qs:
+            if pts.player_id not in seen:
+                players.append(pts)
+                seen.add(pts.player_id)
 
-        cont['team'] = team
-        cont['players'] = players
-        cont['infor'] = "atletas"
-        cont['campus'] = team.name
+        if not players:
+            messages.error(request, "Não tem nenhum atleta cadastrado!")
+        else:
+            namebadge = f'{team.name}-jifs'
+            return generate_badges(players, '7', namebadge, event.id)
 
     # ─────────────────────────────────────────────────────────────────────────
     # MODALIDADE COMPLETA
