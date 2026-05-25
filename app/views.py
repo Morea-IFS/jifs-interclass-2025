@@ -3535,221 +3535,145 @@ def generator_badge(request):
 
     def voluntary_queryset(event, type_voluntary=None):
         qs = Voluntary.objects.filter(event=event)
-
         if type_voluntary is not None:
             qs = qs.filter(type_voluntary=type_voluntary)
-
-        # Admin: qualquer unidade do evento selecionado
         if user.is_staff or user.type == 0:
-            return qs.order_by('type_voluntary', 'unit__name', 'name')
-
-        # Coordenador de evento: todas as unidades do próprio evento
+            return qs.select_related('unit').order_by('type_voluntary', 'unit__name', 'name')
         if user.type == 1:
-            return qs.filter(
-                event=user.event_user
-            ).order_by('type_voluntary', 'unit__name', 'name')
-
-        # Usuário comum / chefe de delegação: apenas própria unidade
-        return qs.filter(
-            event=user.event_user,
-            unit=user.unit
-        ).order_by('type_voluntary', 'unit__name', 'name')
+            return qs.filter(event=user.event_user).select_related('unit').order_by('type_voluntary', 'unit__name', 'name')
+        return qs.filter(event=user.event_user, unit=user.unit).select_related('unit').order_by('type_voluntary', 'unit__name', 'name')
 
     if request.method == "GET":
         context = {}
-
         if user.is_staff or user.type == 0:
             context['events'] = Event.objects.all()
-
             if 'e' in request.GET and request.GET.get('e') != '':
                 event = Event.objects.get(id=request.GET.get('e'))
                 context['event'] = event
                 context['teams'] = Team.objects.filter(event=event).order_by('name')
-                context['teams_sport'] = Team_sport.objects.filter(
-                    event=event
-                ).order_by('team', 'sport', '-sexo')
+                context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
                 context['event_sports'] = Event_sport.objects.filter(event=event)
-
         else:
             event = user.event_user
             context['event'] = event
-
             if user.type == 1:
-                context['teams'] = Team.objects.filter(
-                    event=event
-                ).order_by('name')
-
-                context['teams_sport'] = Team_sport.objects.filter(
-                    event=event
-                ).order_by('team', 'sport', '-sexo')
-
+                context['teams'] = Team.objects.filter(event=event).order_by('name')
+                context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
             else:
-                context['teams'] = Team.objects.filter(
-                    unit=user.unit,
-                    event=event
-                ).order_by('name')
-
-                context['teams_sport'] = Team_sport.objects.filter(
-                    team__unit=user.unit,
-                    event=event
-                ).order_by('team', 'sport', '-sexo')
-
+                context['teams'] = Team.objects.filter(unit=user.unit, event=event).order_by('name')
+                context['teams_sport'] = Team_sport.objects.filter(team__unit=user.unit, event=event).order_by('team', 'sport', '-sexo')
             context['event_sports'] = Event_sport.objects.filter(event=event)
-
         return render(request, 'badge.html', context)
 
-    else:
-        print(request.POST)
+    # POST
+    try:
+        event = Event.objects.get(id=request.POST.get('event_data'))
+    except (Event.DoesNotExist, ValueError, TypeError):
+        messages.error(request, "Evento não encontrado.")
+        return redirect_badge()
 
-        try:
-            event = Event.objects.get(id=request.POST.get('event_data'))
-        except (Event.DoesNotExist, ValueError, TypeError):
-            messages.error(request, "Evento não encontrado.")
+    if not (user.is_staff or user.type == 0):
+        if event != user.event_user:
+            messages.error(request, "Você não tem permissão para acessar este evento.")
             return redirect_badge()
 
-        # Admin acessa qualquer evento.
-        # Coordenador e usuário comum acessam apenas o próprio evento.
-        if not (user.is_staff or user.type == 0):
-            if event != user.event_user:
-                messages.error(request, "Você não tem permissão para acessar este evento.")
-                return redirect_badge()
+    if 'team_sport_in' in request.POST:
+        players = Player_team_sport.objects.filter(
+            team_sport__id=request.POST.get('team_sport_in'),
+            team_sport__event=event
+        ).select_related('player', 'team_sport__team', 'team_sport__team__unit')
 
-        if 'team_sport_in' in request.POST:
-            print('team_sport_in')
+        if user.type == 2 and not user.is_staff:
+            players = players.filter(team_sport__team__unit=user.unit)
 
-            players = Player_team_sport.objects.filter(
-                team_sport__id=request.POST.get('team_sport_in'),
-                team_sport__event=event
-            )
+        team_sport_badge = get_object_or_404(Team_sport, id=request.POST.get('team_sport_in'), event=event)
 
-            if user.type == 2 and not user.is_staff:
-                players = players.filter(team_sport__team__unit=user.unit)
+        if user.type == 2 and not user.is_staff and team_sport_badge.team.unit != user.unit:
+            messages.error(request, "Você não tem permissão para gerar este crachá.")
+            return redirect_badge()
 
-            team_sport_badge = get_object_or_404(
-                Team_sport,
-                id=request.POST.get('team_sport_in'),
-                event=event
-            )
+        if not players.exists():
+            messages.error(request, "Não tem nenhum atleta cadastrado!")
+        else:
+            namebadge = f'{team_sport_badge.sport.get_sport_display()}-{team_sport_badge.team.name}-jifs'
+            return generate_badges(players, '7', namebadge, event.id)
 
-            if user.type == 2 and not user.is_staff and team_sport_badge.team.unit != user.unit:
-                messages.error(request, "Você não tem permissão para gerar este crachá.")
-                return redirect_badge()
+    elif 'team_in' in request.POST:
+        team = get_object_or_404(Team, id=request.POST.get('team_in'))
 
-            if len(players) == 0:
-                messages.error(request, "Não tem nenhum atleta cadastrado!")
-                print('team_sport_in-zero')
-            else:
-                namebadge = f'{team_sport_badge.sport.get_sport_display()}-{team_sport_badge.team.name}-jifs'
-                print('team_sport_in-criar')
-                return generate_badges(players, '7', namebadge, event.id)
+        if not _acesso_team(request.user, team):
+            messages.error(request, "Você não tem permissão para gerar crachás deste time.")
+            return redirect_badge()
 
-        elif 'team_in' in request.POST:
-            print('team_in')
-            
-            team = get_object_or_404(Team, id=request.POST.get('team_in'))
+        players = (
+            Player_team_sport.objects
+            .filter(team_sport__team=team, team_sport__event=event)
+            .select_related('player', 'team_sport__team', 'team_sport__team__unit')
+            .order_by('player_id')
+            .distinct()
+        )
 
-            if not _acesso_team(request.user, team):
-                messages.error(request, "Você não tem permissão para gerar crachás deste time.")
-                return redirect('badge')
-            
-            players_qs = Player_team_sport.objects.filter(
-                team_sport__team=team,
-                team_sport__event=event
-            )
+        if not players.exists():
+            messages.error(request, "Não tem nenhum atleta cadastrado!")
+        else:
+            namebadge = f'{team.name}-jifs'
+            return generate_badges(players, '7', namebadge, event.id)
 
-            seen_players = set()
-            players = []
+    elif 'all_voluntary' in request.POST:
+        voluntary = voluntary_queryset(event, 0)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum voluntário cadastrado!")
+        else:
+            return generate_badges(voluntary, '0', 'voluntarios-jifs', event.id)
 
-            for pts in players_qs:
-                if pts.player_id not in seen_players:
-                    players.append(pts)
-                    seen_players.add(pts.player_id)
+    elif 'all_technician' in request.POST:
+        voluntary = voluntary_queryset(event, 1)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum técnico cadastrado!")
+        else:
+            return generate_badges(voluntary, '1', 'tecnico-modalidade-jifs', event.id)
 
-            if len(players) == 0:
-                messages.error(request, "Não tem nenhum atleta cadastrado!")
-                print('team_in-zero')
-            else:
-                namebadge = f'{team.name}-jifs'
-                print('team_in-criar')
-                return generate_badges(players, '7', namebadge, event.id)
+    elif 'all_support' in request.POST:
+        voluntary = voluntary_queryset(event, 2)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum membro do apoio cadastrado!")
+        else:
+            return generate_badges(voluntary, '2', 'apoio-jifs', event.id)
 
-        elif 'all_voluntary' in request.POST:
-            print('all_voluntary')
-            voluntary = voluntary_queryset(event, 0)
+    elif 'all_trainee' in request.POST:
+        voluntary = voluntary_queryset(event, 3)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum estagiário cadastrado!")
+        else:
+            return generate_badges(voluntary, '3', 'estagiario-jifs', event.id)
 
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum voluntário cadastrado!")
-                print('all_voluntary-zero')
-            else:
-                namebadge = 'voluntarios-jifs'
-                return generate_badges(voluntary, '0', namebadge, event.id)
+    elif 'all_head' in request.POST:
+        voluntary = voluntary_queryset(event, 4)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum chefe de delegação cadastrado!")
+        else:
+            return generate_badges(voluntary, '4', 'chefe-delegacao-jifs', event.id)
 
-        elif 'all_technician' in request.POST:
-            voluntary = voluntary_queryset(event, 1)
+    elif 'all_organization' in request.POST:
+        voluntary = voluntary_queryset(event, 5)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum membro da organização cadastrado!")
+        else:
+            return generate_badges(voluntary, '5', 'organização-jifs', event.id)
 
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum técnico cadastrado!")
-            else:
-                namebadge = 'tecnico-modalidade-jifs'
-                return generate_badges(voluntary, '1', namebadge, event.id)
+    elif 'all_arbitrator' in request.POST:
+        voluntary = voluntary_queryset(event, 6)
+        if not voluntary.exists():
+            messages.error(request, "Não tem nenhum árbitro cadastrado!")
+        else:
+            return generate_badges(voluntary, '6', 'arbitragem-jifs', event.id)
 
-        elif 'all_support' in request.POST:
-            print('all_support')
-            voluntary = voluntary_queryset(event, 2)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum membro do apoio cadastrado!")
-                print('all_support-zero')
-            else:
-                namebadge = 'apoio-jifs'
-                return generate_badges(voluntary, '2', namebadge, event.id)
-
-        elif 'all_trainee' in request.POST:
-            voluntary = voluntary_queryset(event, 3)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum estagiário cadastrado!")
-            else:
-                namebadge = 'estagiario-jifs'
-                return generate_badges(voluntary, '3', namebadge, event.id)
-
-        elif 'all_head' in request.POST:
-            voluntary = voluntary_queryset(event, 4)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum chefe de delegação cadastrado!")
-            else:
-                namebadge = 'chefe-delegacao-jifs'
-                return generate_badges(voluntary, '4', namebadge, event.id)
-
-        elif 'all_organization' in request.POST:
-            print('all_organization')
-            voluntary = voluntary_queryset(event, 5)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum membro da organização cadastrado!")
-                print('all_organization-zero')
-            else:
-                namebadge = 'organização-jifs'
-                return generate_badges(voluntary, '5', namebadge, event.id)
-
-        elif 'all_arbitrator' in request.POST:
-            voluntary = voluntary_queryset(event, 6)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem nenhum árbitro cadastrado!")
-            else:
-                namebadge = 'arbitragem-jifs'
-                return generate_badges(voluntary, '6', namebadge, event.id)
-
-        elif 'all_commission' in request.POST:
-            voluntary = voluntary_queryset(event)
-
-            if len(voluntary) == 0:
-                messages.error(request, "Não tem ninguém da comissão técnica cadastrado!")
-            else:
-                namebadge = 'comissao-tecnica-jifs'
-                return generate_badges(voluntary, None, namebadge, event.id)
+    elif 'all_commission' in request.POST:
+        voluntary = voluntary_queryset(event)
+        if not voluntary.exists():
+            messages.error(request, "Não tem ninguém da comissão técnica cadastrado!")
+        else:
+            return generate_badges(voluntary, None, 'comissao-tecnica-jifs', event.id)
 
     return redirect_badge()
 

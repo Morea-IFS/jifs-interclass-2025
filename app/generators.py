@@ -1,6 +1,5 @@
 from io import BytesIO
 from django.core.files.base import ContentFile
-from reportlab.lib.colors import blue, black
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -9,222 +8,304 @@ from reportlab.pdfbase import pdfmetrics
 from django.conf import settings
 from reportlab.pdfbase.ttfonts import TTFont
 import os, time
-from typing import List, Dict
 from django.http import HttpResponse
-from django.templatetags.static import static
-from .models import Certificate, Match, Occurrence, Match, Time_pause, Event_badge, Event
+from .models import Certificate, Match, Occurrence, Time_pause, Event_badge, Event
+from PIL import Image
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('Outfit', 'fonts/Outfit-Black.ttf'))
 
+
 def generate_certificates(players, user, t):
     w, h = (1920, 1080)
-    buffer = BytesIO() 
+
+    base_certificate_path = os.path.join(settings.BASE_DIR, 'static/images/generators/base_certificate.png')
+    signature_path = os.path.join(settings.BASE_DIR, 'static/images/generators/signature.png')
+
+    # carrega imagens base uma única vez fora do loop
+    base_certificate = ImageReader(base_certificate_path)
+    signature = ImageReader(signature_path)
+
     if t == 0:
         for name in players:
-            namecertificate = name.player.name.split()[0].upper() + ("_" + name.player.name.split()[1].upper() if len(name.player.name.split()) > 1 else '')
+            parts = name.player.name.split()
+            namecertificate = parts[0].upper() + ("_" + parts[1].upper() if len(parts) > 1 else '')
+
+            buffer = BytesIO()
             c = canvas.Canvas(buffer, pagesize=(w, h))
-            base_certificate = ImageReader( os.path.join(settings.BASE_DIR, 'static/images/generators/base_certificate.png') )
             c.drawImage(base_certificate, 0, 0, w, h)
             c.setFont("MsMadi", 100)
             c.drawCentredString(w / 2, h / 2 + 22, name.player.name)
             c.setFont("Outfit", 64)
             c.drawCentredString(540, 260, name.player.get_campus_display().upper())
-            signature = ImageReader( os.path.join(settings.BASE_DIR, 'static/images/generators/signature.png') )
             c.drawImage(signature, 1330, 60, 500, 350, mask='auto')
             c.save()
-            arquivo_saida = f"CERTIFICADO_{unidecode(namecertificate)}_{name.player.id}.pdf"
+
             buffer.seek(0)
+            arquivo_saida = f"CERTIFICADO_{unidecode(namecertificate)}_{name.player.id}.pdf"
             certificate = Certificate.objects.create(user=user)
             certificate.name = unidecode(namecertificate)
             certificate.file.save(arquivo_saida, ContentFile(buffer.read()))
             certificate.save()
+            buffer.close()
     else:
         for name in players:
-            namecertificate = name.name.split()[0].upper() + ("_" + name.name.split()[1].upper() if len(name.name.split()) > 1 else '')
+            parts = name.name.split()
+            namecertificate = parts[0].upper() + ("_" + parts[1].upper() if len(parts) > 1 else '')
+
+            buffer = BytesIO()
             c = canvas.Canvas(buffer, pagesize=(w, h))
-            base_certificate = ImageReader( os.path.join(settings.BASE_DIR, 'static/images/generators/base_certificate.png') )
             c.drawImage(base_certificate, 0, 0, w, h)
             c.setFont("MsMadi", 100)
             c.drawCentredString(w / 2, h / 2 + 22, name.name)
             c.setFont("Outfit", 64)
             c.drawCentredString(540, 260, name.get_campus_display().upper())
-            signature = ImageReader( os.path.join(settings.BASE_DIR, 'static/images/generators/signature.png') )
             c.drawImage(signature, 1330, 60, 500, 350, mask='auto')
             c.save()
+
+            buffer.seek(0)
             namebadge = f'CAMPUS_{name.get_campus_display().upper()}_{name.get_type_voluntary_display().upper()}'
             arquivo_saida = f"CRACHA_{unidecode(namebadge)}_{name.id}.pdf"
-            buffer.seek(0)
             certificate = Certificate.objects.create(user=user)
             certificate.name = unidecode(namecertificate)
             certificate.file.save(arquivo_saida, ContentFile(buffer.read()))
             certificate.save()
+            buffer.close()
 
-def draw_circular_image(c, image_path, center_x, center_y, diameter):
-    img = ImageReader(image_path)
+
+def draw_circular_image_optimized(c, image_reader, center_x, center_y, diameter):
     c.saveState()
     path = c.beginPath()
     path.circle(center_x, center_y, diameter / 2)
     c.clipPath(path, stroke=0, fill=0)
     c.drawImage(
-        img,
+        image_reader,
         center_x - diameter / 2,
         center_y - diameter / 2,
         width=diameter,
         height=diameter,
-        mask="auto",
+        mask='auto'
     )
     c.restoreState()
-    
+
+
+def optimize_image(path, max_size=500):
+    try:
+        with Image.open(path) as original:
+            # variáveis separadas para cada estágio — evita objetos PIL órfãos
+            converted = original.convert("RGB")
+
+            w, h = converted.size
+            min_side = min(w, h)
+            left, top = (w - min_side) // 2, (h - min_side) // 2
+            cropped = converted.crop((left, top, left + min_side, top + min_side))
+            converted.close()
+
+            resized = cropped.resize((max_size, max_size), Image.Resampling.LANCZOS)
+            cropped.close()
+
+            buf = BytesIO()
+            resized.save(buf, format="JPEG", quality=90, optimize=True)
+            resized.close()
+
+            buf.seek(0)
+            return ImageReader(buf)
+
+    except Exception as e:
+        prinet(f"Erro optimize_image: {e}")
+        return None
+
+
 def generate_badges(players, t, namebadge, event):
-    print('gerar crachá')
+    # IMPORTANTE: chame esta função na view com select_related aplicado:
+    # players = players.select_related('player', 'team_sport__team', 'unit')
+    # Isso evita N+1 queries durante o loop.
 
     buffer = BytesIO()
+
     w, h = A4
-    nametag_width = (w - 3 * 20) / 2
-    nametag_height = (h - 3 * 20) / 2
+    margin = 20
+    nametag_width = (w - 3 * margin) / 2
+    nametag_height = (h - 3 * margin) / 2
+
+    row_h = nametag_height + margin
+    col_w = nametag_width + margin
+
     positions = [
-        (20, h - 20 - nametag_height),
-        (20 * 2 + nametag_width, h - 20 - nametag_height),
-        (20, 20),
-        (20 * 2 + nametag_width, 20),
+        (margin, h - row_h),
+        (margin + col_w, h - row_h),
+        (margin, h - 2 * row_h),
+        (margin + col_w, h - 2 * row_h),
     ]
 
     c = canvas.Canvas(buffer, pagesize=A4)
+    c.setPageCompression(1)
 
-    event_obj = Event.objects.get(id=event)
+    try:
+        event_obj = Event.objects.get(id=event)
+    except Event.DoesNotExist:
+        buffer.close()
+        raise
 
-    for j, user in enumerate(players):
+    badge_cache = {}
 
-        if j % 4 == 0 and j > 0:
-            c.showPage()
+    def get_base(badge_type):
+        if badge_type in badge_cache:
+            return badge_cache[badge_type]
+        try:
+            badge = Event_badge.objects.filter(event=event_obj, number=badge_type).first()
+            path = badge.file.path if badge else os.path.join(
+                settings.BASE_DIR, f'static/images/generators/base_nametag__{badge_type}.png'
+            )
+            img = ImageReader(path)
+            badge_cache[badge_type] = img
+            return img
+        except Exception as e:
+            prinet(f"Erro ao carregar base do crachá tipo {badge_type}: {e}")
+            raise
 
-        x, y = positions[j % 4]
+    players_iter = players.iterator(chunk_size=50) if hasattr(players, 'iterator') else iter(players)
 
-        c.rect(x, y, nametag_width, nametag_height)
+    try:
+        for j, user in enumerate(players_iter):
 
-        # ================= BASE DO CRACHÁ =================
-        if t is not None:
-            badge_type = str(t)
-        else:
-            badge_type = str(user.type_voluntary)
+            if j % 4 == 0 and j > 0:
+                c.showPage()
 
-        if Event_badge.objects.filter(event=event_obj, number=badge_type).exists():
-            base_nametag_path = Event_badge.objects.get(
-                event=event_obj,
-                number=badge_type
-            ).file.path
-        else:
-            base_nametag_path = os.path.join(
-                settings.BASE_DIR,
-                f'static/images/generators/base_nametag__{badge_type}.png'
+            x, y = positions[j % 4]
+
+            badge_type = str(t) if t is not None else str(user.type_voluntary)
+            base_img = get_base(badge_type)
+            c.drawImage(base_img, x, y, width=nametag_width, height=nametag_height)
+
+            if hasattr(user, 'player'):
+                obj = user.player
+                photo = obj.photo
+                name = obj.name
+                registration = obj.registration
+                description = f"TIME: {user.team_sport.team.name}"
+            else:
+                photo = user.photo
+                name = user.name
+                registration = user.registration
+                description = user.unit.name.upper() if user.unit else "SEM UNIDADE"
+
+            if photo:
+                try:
+                    photo_path = getattr(photo, "path", None)
+                    if photo_path:
+                        img = optimize_image(photo_path)
+                        if img:
+                            d = nametag_width / 2 + 20
+                            draw_circular_image_optimized(
+                                c, img,
+                                x + nametag_width / 2,
+                                y + nametag_height - d + 43,
+                                d
+                            )
+                            del img  # libera o BytesIO interno imediatamente
+                except Exception as e:
+                    prinet(f"Erro ao gerar foto de {name}: {e}")
+
+            parts = name.split()
+            short_name = (
+                name.upper()
+                if len(name) < 15
+                else parts[0].upper() + (" " + parts[1][0].upper() + "." if len(parts) > 1 else "")
             )
 
-        base_nametag = ImageReader(base_nametag_path)
-        c.drawImage(base_nametag, x, y, width=nametag_width, height=nametag_height)
+            c.setFont("Helvetica-Bold", 24)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
 
-        # ================= IDENTIFICA =================
-        if hasattr(user, 'player'):
-            photo = user.player.photo
-            name = user.player.name
-            registration = user.player.registration
-            description = f"TIME: {user.team_sport.team.name}"
-        else:
-            photo = user.photo
-            name = user.name
-            registration = user.registration
+            c.setFont("Helvetica", 16)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
 
-            if user.unit:
-                description = user.unit.name.upper()
-            else:
-                description = "SEM UNIDADE"
-        # ============================================
+            c.setFont("Helvetica-Bold", 14)
+            c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, description)
 
-        # ================= FOTO =================
-        if photo:
-            try:
-                photo_diameter = nametag_width / 2 + 20
-                center_x = x + nametag_width / 2
-                center_y = y + nametag_height - photo_diameter + 43
-                photo_path = photo.path if hasattr(photo, 'path') else photo
-                draw_circular_image(c, photo_path, center_x, center_y, photo_diameter)
-            except Exception as e:
-                print("Erro ao carregar foto:", e)
+        c.save()
+        pdf_bytes = buffer.getvalue()
 
-        # ================= NOME =================
-        short_name = (
-            name.upper()
-            if len(name) < 15
-            else f"{name.split()[0].upper()} {next((w[0].upper() + '.' for w in name.split()[1:] if w.lower() not in ['de','da','dos','das','do']), '')}"
-        )
+    except Exception:
+        buffer.close()
+        raise
+    finally:
+        if not buffer.closed:
+            buffer.close()
 
-        c.setFont("Helvetica-Bold", 28)
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 30, short_name)
-
-        # ================= MATRÍCULA =================
-        c.setFont("Helvetica", 18)
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 50, str(registration))
-
-        # ================= DESCRIÇÃO =================
-        c.setFont("Helvetica-Bold", 18)
-        c.drawCentredString(x + nametag_width / 2, y + nametag_height / 2 - 70, description)
-
-    c.save()
-    buffer.seek(0)
-
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="CRACHA_{unidecode(namebadge)}.pdf"'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="CRACHA_{namebadge}.pdf"'
     return response
+
 
 def generate_events(name, details):
     match = Match.objects.get(status=1)
-    Occurrence.objects.create(name=name,details=details, match=match)
+    Occurrence.objects.create(name=name, details=details, match=match)
 
 
 def generate_timer(match):
     rel = time.localtime()
     seconds = 0
+
     if match.time_start and match.time_end:
-        seconds = (match.time_end.hour * 60 * 60 + match.time_end.minute * 60 + match.time_end.second) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
+        seconds = (
+            (match.time_end.hour * 3600 + match.time_end.minute * 60 + match.time_end.second) -
+            (match.time_start.hour * 3600 + match.time_start.minute * 60 + match.time_start.second)
+        )
         status = 3
-        if Time_pause.objects.filter(match=match):
-            pausas_totais = Time_pause.objects.filter(match=match)
-            somatorio = 0
-            for i in pausas_totais: somatorio += (i.end_pause.hour * 60 * 60 + i.end_pause.minute * 60 + i.end_pause.second) - (i.start_pause.hour * 60 * 60 + i.start_pause.minute * 60 + i.start_pause.second)
+        pausas_totais = Time_pause.objects.filter(match=match)
+        if pausas_totais.exists():
+            somatorio = sum(
+                (i.end_pause.hour * 3600 + i.end_pause.minute * 60 + i.end_pause.second) -
+                (i.start_pause.hour * 3600 + i.start_pause.minute * 60 + i.start_pause.second)
+                for i in pausas_totais
+            )
             seconds -= somatorio
-            print(seconds)
+
     elif match.time_start:
-        if Time_pause.objects.filter(match=match):
-            seconds = (rel.tm_hour * 60 * 60 + rel.tm_min * 60 + rel.tm_sec) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
-            pause = Time_pause.objects.filter(match=match).last()
-            pausas_totais = Time_pause.objects.filter(match=match)
-            somatorio = 0
+        now_seconds = rel.tm_hour * 3600 + rel.tm_min * 60 + rel.tm_sec
+        start_seconds = match.time_start.hour * 3600 + match.time_start.minute * 60 + match.time_start.second
+        pausas_totais = Time_pause.objects.filter(match=match)
+
+        if pausas_totais.exists():
+            pause = pausas_totais.last()
+
             if pause.start_pause and pause.end_pause:
                 status = 1
-                for i in pausas_totais:
-                    print(i.end_pause,i.start_pause)
-                    somatorio += (i.end_pause.hour * 60 * 60 + i.end_pause.minute * 60 + i.end_pause.second) - (i.start_pause.hour * 60 * 60 + i.start_pause.minute * 60 + i.start_pause.second)
-                    print(somatorio)
+                seconds = now_seconds - start_seconds
+                somatorio = sum(
+                    (i.end_pause.hour * 3600 + i.end_pause.minute * 60 + i.end_pause.second) -
+                    (i.start_pause.hour * 3600 + i.start_pause.minute * 60 + i.start_pause.second)
+                    for i in pausas_totais
+                )
                 seconds -= somatorio
-            elif pause.start_pause and not pause.end_pause and Time_pause.objects.filter(match=match).count() > 1:
-                seconds = (pause.start_pause.hour * 60 * 60 + pause.start_pause.minute * 60 + pause.start_pause.second) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)        
+
+            elif pause.start_pause and not pause.end_pause and pausas_totais.count() > 1:
                 status = 2
-                for i in pausas_totais:
-                    if i == pausas_totais.last():
-                        break
-                    somatorio += (i.end_pause.hour * 60 * 60 + i.end_pause.minute * 60 + i.end_pause.second) - (i.start_pause.hour * 60 * 60 + i.start_pause.minute * 60 + i.start_pause.second)
+                pause_start_seconds = pause.start_pause.hour * 3600 + pause.start_pause.minute * 60 + pause.start_pause.second
+                seconds = pause_start_seconds - start_seconds
+                somatorio = sum(
+                    (i.end_pause.hour * 3600 + i.end_pause.minute * 60 + i.end_pause.second) -
+                    (i.start_pause.hour * 3600 + i.start_pause.minute * 60 + i.start_pause.second)
+                    for i in pausas_totais.exclude(pk=pause.pk)
+                )
                 seconds -= somatorio
+
             elif pause.start_pause and not pause.end_pause:
                 status = 2
-                seconds = (pause.start_pause.hour * 60 * 60 + pause.start_pause.minute * 60 + pause.start_pause.second) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
+                pause_start_seconds = pause.start_pause.hour * 3600 + pause.start_pause.minute * 60 + pause.start_pause.second
+                seconds = pause_start_seconds - start_seconds
+
         else:
             status = 1
-            seconds = (rel.tm_hour * 60 * 60 + rel.tm_min * 60 + rel.tm_sec) - (match.time_start.hour * 60 * 60 + match.time_start.minute * 60 + match.time_start.second)
+            seconds = now_seconds - start_seconds
 
     else:
         seconds = 0
         status = 3
+
     return seconds, status
+
 
 def prinet(message):
     if settings.DEBUG:
