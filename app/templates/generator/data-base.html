@@ -69,10 +69,10 @@
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
-            {% if event.player_need_registration %}
+            {% if event.player_need_registration and not hide_sensitive %}
             <th style="width: 11%;">Matrícula</th>
             {% endif %}
-            {% if event.player_need_cpf %}
+            {% if event.player_need_cpf and not hide_sensitive %}
             <th style="width: 12%;">CPF</th>
             {% endif %}
             {% if event.player_need_sexo %}
@@ -88,10 +88,10 @@
         {% for i in players %}
         <tr>
             <td>{{ i.name }}</td>
-            {% if event.player_need_registration %}
+            {% if event.player_need_registration not hide_sensitive %}
             <td>{{ i.registration|upper }}</td>
             {% endif %}
-            {% if event.player_need_cpf %}
+            {% if event.player_need_cpf not hide_sensitive %}
             <td>{{ i.cpf|slice:":3" }}.{{ i.cpf|slice:"3:6" }}.{{ i.cpf|slice:"6:9" }}-{{ i.cpf|slice:"9:" }}</td>
             {% endif %}
             {% if event.player_need_sexo %}
