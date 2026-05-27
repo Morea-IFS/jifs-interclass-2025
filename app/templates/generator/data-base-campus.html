@@ -77,10 +77,10 @@
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
-            {% if i.event.player_need_registration %}
+            {% if i.event.player_need_registration and not hide_sensitive %}
             <th style="width: 11%;">Matrícula</th>
             {% endif %}
-            {% if i.event.player_need_cpf %}
+            {% if i.event.player_need_cpf and not hide_sensitive %}
             <th style="width: 12%;">CPF</th>
             {% endif %}
             {% if i.event.player_need_sexo %}
@@ -94,10 +94,10 @@
         {% for j in i.players.all %}
         <tr>
             <td>{{ j.player.name|upper }}</td>
-            {% if i.event.player_need_registration %}
+            {% if i.event.player_need_registration and not hide_sensitive %}
             <td>{{ j.player.registration|upper }}</td>
             {% endif %}
-            {% if i.event.player_need_cpf %}
+            {% if i.event.player_need_cpf and not hide_sensitive %}
             <td>{{ j.player.cpf|slice:":3" }}.{{ j.player.cpf|slice:"3:6" }}.{{ j.player.cpf|slice:"6:9" }}-{{ j.player.cpf|slice:"9:" }}</td>
             {% endif %}
             {% if i.event.player_need_sexo %}

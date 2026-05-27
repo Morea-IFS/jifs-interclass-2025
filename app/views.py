@@ -551,7 +551,7 @@ def home_public(request, event_id):
             for match in matchs_queimado_masc
         ]
         event_sports = Event_sport.objects.filter(event=event)
-        attachments = Attachments.objects.filter(public=True, event=event)
+        attachments = Attachments.objects.filter(public=True, event=event).order_by('-id')
 
         if request.method == "GET":
             context = {
@@ -698,9 +698,9 @@ def attachments(request):
         if request.user.type == 0 or request.user.is_staff:  
             context['events'] = Event.objects.all()
         if request.user.type != 0:
-            context['attachments'] = Attachments.objects.filter(event=request.user.event_user)
+            context['attachments'] = Attachments.objects.filter(event=request.user.event_user).order_by('-id')
         elif 'e' in request.GET and request.GET.get('e') != '':
-            context['attachments'] = Attachments.objects.filter(event__id=request.GET.get('e'))
+            context['attachments'] = Attachments.objects.filter(event__id=request.GET.get('e')).order_by('-id')
             context['select_event'] = request.GET.get('e')
 
         return render(request, 'attachments.html', context)
@@ -3817,6 +3817,7 @@ def generator_data(request):
         context = {
             'events': Event.objects.all(),
             'type_service': Type_service.choices,
+            'hide_sensitive': 'hide_sensitive' in request.GET,  # ← único lugar necessário no GET
         }
 
         if not event:
@@ -3852,13 +3853,17 @@ def generator_data(request):
         messages.error(request, "Nenhum evento selecionado.")
         return redirect('data')
 
+    # ← definir hide_sensitive logo no início do POST, antes de qualquer elif
+    hide_sensitive = 'hide_sensitive' in request.POST
+
     status = False
 
     cont = {
         'now': timezone.now(),
         'user': request.user,
         'event': event,
-        'logo_morea': request.build_absolute_uri('/static/images/logo_atum.png')
+        'logo_morea': request.build_absolute_uri('/static/images/logo_atum.png'),
+        'hide_sensitive': hide_sensitive,  # ← passar para todos os templates
     }
 
     if event:
@@ -4109,29 +4114,20 @@ def generator_data(request):
         team = get_object_or_404(Team, id=request.POST.get('team_in'))
 
         if not _acesso_team(request.user, team):
-            messages.error(request, "Você não tem permissão para gerar crachás deste time.")
+            messages.error(request, "Você não tem permissão para acessar este time.")
             return redirect('data')
 
-        players_qs = (
-            Player_team_sport.objects
-            .filter(team_sport__team=team, team_sport__event=event)
-            .select_related('player', 'team_sport__team', 'team_sport__team__unit')
-            .order_by('player_id')
-        )
+        name_html = 'data-base-campus'
+        name_pdf = f'atletas_{team.name}'
 
-        # deduplicação: mesmo atleta em múltiplos esportes gera apenas 1 crachá
-        seen = set()
-        players = []
-        for pts in players_qs:
-            if pts.player_id not in seen:
-                players.append(pts)
-                seen.add(pts.player_id)
+        teams = base_ts.filter(team=team)
 
-        if not players:
-            messages.error(request, "Não tem nenhum atleta cadastrado!")
-        else:
-            namebadge = f'{team.name}-jifs'
-            return generate_badges(players, '7', namebadge, event.id)
+        if not teams.exists():
+            messages.error(request, "Não há equipes ou atletas cadastrados neste campus.")
+            status = True
+
+        cont['teams'] = teams
+        cont['infor'] = team.name
 
     # ─────────────────────────────────────────────────────────────────────────
     # MODALIDADE COMPLETA
@@ -4195,9 +4191,11 @@ def generator_data(request):
         return redirect('data')
 
     if status:
-        if current_get_params:
-            return redirect(f"{reverse('data')}?{current_get_params}")
-        return redirect('data')
+        redirect_url = reverse('data')
+        params = current_get_params + ('&' if current_get_params else '') + ('hide_sensitive=1' if hide_sensitive else '')
+        if params:
+            redirect_url += '?' + params
+        return redirect(redirect_url)
 
     html_string = render_to_string(f'generator/{name_html}.html', cont)
     response = HttpResponse(content_type='application/pdf')

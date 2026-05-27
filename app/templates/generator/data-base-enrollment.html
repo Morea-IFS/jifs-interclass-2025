@@ -77,7 +77,7 @@
     <table>
         <tr>
             <th style="width: 38%;">Nome</th>
-            {% if i.event.player_need_registration %}
+            {% if i.event.player_need_registration and not hide_sensitive %}
             <th style="width: 11%;">Matrícula</th>
             {% endif %}
             <th style="width: 4%;">Turma</th>
@@ -85,7 +85,7 @@
         {% for j in i.players.all %}
         <tr>
             <td>{{ j.player.name|upper }}</td>
-            {% if i.event.player_need_registration %}
+            {% if i.event.player_need_registration and not hide_sensitive %}
             <td>{{ j.player.registration|upper }}</td>
             {% endif %}
             <td>{{j.player.unit.name|upper}}</td>

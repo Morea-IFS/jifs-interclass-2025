@@ -71,10 +71,10 @@
         <thead>
             <tr>
                 <th style="width: 38%;">Nome</th>
-                {% if event.player_need_registration %}
+                {% if event.player_need_registration and not hide_sensitive %}
                 <th style="width: 11%;">Matrícula</th>
                 {% endif %}
-                {% if event.player_need_cpf %}
+                {% if event.player_need_cpf and not hide_sensitive %}
                 <th style="width: 12%;">CPF</th>
                 {% endif %}
                 {% if event.player_need_sexo %}
@@ -91,10 +91,10 @@
             {% for i in players %}
             <tr>
                 <td>{{ i.player.name }}</td>
-                {% if team.event.player_need_registration %}
+                {% if team.event.player_need_registration and not hide_sensitive %}
                 <td>{{ i.player.registration }}</td>
                 {% endif %}
-                {% if team.event.player_need_cpf %}
+                {% if team.event.player_need_cpf and not hide_sensitive %}
                 <td>{{ i.player.cpf|slice:":3" }}.{{ i.player.cpf|slice:"3:6" }}.{{ i.player.cpf|slice:"6:9" }}-{{ i.player.cpf|slice:"9:" }}</td>
                 {% endif %}
                 {% if team.event.player_need_sexo %}

@@ -21,17 +21,12 @@
         }
         td { white-space: pre-wrap; }
         th { background-color: #f2f2f2; }
-
         tr { 
             page-break-inside: avoid; 
             break-inside: avoid; 
             page-break-after: auto; 
         }
-
-        thead { 
-            display: table-header-group;
-        }
-        
+        thead { display: table-header-group; }
         .header-data {
             width: 80vw;
             height: 6.5em;
@@ -49,34 +44,36 @@
             right: 2em;
             padding-top: 0.8em;
         }
-
     </style>
 </head>
 <body>
     <div class="header-data">
         {% if logo_event_type == 1 %}
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 4.5em;">
+        <img class="logo-ifs" src="{{ logo_ifs }}" alt="" style="height: 4.5em;">
         {% else %}
-        <img class="logo-ifs" src="{{logo_ifs }}" alt="" style="height: 5em; " >
+        <img class="logo-ifs" src="{{ logo_ifs }}" alt="" style="height: 5em;">
         {% endif %}
-        <img class="logo-morea" src="{{logo_morea }}" alt="">
+        <img class="logo-morea" src="{{ logo_morea }}" alt="">
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
         <p><b>RELATÓRIO DA C. TÉCNICA</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
-
     </div>
     <br><br>
     <table>
         <tr>
             <th style="width: 40%;">Nome</th>
+            {% if not hide_sensitive %}
             <th style="width: 12.5%;">Matrícula/siape/CPF</th>
+            {% endif %}
             <th style="width: 12%;">Função</th>
             <th style="width: 12%;">Unidade</th>
         </tr>
         {% for i in voluntarys %}
         <tr>
             <td>{{ i.name|upper }}</td>
+            {% if not hide_sensitive %}
             <td>{{ i.registration }}</td>
+            {% endif %}
             {% if i.type_voluntary == 4 %}
                 <td>Chefe de del.</td>
             {% else %}

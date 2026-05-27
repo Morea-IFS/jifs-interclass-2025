@@ -56,7 +56,14 @@
             <form method="post" class="relatorios-grid-wrapper">
                 {% csrf_token %}
                 <input type="hidden" name="event_data" value="{{ event.id }}">
-
+                <div class="badge-section" style="margin-bottom: 0;">
+                    <label style="display:flex; align-items:center; gap:8px; color:#fff; font-size:13px; cursor:pointer; margin: 0;">
+                        <input type="checkbox" name="hide_sensitive" value="1"
+                            {% if hide_sensitive %}checked{% endif %}
+                            style="width:16px; height:16px; cursor:pointer;">
+                        Ocultar CPF e matrícula nos relatórios
+                    </label>
+                </div>
                 {% if user.is_staff or user.type == 1 %}
                 <div class="badge-section">
                     <h3 class="badge-section-title"><i class="fas fa-chart-bar"></i> Gestão do evento</h3>
