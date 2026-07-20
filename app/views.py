@@ -4939,6 +4939,7 @@ def dashboard_acesso(request):
             "total_docs": 0,
             "total_pendentes": 0,
             "acessos_hoje": 0,
+            "acessos_hoje_data": None,
             "acessos_7dias": [],
             "user_rows": [],
         }
@@ -4969,45 +4970,46 @@ def dashboard_acesso(request):
         if (not getattr(u, "accepted", False)) or (not _has_user_document(u))
     )
 
-    acessos_hoje = (
-        AccessLog.objects.filter(
-            event=event,
-            accessed_at__date=hoje
-        )
-        .values("user")
-        .distinct()
-        .count()
-    )
+    # Quando um usuário específico é selecionado no filtro "u", os cards e o
+    # card de acessos passam a refletir só os acessos dele. Sem usuário
+    # selecionado, mostram o total do evento. Mesma métrica (total de
+    # registros de AccessLog) usada na coluna "Acessos" da tabela.
+    stats_user = selected_user_obj if selected_user_id else None
+
+    def _access_count(day, only_user=None):
+        qs = AccessLog.objects.filter(event=event, accessed_at__date=day)
+        if only_user:
+            qs = qs.filter(user=only_user)
+        return qs.count()
+
+    # O card de "acessos" no topo agora respeita o filtro de data (d):
+    # se uma data foi escolhida, mostra os acessos daquele dia; senão,
+    # mostra os acessos de hoje. Antes esse card ignorava completamente
+    # o filtro de data, dando a impressão de que o filtro não funcionava.
+    dia_referencia = selected_date_obj or hoje
+    acessos_hoje = _access_count(dia_referencia, stats_user)
 
     acessos_7dias_raw = []
     max_count = 0
 
     for i in range(6, -1, -1):
         dia = hoje - timedelta(days=i)
-        count = (
-            AccessLog.objects.filter(
-                event=event,
-                accessed_at__date=dia
-            )
-            .values("user")
-            .distinct()
-            .count()
-        )
+        count = _access_count(dia, stats_user)
         acessos_7dias_raw.append({"dia": dia, "count": count})
         max_count = max(max_count, count)
 
     acessos_7dias = []
-    for item in acessos_7dias_raw:
-        count = item["count"]
-        pct = max(6, round((count / max_count) * 100)) if max_count > 0 else 0
-
-        acessos_7dias.append(
-            {
-                "label": item["dia"].strftime("%d/%m"),
-                "count": count,
-                "pct": pct,
-            }
-        )
+    if max_count > 0:
+        for item in acessos_7dias_raw:
+            count = item["count"]
+            pct = max(6, round((count / max_count) * 100))
+            acessos_7dias.append(
+                {
+                    "label": item["dia"].strftime("%d/%m"),
+                    "count": count,
+                    "pct": pct,
+                }
+            )
 
     user_rows = []
     for u in users_qs:
@@ -5031,6 +5033,7 @@ def dashboard_acesso(request):
         "total_docs": total_docs,
         "total_pendentes": total_pendentes,
         "acessos_hoje": acessos_hoje,
+        "acessos_hoje_data": dia_referencia,
         "acessos_7dias": acessos_7dias,
         "user_rows": user_rows,
     }
