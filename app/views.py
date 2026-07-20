@@ -48,6 +48,7 @@ from datetime import date, timedelta
 from .models import AccessLog, Event
 from .models import Sticker_template
 from .generators import generate_stickers
+from django.conf import settings as django_settings
 
 User = get_user_model()
 
@@ -4852,6 +4853,23 @@ def _format_dt(dt):
         dt = timezone.localtime(dt)
     return dt.strftime("%d/%m/%Y %H:%M")
 
+def _day_bounds(dia):
+    """
+    Calcula o início/fim (exclusivo) de um dia como datetimes, evitando
+    depender de conversão de timezone feita pelo banco (accessed_at__date),
+    que pode falhar silenciosamente dependendo do banco/config em produção.
+    """
+    start_naive = datetime.combine(dia, datetime.min.time())
+    end_naive = start_naive + timedelta(days=1)
+
+    if django_settings.USE_TZ:
+        current_tz = timezone.get_current_timezone()
+        start = timezone.make_aware(start_naive, current_tz)
+        end = timezone.make_aware(end_naive, current_tz)
+    else:
+        start, end = start_naive, end_naive
+
+    return start, end
 
 def _get_user_access_qs(user, selected_date=None, event=None):
     qs = AccessLog.objects.filter(user=user)
@@ -4860,7 +4878,8 @@ def _get_user_access_qs(user, selected_date=None, event=None):
         qs = qs.filter(event=event)
 
     if selected_date:
-        qs = qs.filter(accessed_at__date=selected_date)
+        start, end = _day_bounds(selected_date)
+        qs = qs.filter(accessed_at__gte=start, accessed_at__lt=end)
 
     return qs.order_by("accessed_at")
 
@@ -4977,7 +4996,10 @@ def dashboard_acesso(request):
     stats_user = selected_user_obj if selected_user_id else None
 
     def _access_count(day, only_user=None):
-        qs = AccessLog.objects.filter(event=event, accessed_at__date=day)
+        start, end = _day_bounds(day)
+        qs = AccessLog.objects.filter(
+            event=event, accessed_at__gte=start, accessed_at__lt=end
+        )
         if only_user:
             qs = qs.filter(user=only_user)
         return qs.count()
