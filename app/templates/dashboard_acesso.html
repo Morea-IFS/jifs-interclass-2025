@@ -48,11 +48,11 @@
                     {% endfor %}
                 </select>
 
-                <input type="date" name="d" value="{{ selected_date }}" onchange="this.form.submit()" class="filter-date" title="Filtrar por data">
+                <input type="date" name="d" value="{{ selected_date }}" id="dashDateFilter" class="filter-date" title="Filtrar por data">
                 {% endif %}
 
-                {% if user.type == 0 and select_event or selected_user_id or selected_date %}
-                <a href="{% url 'dashboard_acesso' %}" class="filter-clear">
+                {% if selected_user_id or selected_date %}
+                <a href="{% url 'dashboard_acesso' %}{% if user.type == 0 and select_event %}?e={{ select_event }}{% endif %}" class="filter-clear">
                     <i class="fa-solid fa-xmark"></i> Limpar
                 </a>
                 {% endif %}
@@ -71,7 +71,9 @@
         <div class="dash-card">
             <div class="dc-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
             <div class="dc-value">{{ acessos_hoje }}</div>
-            <div class="dc-label">Acessos hoje</div>
+            <div class="dc-label">
+                {% if selected_date %}Acessos em {{ acessos_hoje_data|date:"d/m/Y" }}{% else %}Acessos hoje{% endif %}
+            </div>
         </div>
         <div class="dash-card">
             <div class="dc-icon"><i class="fa-solid fa-circle-check"></i></div>
@@ -439,6 +441,37 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal.classList.contains('open')) closeUserModal();
+    });
+})();
+(function() {
+    const dateInput = document.getElementById('dashDateFilter');
+    if (!dateInput) return;
+
+    let debounceTimer = null;
+
+    function isCompleteDate(value) {
+        // yyyy-mm-dd tem exatamente 10 caracteres quando completo
+        return value.length === 10;
+    }
+
+    dateInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+
+        // só agenda o submit se a data já estiver completa;
+        // enquanto o usuário ainda está digitando dia/mês/ano, não faz nada
+        if (isCompleteDate(dateInput.value)) {
+            debounceTimer = setTimeout(function() {
+                dateInput.form.submit();
+            }, 2000);
+        }
+    });
+
+    // se o usuário limpar o campo, também filtra (remove o filtro de data)
+    dateInput.addEventListener('change', function() {
+        if (dateInput.value === '') {
+            clearTimeout(debounceTimer);
+            dateInput.form.submit();
+        }
     });
 })();
 </script>
