@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>ATUM ADMIN</title>
+    <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+    <style>
+        .template-select-wrap {
+            margin: 0 0 20px 0;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+        }
+        .template-select-wrap label {
+            display: block;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .template-select-wrap select {
+            width: 100%;
+            max-width: 420px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .template-hint {
+            color: #bbb;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .template-hint a {
+            color: #6fa8ff;
+        }
+    </style>
+{% endblock head %}
+
+{% block navbar %}
+<!-- NAVBAR já vem de base.html -->
+{% endblock navbar %}
+
+{% block content %}
+<div class="all-block">
+    <div class="block1">
+        <div class="relatorios-wrapper">
+            <div class="title-adm">
+                <h1>
+                {% if event %} FIGURINHAS DO {{event.name}}{% else %} FIGURINHAS {% endif %}
+                </h1>
+                <div class="title-buttons">
+                    {% if user.type == 0 %}
+                    <form method="get">
+                        <select name="e" onchange="this.form.submit();">
+                            <option value="">Evento</option>
+                            {% for i in events %}
+                                <option value="{{ i.id }}" {% if event.id|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{ i.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <h3>{% if event %} {{event.name}} {% else %} ATUM ADMIN {% endif %}</h3>
+                    {% else %}
+                    <h3>{{ user.event_user.name }}</h3>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if event %}
+            <form method="post" class="relatorios-grid-wrapper">
+                {% csrf_token %}
+                <input type="hidden" name="event_data" value="{{ event.id }}">
+
+                <div class="template-select-wrap">
+                    <label for="template_id"><i class="fas fa-image"></i> Template de figurinha</label>
+                    {% if templates %}
+                    <select name="template_id" id="template_id">
+                        {% for t in templates %}
+                            <option value="{{ t.id }}" {% if t.is_default %}selected{% endif %}>
+                                {{ t.name }}{% if t.is_default %} (padrão){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <p class="template-hint">
+                        Escolha o modelo de figurinha antes de clicar em gerar.
+                        {% if perms.app.add_sticker_template %}
+                        Precisa de um novo modelo? <a href="{% url 'sticker_template_manage' %}">Cadastre aqui</a>.
+                        {% endif %}
+                    </p>
+                    {% else %}
+                    <p class="template-hint" style="color:#ff8080;">
+                        Nenhum template de figurinha cadastrado para este evento ainda.
+                        {% if perms.app.add_sticker_template %}
+                        <a href="{% url 'sticker_template_manage' %}">Cadastre o primeiro template</a>.
+                        {% else %}
+                        Peça a um coordenador para cadastrar um template.
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                {% if teams %}
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-university"></i> Figurinhas por Campus</h3>
+                    <div class="relatorios-grid">
+                        {% for i in teams %}
+                        <button name="team_in" value="{{ i.id }}" type="submit" class="relatorio-btn" {% if not templates %}disabled{% endif %}>
+                            <i class="fas fa-shield-alt"></i>
+                            <p>{{ i.name }}</p>
+                            <span class="badge-type-tag">Figurinha Atleta</span>
+                        </button>
+                        {% empty %}
+                        <p style="color:#ffffff;font-size:13px;">Nenhum campus cadastrado neste evento.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if teams_sport %}
+                <div class="badge-section">
+                    <h3 class="badge-section-title"><i class="fas fa-running"></i> Figurinhas por Modalidade</h3>
+                    <div class="relatorios-grid">
+                        {% for i in teams_sport %}
+                        <button name="team_sport_in" value="{{ i.id }}" type="submit" class="relatorio-btn" {% if not templates %}disabled{% endif %}>
+                            <i class="fas fa-medal"></i>
+                            <p>{{ i.team.name }}</p>
+                            <small>{{ i.sport.get_sport_display }} — {{ i.get_sexo_display }}</small>
+                            <span class="badge-type-tag">Figurinha Atleta</span>
+                        </button>
+                        {% empty %}
+                        <p style="color:#ffffff;font-size:13px;">Nenhuma modalidade com atletas cadastrados.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+            {% else %}
+            <section class="alert-page">
+                <div class="alert-img"><i class="fa-solid fa-circle-exclamation"></i></div>
+                <div class="alert-text"><p>NÃO HÁ NENHUM EVENTO SELECIONADO.</p></div>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -350,6 +350,23 @@
         color: #555 !important;
     }
 
+    .badge-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        margin-right: 6px;
+        font-weight: bold;
+    }
+    .badge-default { 
+        background: #27ae60; 
+        color: #fff; 
+    }
+    .badge-inactive { 
+        background: #7f8c8d; 
+        color: #fff; 
+    }
+
     @media (max-width: 600px) {
         .badge-card {
             flex-direction: column;
@@ -395,9 +412,26 @@
 
     {% for event in events %}
     <div class="event-card">
-        <h2>{{ event.name }}</h2>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <h2 style="margin:0;">{{ event.name }}</h2>
+            <button class="btn-secondary" style="padding:6px 14px;" onclick="openEditModal({{ event.id }}, '{{ event.name|escapejs }}', {{ event.sticker_module_enabled|yesno:'true,false' }}, {{ event.badge_module_enabled|yesno:'true,false' }}, {{ event.active|yesno:'true,false' }})">
+                <i class="fa-solid fa-pen"></i> Editar
+            </button>
+        </div>
         <p><strong>Local:</strong> {{ event.local }}</p>
         <p><strong>Período:</strong> {{ event.date_init }} - {{ event.date_end }}</p>
+
+        <p style="margin-top:10px;">
+            <strong>Módulos:</strong>
+            <span class="badge-tag {% if event.badge_module_enabled %}badge-default{% else %}badge-inactive{% endif %}">
+                Crachás {% if event.badge_module_enabled %}Ativo{% else %}Inativo{% endif %}
+            </span>
+            <span class="badge-tag {% if event.sticker_module_enabled %}badge-default{% else %}badge-inactive{% endif %}">
+                Figurinhas {% if event.sticker_module_enabled %}Ativo{% else %}Inativo{% endif %}
+            </span>
+            {% if not event.active %}<span class="badge-tag badge-inactive">Evento inativo</span>{% endif %}
+        </p>
+
         <p><strong>Descrição:</strong> {{ event.description }}</p>
         <p><strong>Inscrições:</strong> {{ event.enrollment_init }} - {{ event.enrollment_end }}</p>
 
@@ -482,6 +516,26 @@
 
                 <label for="local">Local:</label>
                 <input type="text" name="local" id="local">
+
+                <hr style="margin: 25px 0; border: none; border-top: 1px solid #eee;">
+                <h2 class="step-section-title" style="margin-top:0;">Módulos do evento</h2>
+                <p class="help-text" style="margin-top:-5px;">Escolha quais funcionalidades ficam disponíveis para este evento. Pode ser alterado depois em "Editar".</p>
+
+                <div class="toggle-label">
+                    <span>Crachás</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="badge_module_enabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-label">
+                    <span>Figurinhas</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="sticker_module_enabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="modal-step" id="modal-step-2" style="display:none;">
@@ -767,6 +821,53 @@
     </div>
 </div>
 
+<div id="editEventModal" class="modal">
+    <div class="modal-content" style="max-width:480px;">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2 style="color:#2196F3;">Editar evento</h2>
+
+        <form method="post" action="" id="editEventForm" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="edit_name">Nome:</label>
+            <input type="text" name="name" id="edit_name" required>
+
+            <label for="edit_logo">Trocar logo (opcional):</label>
+            <input type="file" name="logo" id="edit_logo">
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+
+            <div class="toggle-label">
+                <span>Evento ativo</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="active" id="edit_active">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-label">
+                <span>Módulo de Crachás</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="badge_module_enabled" id="edit_badge_module">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-label">
+                <span>Módulo de Figurinhas</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="sticker_module_enabled" id="edit_sticker_module">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <p class="help-text">Desativar um módulo o esconde do menu Configurações e bloqueia a geração — dados já gerados não são apagados.</p>
+
+            <button type="submit">Salvar alterações</button>
+        </form>
+    </div>
+</div>
+
 <script>
     let modalCurrentStep = 1;
     const modalTotalSteps = 6;
@@ -914,6 +1015,23 @@
         if (event.target === unitModal) {
             closeUnitModal();
         }
+        const editEventModal = document.getElementById("editEventModal");
+        if (event.target === editEventModal) {
+            closeEditModal();
+        }
     });
+
+    function openEditModal(id, name, stickerEnabled, badgeEnabled, active) {
+        document.getElementById('editEventForm').action = `/edit/event/${id}`;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_active').checked = active;
+        document.getElementById('edit_badge_module').checked = badgeEnabled;
+        document.getElementById('edit_sticker_module').checked = stickerEnabled;
+        document.getElementById('editEventModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editEventModal').style.display = 'none';
+    }
 </script>
 {% endblock content %}

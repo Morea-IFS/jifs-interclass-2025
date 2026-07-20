@@ -46,6 +46,8 @@ from .models import AccessLog, UserSession
 from .decorators import terms_accept_required
 from datetime import date, timedelta
 from .models import AccessLog, Event
+from .models import Sticker_template
+from .generators import generate_stickers
 
 User = get_user_model()
 
@@ -366,6 +368,9 @@ def event_manage(request):
 
             tutorial = request.POST.get('tutorial', '').strip() or None
 
+            sticker_module_enabled = 'sticker_module_enabled' in request.POST
+            badge_module_enabled = 'badge_module_enabled' in request.POST
+
             Event.objects.create(
                 name=name,
                 logo=logo,
@@ -408,9 +413,31 @@ def event_manage(request):
                 upload_intro_text=upload_intro_text,
 
                 tutorial=tutorial,
+
+                sticker_module_enabled=sticker_module_enabled,
+                badge_module_enabled=badge_module_enabled,
             )
 
         return redirect('event_manage')
+
+@login_required(login_url="login")
+@permission_required('app.change_event', raise_exception=True)
+def event_edit(request, id):
+    event = get_object_or_404(Event, id=id)
+    if request.method != "POST":
+        return redirect('event_manage')
+
+    event.name = request.POST.get('name', event.name)
+    if request.FILES.get('logo'):
+        event.logo = request.FILES.get('logo')
+
+    event.active = 'active' in request.POST
+    event.badge_module_enabled = 'badge_module_enabled' in request.POST
+    event.sticker_module_enabled = 'sticker_module_enabled' in request.POST
+    event.save()
+
+    messages.success(request, f"Evento '{event.name}' atualizado com sucesso!")
+    return redirect('event_manage')
 
 @login_required(login_url="login")
 def event_sport_manage(request):
@@ -3676,6 +3703,257 @@ def generator_badge(request):
             return generate_badges(voluntary, None, 'comissao-tecnica-jifs', event.id)
 
     return redirect_badge()
+
+@login_required(login_url="login")
+@terms_accept_required
+@permission_required('app.view_sticker_template', raise_exception=True)
+def sticker_template_manage(request):
+    """
+    Tela de gerenciamento (CRUD) dos templates de figurinha.
+    Espelha o mesmo padrão de acesso usado no cadastro de crachás
+    personalizados (Event_badge) em `event_manage`: só staff/superusuário
+    ou coordenador de evento (type=1) podem cadastrar/editar.
+    """
+    if not (request.user.is_staff or request.user.type in [0, 1]):
+        messages.error(request, "Você não tem permissão para gerenciar templates de figurinha.")
+        return redirect('Home')
+ 
+    if request.user.type == 0 or request.user.is_staff:
+        events = Event.objects.all()
+        templates = Sticker_template.objects.all()
+    else:
+        events = Event.objects.filter(id=request.user.event_user.id)
+        templates = Sticker_template.objects.filter(
+            Q(event=request.user.event_user) | Q(event__isnull=True)
+        )
+ 
+    if request.method == "GET":
+        return render(request, 'settings/sticker_template_manage.html', {
+            'events': events,
+            'templates': templates,
+        })
+ 
+    # ── POST ─────────────────────────────────────────────────────────────
+    if 'template_delete' in request.POST:
+        if not request.user.has_perm('app.delete_sticker_template'):
+            messages.error(request, "Você não tem permissão para remover templates.")
+            return redirect('sticker_template_manage')
+        template = get_object_or_404(Sticker_template, id=request.POST.get('template_delete'))
+        template.base_image.delete(save=False)
+        template.delete()
+        messages.success(request, "Template removido com sucesso.")
+        return redirect('sticker_template_manage')
+ 
+    try:
+        name = request.POST.get('name')
+        event_id = request.POST.get('event')
+        base_image = request.FILES.get('base_image')
+ 
+        event = None
+        if event_id:
+            event = get_object_or_404(Event, id=event_id)
+            if not _acesso_evento(request.user, event):
+                messages.error(request, "Você não tem permissão para criar templates neste evento.")
+                return redirect('sticker_template_manage')
+ 
+        if not name:
+            messages.error(request, "Informe um nome para o template.")
+            return redirect('sticker_template_manage')
+ 
+        template_id = request.POST.get('template_id')
+        if template_id:
+            template = get_object_or_404(Sticker_template, id=template_id)
+            if not request.user.has_perm('app.change_sticker_template'):
+                messages.error(request, "Você não tem permissão para editar templates.")
+                return redirect('sticker_template_manage')
+        else:
+            if not request.user.has_perm('app.add_sticker_template'):
+                messages.error(request, "Você não tem permissão para criar templates.")
+                return redirect('sticker_template_manage')
+            if not base_image:
+                messages.error(request, "É necessário enviar a imagem base do template.")
+                return redirect('sticker_template_manage')
+            template = Sticker_template(event=event)
+ 
+        template.name = name
+        template.event = event
+ 
+        if base_image:
+            if type_file(request, ['.png', '.jpg', '.jpeg'], base_image,
+                          'A imagem do template deve ser PNG, JPG ou JPEG.'):
+                return redirect('sticker_template_manage')
+            if template.base_image:
+                template.base_image.delete(save=False)
+            template.base_image = base_image
+ 
+        def _f(field, default):
+            val = request.POST.get(field)
+            try:
+                return float(val) if val not in (None, '') else default
+            except (TypeError, ValueError):
+                return default
+ 
+        template.width_mm = int(_f('width_mm', 65))
+        template.height_mm = int(_f('height_mm', 90))
+        template.photo_x = _f('photo_x', 15)
+        template.photo_y = _f('photo_y', 12)
+        template.photo_width = _f('photo_width', 70)
+        template.photo_height = _f('photo_height', 55)
+        template.photo_corner_radius = _f('photo_corner_radius', 8)
+        template.show_name = 'show_name' in request.POST
+        template.name_y = _f('name_y', 88)
+        template.name_font_size = int(_f('name_font_size', 28))
+        template.name_color = request.POST.get('name_color') or '#FFFFFF'
+        template.show_campus = 'show_campus' in request.POST
+        template.campus_side = request.POST.get('campus_side') if request.POST.get('campus_side') in ('left', 'right') else 'left'
+        template.show_year = 'show_year' in request.POST
+        template.year_side = request.POST.get('year_side') if request.POST.get('year_side') in ('left', 'right') else 'right'
+        template.side_font_size = int(_f('side_font_size', 20))
+        template.side_color = request.POST.get('side_color') or '#FFFFFF'
+        template.active = 'active' in request.POST
+        template.is_default = 'is_default' in request.POST
+ 
+        template.save()
+        messages.success(request, "Template de figurinha salvo com sucesso!")
+    except Exception as e:
+        messages.error(request, f"Um erro inesperado aconteceu: {str(e)}")
+ 
+    return redirect('sticker_template_manage')
+ 
+ 
+@login_required(login_url="login")
+@terms_accept_required
+def sticker_manage(request):
+    """
+    Tela de geração de figurinhas. Espelha, quase 1:1, `generator_badge`:
+    mesma hierarquia (type 0/1/2), mesmas regras de acesso a time e
+    modalidade (`_acesso_team`), só trocando `generate_badges` por
+    `generate_stickers` e adicionando a seleção de template.
+    """
+    current_get_params = request.GET.urlencode()
+    user = User.objects.get(id=request.user.id)
+ 
+    def redirect_sticker():
+        if current_get_params:
+            return redirect(f"{reverse('sticker')}?{current_get_params}")
+        return redirect('sticker')
+ 
+    def _templates_for(event):
+        return Sticker_template.objects.filter(
+            Q(event=event) | Q(event__isnull=True), active=True
+        ).order_by('-is_default', 'name')
+ 
+    def _resolve_template(event, posted_id):
+        qs = _templates_for(event)
+        if posted_id:
+            tpl = qs.filter(id=posted_id).first()
+            if tpl:
+                return tpl
+        return qs.filter(is_default=True).first() or qs.first()
+ 
+    if request.method == "GET":
+        context = {}
+        if user.is_staff or user.type == 0:
+            context['events'] = Event.objects.all()
+            if 'e' in request.GET and request.GET.get('e') != '':
+                event = Event.objects.get(id=request.GET.get('e'))
+                context['event'] = event
+                context['teams'] = Team.objects.filter(event=event).order_by('name')
+                context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
+                context['templates'] = _templates_for(event)
+        else:
+            event = user.event_user
+            context['event'] = event
+            if user.type == 1:
+                context['teams'] = Team.objects.filter(event=event).order_by('name')
+                context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
+            else:
+                context['teams'] = Team.objects.filter(unit=user.unit, event=event).order_by('name')
+                context['teams_sport'] = Team_sport.objects.filter(team__unit=user.unit, event=event).order_by('team', 'sport', '-sexo')
+            context['templates'] = _templates_for(event)
+        return render(request, 'sticker.html', context)
+ 
+    # ── POST ─────────────────────────────────────────────────────────────
+    try:
+        event = Event.objects.get(id=request.POST.get('event_data'))
+    except (Event.DoesNotExist, ValueError, TypeError):
+        messages.error(request, "Evento não encontrado.")
+        return redirect_sticker()
+ 
+    if not (user.is_staff or user.type == 0):
+        if event != user.event_user:
+            messages.error(request, "Você não tem permissão para acessar este evento.")
+            return redirect_sticker()
+        
+    if not event.sticker_module_enabled:
+        messages.error(request, "O módulo de Figurinhas está desativado para este evento.")
+        return redirect('Home')
+ 
+    template = _resolve_template(event, request.POST.get('template_id'))
+    if not template:
+        messages.error(
+            request,
+            "Nenhum template de figurinha disponível para este evento. "
+            "Cadastre um template primeiro."
+        )
+        return redirect_sticker()
+ 
+    if 'team_sport_in' in request.POST:
+        players = Player_team_sport.objects.filter(
+            team_sport__id=request.POST.get('team_sport_in'),
+            team_sport__event=event
+        ).select_related('player', 'team_sport__team', 'team_sport__team__unit')
+ 
+        if user.type == 2 and not user.is_staff:
+            players = players.filter(team_sport__team__unit=user.unit)
+ 
+        team_sport_sticker = get_object_or_404(Team_sport, id=request.POST.get('team_sport_in'), event=event)
+        if user.type == 2 and not user.is_staff and team_sport_sticker.team.unit != user.unit:
+            messages.error(request, "Você não tem permissão para gerar esta figurinha.")
+            return redirect_sticker()
+ 
+        if not players.exists():
+            messages.error(request, "Não tem nenhum atleta cadastrado!")
+        else:
+            namesticker = f'{team_sport_sticker.sport.get_sport_display()}-{team_sport_sticker.team.name}-jifs'
+            return generate_stickers(players, template, namesticker, event.id)
+ 
+    elif 'team_in' in request.POST:
+        team = get_object_or_404(Team, id=request.POST.get('team_in'))
+        if not _acesso_team(request.user, team):
+            messages.error(request, "Você não tem permissão para gerar figurinhas deste time.")
+            return redirect_sticker()
+ 
+        players = (
+            Player_team_sport.objects
+            .filter(team_sport__team=team, team_sport__event=event)
+            .select_related('player', 'team_sport__team', 'team_sport__team__unit')
+            .order_by('player_id')
+            .distinct()
+        )
+ 
+        if not players.exists():
+            messages.error(request, "Não tem nenhum atleta cadastrado!")
+        else:
+            namesticker = f'{team.name}-jifs'
+            return generate_stickers(players, template, namesticker, event.id)
+ 
+    return redirect_sticker()
+
+def _templates_for(event):
+    return Sticker_template.objects.filter(
+        Q(event=event) | Q(event__isnull=True), active=True
+    ).order_by('-is_default', 'name')
+
+def _resolve_template(event, posted_id):
+    qs = _templates_for(event)
+    if posted_id:
+        tpl = qs.filter(id=posted_id).first()
+        if tpl:
+            return tpl
+    # com o template semente do sistema (is_system_default=True, is_default=True)
+    # este fallback nunca fica vazio depois da migração de dados
+    return qs.filter(is_default=True).first() or qs.first()
 
 @login_required(login_url="login")
 @terms_accept_required

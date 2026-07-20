@@ -195,6 +195,15 @@ class Event(models.Model):
 
     tutorial = models.CharField(max_length=500, blank=True, null=True)
 
+    sticker_module_enabled = models.BooleanField(
+        default=True,
+        help_text="Habilita a geração de Figurinhas para este evento."
+    )
+    badge_module_enabled = models.BooleanField(
+        default=True,
+        help_text="Habilita a geração de Crachás para este evento."
+    )
+
 
     def __str__(self):
         return self.name
@@ -221,6 +230,100 @@ class Event_badge(models.Model):
     def __str__(self):
         return f"{self.event.name} | {self.name} | {self.number} | {self.file}"
     
+class Sticker_template(models.Model):
+    """
+    Template configurável de figurinha (sticker) de atleta/voluntário.
+ 
+    Reaproveita o MESMO CONCEITO do Event_badge (uma imagem base cadastrada
+    pelo admin), mas em vez de só guardar o arquivo, guarda também a
+    GEOMETRIA da área onde a foto do atleta deve encaixar — tudo em
+    porcentagem (0–100), para funcionar com templates de qualquer resolução
+    e permitir infinitos templates novos sem tocar em código (requisito de
+    escalabilidade: "estrutura baseada em configuração, não hardcoded").
+    """
+ 
+    name = models.CharField(max_length=100)
+ 
+    # event=None -> template GLOBAL, disponível para qualquer evento.
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, null=True, blank=True,
+        related_name="sticker_templates",
+        help_text="Deixe em branco para um template global (disponível para todos os eventos)."
+    )
+ 
+    base_image = models.ImageField(upload_to='sticker_templates/')
+ 
+    # ── tamanho físico real da figurinha impressa (mm) ──────────────────────
+    # o base_image deve ter a MESMA proporção (largura:altura) que estes
+    # valores, para que o encaixe da foto seja fiel ao molde.
+    width_mm = models.PositiveIntegerField(default=65)
+    height_mm = models.PositiveIntegerField(default=90)
+ 
+    # ── área da foto do atleta, em % do template (0 a 100) ──────────────────
+    # (x, y) = canto superior esquerdo da área da foto
+    photo_x = models.FloatField(default=15.0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    photo_y = models.FloatField(default=12.0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    photo_width = models.FloatField(default=70.0, validators=[MinValueValidator(1), MaxValueValidator(100)])
+    photo_height = models.FloatField(default=55.0, validators=[MinValueValidator(1), MaxValueValidator(100)])
+    photo_corner_radius = models.FloatField(
+        default=8.0, validators=[MinValueValidator(0), MaxValueValidator(50)],
+        help_text="Arredondamento das bordas da foto, em % da largura da área da foto."
+    )
+ 
+    # ── nome/apelido exibido no template ────────────────────────────────────
+    show_name = models.BooleanField(default=True)
+    name_y = models.FloatField(
+        default=88.0, validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posição vertical (%) do texto do nome, a partir do topo."
+    )
+    name_font_size = models.PositiveIntegerField(default=28)
+    name_color = models.CharField(max_length=7, default="#FFFFFF")
+ 
+    active = models.BooleanField(default=True)
+    is_default = models.BooleanField(
+        default=False,
+        help_text="Template usado automaticamente quando nenhum outro for escolhido na geração."
+    )
+    show_team = models.BooleanField(default=True)
+    team_y = models.FloatField(default=93.0, validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posição vertical (%) da linha do TIME, logo abaixo do nome.")
+
+    show_campus = models.BooleanField(default=True)
+    campus_side = models.CharField(
+        max_length=5,
+        choices=[('left', 'Esquerda'), ('right', 'Direita')],
+        default='left',
+        help_text="Lado da figurinha onde o campus aparece."
+    )
+    show_year = models.BooleanField(default=True)
+    year_side = models.CharField(
+        max_length=5,
+        choices=[('left', 'Esquerda'), ('right', 'Direita')],
+        default='right',
+        help_text="Lado da figurinha onde o ano do evento aparece."
+    )
+    side_font_size = models.PositiveIntegerField(default=22,
+        help_text="Tamanho da fonte do CAMPUS/ANO (textos verticais nas laterais).")
+    side_color = models.CharField(max_length=7, default="#FFFFFF")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['-is_default', 'name']
+        verbose_name = "Template de Figurinha"
+        verbose_name_plural = "Templates de Figurinha"
+ 
+    def __str__(self):
+        return f"{self.name}" + (f" | {self.event.name}" if self.event else " | Global")
+ 
+    def save(self, *args, **kwargs):
+        # garante um único "is_default" por evento (ou um único default global)
+        if self.is_default:
+            Sticker_template.objects.filter(
+                event=self.event, is_default=True
+            ).exclude(id=self.id).update(is_default=False)
+        super().save(*args, **kwargs)
+
 class Event_unit(models.Model):
     name = models.CharField(max_length=100 ,null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="unit_set")

@@ -12,6 +12,10 @@ from django.http import HttpResponse
 from .models import Certificate, Match, Occurrence, Time_pause, Event_badge, Event
 from PIL import Image
 from django.db.models import Min
+from django.core.cache import cache
+from reportlab.lib.units import mm as MM
+from reportlab.lib.colors import HexColor
+from django.utils import timezone  
 
 pdfmetrics.registerFont(TTFont('MsMadi', 'fonts/MsMadi-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('Outfit', 'fonts/Outfit-Black.ttf'))
@@ -114,6 +118,47 @@ def optimize_image(path, max_size=500):
         _log(f"Erro optimize_image: {e}")
         return None
 
+def optimize_image_rect(path, target_w, target_h):
+    """
+    Irmã de `optimize_image()` (usada nos crachás) — MESMO padrão, mesmo
+    tratamento de erro (try/except + _log, nunca deixa a geração inteira
+    cair por causa de uma foto). Única diferença: em vez de sempre recortar
+    quadrado, recorta na proporção retangular pedida (cover-crop), porque a
+    área da foto na figurinha normalmente não é um quadrado.
+    """
+    try:
+        with Image.open(path) as original:
+            converted = original.convert("RGB")
+ 
+            w, h = converted.size
+            target_ratio = target_w / target_h
+            img_ratio = w / h
+ 
+            if img_ratio > target_ratio:
+                new_h = target_h
+                new_w = max(1, int(round(target_h * img_ratio)))
+            else:
+                new_w = target_w
+                new_h = max(1, int(round(target_w / img_ratio)))
+ 
+            resized = converted.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            converted.close()
+ 
+            left = max(0, (new_w - target_w) // 2)
+            top = max(0, (new_h - target_h) // 2)
+            cropped = resized.crop((left, top, left + target_w, top + target_h))
+            resized.close()
+ 
+            buf = BytesIO()
+            cropped.save(buf, format="JPEG", quality=90, optimize=True)
+            cropped.close()
+ 
+            buf.seek(0)
+            return ImageReader(buf)
+ 
+    except Exception as e:
+        _log(f"Erro optimize_image_rect: {e}")
+        return None
 
 def _abbreviate_name(name):
     """
@@ -364,3 +409,186 @@ def _log(message):
     import logging
     logger = logging.getLogger(__name__)
     logger.warning(message)
+ 
+ 
+def _draw_rounded_clip(c, x, y, width, height, radius):
+    """
+    Clip com bordas arredondadas — o raio é limitado a, no máximo, metade
+    do menor lado da caixa. Um raio maior que isso gera um path degenerado
+    no reportlab (a imagem é desenhada, mas o clip corta ela inteira, sem
+    erro nenhum) — por isso o limite continua aqui, é uma correção real
+    e independente de como a foto é carregada.
+    """
+    safe_radius = max(0, min(radius, width / 2, height / 2))
+    c.saveState()
+    path = c.beginPath()
+    path.roundRect(x, y, width, height, safe_radius)
+    c.clipPath(path, stroke=0, fill=0)
+ 
+def _draw_side_text(c, text, side, x_left_pt, x_right_pt, y_center_pt, color, font_size):
+    """
+    Desenha texto vertical numa lateral da figurinha.
+    'left'  -> lê de baixo pra cima (rotação +90°)
+    'right' -> lê de cima pra baixo (rotação -90°)
+    """
+    if not text:
+        return
+    c.saveState()
+    c.setFillColor(color)
+    c.setFont("Helvetica-Bold", font_size)
+    if side == 'left':
+        c.translate(x_left_pt, y_center_pt)
+        c.rotate(90)
+    else:
+        c.translate(x_right_pt, y_center_pt)
+        c.rotate(-90)
+    c.drawCentredString(0, 0, text.upper())
+    c.restoreState()
+
+def generate_stickers(players, template, namebadge, event_id):
+    """
+    Gera um PDF de figurinhas (várias por folha A4, prontas para impressão
+    e recorte), com base num `Sticker_template` configurável.
+ 
+    Reaproveita diretamente do módulo de crachás:
+      - `_deduplicate_players` (mesma dedup por player_id)
+      - o padrão de cache local `*_cache = {}` para a imagem base
+      - `players.iterator(chunk_size=50)` para baixo consumo de memória
+      - o mesmo modelo de resposta HttpResponse com Content-Disposition
+ 
+    Parâmetros
+    ----------
+    players    : queryset/lista de Player_team_sport (atletas) ou Voluntary
+    template   : instância de Sticker_template (geometria + arquivo base)
+    namebadge  : nome base do arquivo PDF gerado
+    event_id   : id do evento (usado apenas para contexto/erros)
+    """
+    players = _deduplicate_players(players)
+ 
+    buffer = BytesIO()
+ 
+    sticker_w = template.width_mm * MM
+    sticker_h = template.height_mm * MM
+    page_w, page_h = A4
+    margin, gap = 8, 6
+
+    cols = max(1, int((page_w - 2 * margin + gap) // (sticker_w + gap)))
+    rows = max(1, int((page_h - 2 * margin + gap) // (sticker_h + gap)))
+    per_page = cols * rows
+
+    photo_w_pt = sticker_w * (template.photo_width / 100.0)
+    photo_h_pt = sticker_h * (template.photo_height / 100.0)
+    photo_x_pt = sticker_w * (template.photo_x / 100.0)
+    photo_y_pt = sticker_h * (1 - (template.photo_y / 100.0)) - photo_h_pt
+    radius_pt = photo_w_pt * (template.photo_corner_radius / 100.0)
+
+    name_y_pt = sticker_h * (1 - (template.name_y / 100.0))
+
+    photo_px_w = max(200, int(photo_w_pt * 3))
+    photo_px_h = max(200, int(photo_h_pt * 3))
+
+    try:
+        base_image = ImageReader(template.base_image.path)
+    except Exception as e:
+        buffer.close()
+        raise ValueError(f"Não foi possível carregar a imagem do template de figurinha: {e}")
+
+    name_color = HexColor(template.name_color or "#FFFFFF")
+    side_color = HexColor(getattr(template, 'side_color', '#FFFFFF') or '#FFFFFF')
+    side_font = getattr(template, 'side_font_size', 22)
+
+    # ano: usa o ano de início do evento (fallback: ano atual)
+    try:
+        event_obj = Event.objects.get(id=event_id)
+        year_text = str(event_obj.date_init.year) if event_obj.date_init else str(timezone.now().year)
+    except Event.DoesNotExist:
+        year_text = str(timezone.now().year)
+
+    c = canvas.Canvas(buffer, pagesize=A4)
+    c.setPageCompression(1)
+    players_iter = players.iterator(chunk_size=50) if hasattr(players, 'iterator') else iter(players)
+
+    try:
+        for j, item in enumerate(players_iter):
+            if j % per_page == 0 and j > 0:
+                c.showPage()
+            slot = j % per_page
+            col, row = slot % cols, slot // cols
+            x = margin + col * (sticker_w + gap)
+            y = page_h - margin - (row + 1) * sticker_h - row * gap
+
+            if hasattr(item, 'player'):
+                obj = item.player
+                photo = obj.photo
+                display_name = (obj.name or '').strip()
+                team_name = item.team_sport.team.name if item.team_sport and item.team_sport.team else ''
+                campus_name = obj.unit.name if obj.unit else ''
+            else:
+                obj = item
+                photo = obj.photo
+                display_name = (obj.name or '').strip()
+                team_name = ''
+                campus_name = obj.unit.name if obj.unit else ''
+
+            c.drawImage(base_image, x, y, width=sticker_w, height=sticker_h)
+
+            if photo:
+                try:
+                    photo_path = getattr(photo, "path", None)
+                    if photo_path:
+                        img = optimize_image_rect(photo_path, photo_px_w, photo_px_h)
+                        if img:
+                            _draw_rounded_clip(
+                                c,
+                                x + photo_x_pt, y + photo_y_pt,
+                                photo_w_pt, photo_h_pt,
+                                radius_pt,
+                            )
+                            c.drawImage(
+                                img,
+                                x + photo_x_pt, y + photo_y_pt,
+                                width=photo_w_pt, height=photo_h_pt,
+                                mask='auto',
+                            )
+                            c.restoreState()
+                            del img
+                except Exception as e:
+                    _log(f"Erro ao gerar foto da figurinha de {display_name}: {e}")
+
+            # nome — MESMA abreviação usada nos crachás, pra nunca estourar o layout
+            if template.show_name and display_name:
+                short_name = _abbreviate_name(display_name)
+                c.setFillColor(name_color)
+                c.setFont("Helvetica-Bold", template.name_font_size)
+                c.drawCentredString(x + sticker_w / 2, y + name_y_pt, short_name.upper())
+                c.setFillColorRGB(0, 0, 0)
+
+            x_left_pt = x + sticker_w * 0.08
+            x_right_pt = x + sticker_w * 0.92
+            y_center_pt = y + sticker_h * 0.5
+
+            if getattr(template, 'show_campus', False) and campus_name:
+                _draw_side_text(
+                    c, campus_name, getattr(template, 'campus_side', 'left'),
+                    x_left_pt, x_right_pt, y_center_pt, side_color, side_font
+                )
+
+            if getattr(template, 'show_year', False) and year_text:
+                _draw_side_text(
+                    c, year_text, getattr(template, 'year_side', 'right'),
+                    x_left_pt, x_right_pt, y_center_pt, side_color, side_font
+                )
+
+        c.save()
+        pdf_bytes = buffer.getvalue()
+    except Exception:
+        buffer.close()
+        raise
+    finally:
+        if not buffer.closed:
+            buffer.close()
+
+    safe_name = namebadge.replace(' ', '_').replace('/', '_')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="FIGURINHA_{safe_name}.pdf"'
+    return response
