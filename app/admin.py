@@ -3,6 +3,7 @@ from . models import Certificate, CustomUser, Help, AccessLog, Event_badge, Even
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
+from .models import Sticker_template
 
 User = get_user_model()
 
@@ -236,6 +237,13 @@ class TermsUseAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'name', 'siape', 'document', 'photo', 'accepted', 'accepted_at')
     search_fields = ('usuario', 'name', 'siape')
     list_filter = ('accepted',)
+
+@admin.register(Sticker_template)
+class Sticker_templateAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'event', 'width_mm', 'height_mm', 'active', 'is_default')
+    list_filter = ('active', 'is_default', 'event')
+    search_fields = ('name',)
+ 
 
 def apagar_unidade_com_dados(unit):
     players = Player.objects.filter(unit=unit)

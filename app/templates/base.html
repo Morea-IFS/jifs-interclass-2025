@@ -110,6 +110,9 @@
                                 {% if user.type != 3 %}
                                 <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
                                 {% endif %}
+                                {% if user.type != 3 %}
+                                <a href="{% url 'sticker' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-icons"></i>FIGURINHAS</a>
+                                {% endif %}
                                 {% if user.type == 1 %}
                                 <a href="{% url 'user_manage' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>USUÁRIOS</a>
                                 {% endif %}

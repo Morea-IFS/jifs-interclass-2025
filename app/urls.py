@@ -53,6 +53,7 @@ urlpatterns = [
     path('anexo_register', views.anexo_register, name="anexo_register"),
 
     path('manage/event', views.event_manage, name="event_manage"),
+    path('edit/event/<int:id>', views.event_edit, name="event_edit"),
     path('manage/sport', views.event_sport_manage, name="event_sport_manage"),
     path('edit/sport', views.event_sport_edit, name="event_sport_edit"),
 
@@ -66,6 +67,9 @@ urlpatterns = [
     path('spreadsheet/', views.generator_spreadsheet, name='spreadsheet'),
 
     path('search-player/<int:team_sport_id>/', views.search_player_preview, name='search_player_preview'),
+
+    path('manage/sticker-templates', views.sticker_template_manage, name="sticker_template_manage"),
+    path('generator/sticker', views.sticker_manage, name="sticker"),
 
     #API
     path('get_teams/', views.get_teams, name='get_teams'),

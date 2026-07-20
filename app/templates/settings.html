@@ -51,6 +51,14 @@
                 <i class="fa-solid fa-film"></i>
             </a>
         </div>
+                {% if perms.app.add_sticker_template %}
+        <div class="link-nav">
+            <a href="{% url 'sticker_template_manage' %}">
+                <p>FIGURINHAS</p>
+                <i class="fa-solid fa-swatchbook"></i>
+            </a>
+        </div>
+        {% endif %}
         {% endif %}
         {% if perms.app.view_statement and perms.app.add_statement %}
         <div class="link-nav">
