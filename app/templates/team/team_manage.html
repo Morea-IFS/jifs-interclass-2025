@@ -29,33 +29,91 @@
         width: 100%;
         height: auto;
         margin-top: 25px;
-        padding: 20px;
-        background-color: #dfdfdf;
-        border-radius: 15px;
+        padding: 24px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
         display: flex;
-        align-items: center;
+        align-items: stretch;
         flex-wrap: wrap;
-        gap: 22px;
+        gap: 18px;
     }
 
     .button_team {
-        width: 8em;
-        height: 12.5em;
-        border-radius: 15px;
-    }    
-    .button_team button{
+        width: 9.5em;
+        height: 13em;
+        border-radius: 16px;
+        background-color: var(--global-nav-color, #10193f);
+        border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .button_team:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+        border-color: rgba(255,255,255,0.18);
+    }
+
+    .button_team.active-team {
+        border-color: #00c2ff;
+        box-shadow: 0 0 0 2px rgba(0,194,255,0.35), 0 10px 24px rgba(0,0,0,0.35);
+    }
+
+    .button_team button {
         border: 0;
         background-color: transparent;
+        width: 100%;
+        height: 100%;
+        padding: 16px 10px 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        cursor: pointer;
     }
+
+    .button_team img {
+        width: 5.6em;
+        height: 5.6em;
+        object-fit: cover;
+        border-radius: 12px;
+        background: #fff;
+        padding: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .button_team p {
+        text-align: center;
+        font-size: 14px;
+        letter-spacing: 0.3px;
+        color: #ffffff;
+        font-weight: 700;
+        line-height: 1.25;
+        margin: 0;
+    }
+
     .item {
-        height: 4px;
-        background-color: #ffffff;
+        height: 3px;
+        background: linear-gradient(90deg, #00c2ff, #0072ff);
         border-radius: 25px;
-        margin-top: 12px;
-        width: 0;
+        margin-top: 4px;
+        width: 60%;
         margin-left: auto;
         margin-right: auto;
-        animation: growBar 1.2s ease-out forwards;
+        animation: growBar 0.5s ease-out forwards;
+    }
+
+    @keyframes growBar {
+        0% { width: 0; opacity: 0; }
+        100% { width: 60%; opacity: 1; }
+    }
+
+    .menu_team::-webkit-scrollbar {
+        display: none;
     }
 
     @keyframes growBar {
@@ -288,7 +346,7 @@
             {% if teams %}
             <form method="get" onsubmit="adicionarCamposOcultos(this)" class="menu_team">
                 {% for i in teams %}
-                <button type="submit" name="t" value="{{i.id}}" class="button_team">
+                <button type="submit" name="t" value="{{i.id}}" class="button_team {% if team.id == i.id %}active-team{% endif %}">
                     <img src="{{i.photo.url}}" alt="" draggable="false">
                     <p>{{i.name}}</p>
                     {% if team.id == i.id %} <div class="item"></div> {% endif %}
