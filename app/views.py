@@ -697,6 +697,7 @@ def login(request):
                 user = authenticate(username=username, password=password)
                 if user:
                     auth_login(request, user)
+                    request.session.pop('selected_event_id', None) # Remove o evento selecionado da sessão, se existir
                     if user.team:
                         messages.success(request, f"Seja bem-vindo time {user.team.name}! para navegar, acesse o menu.")
                     else:
