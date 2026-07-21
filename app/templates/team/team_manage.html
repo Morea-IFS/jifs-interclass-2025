@@ -186,9 +186,6 @@
         .subtitle-buttons{
             justify-content: space-around;
         }
-        .menu_team{
-            justify-content: space-around;
-        }
     }
     @media screen and (min-width: 700px) {
         .subtitle-buttons{
@@ -325,6 +322,33 @@
         white-space: normal;
         line-height: 1.25;
         font-size: 18.5px;
+    }
+    @media screen and (max-width: 700px) {
+        .menu_team {
+            padding: 14px;
+            gap: 10px;
+        }
+
+        .button_team {
+            width: calc(33.33% - 7px) !important;
+            min-height: 10em;
+        }
+
+        .button_team img {
+            width: 6em;
+            height: 6em;
+        }
+
+        .button_team p {
+            font-size: 16px;
+        }
+    }
+
+    @media screen and (max-width: 420px) {
+        .button_team {
+            width: calc(50% - 6px) !important;
+            min-height: 9.5em;
+        }
     }
 </style>
 
