@@ -414,7 +414,7 @@
     <div class="event-card">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
             <h2 style="margin:0;">{{ event.name }}</h2>
-            <button class="btn-secondary" style="padding:6px 14px;" onclick="openEditModal({{ event.id }}, '{{ event.name|escapejs }}', {{ event.sticker_module_enabled|yesno:'true,false' }}, {{ event.badge_module_enabled|yesno:'true,false' }}, {{ event.active|yesno:'true,false' }})">
+            <button class="btn-secondary" style="padding:6px 14px;" onclick="openEditModal({{ event.id }})">
                 <i class="fa-solid fa-pen"></i> Editar
             </button>
         </div>
@@ -822,48 +822,91 @@
 </div>
 
 <div id="editEventModal" class="modal">
-    <div class="modal-content" style="max-width:480px;">
+    <div class="modal-content" style="max-width:600px;">
         <span class="close" onclick="closeEditModal()">&times;</span>
         <h2 style="color:#2196F3;">Editar evento</h2>
 
         <form method="post" action="" id="editEventForm" enctype="multipart/form-data">
             {% csrf_token %}
 
+            <h3 class="step-section-title">Básico</h3>
             <label for="edit_name">Nome:</label>
             <input type="text" name="name" id="edit_name" required>
 
+            <label for="edit_description">Descrição:</label>
+            <textarea name="description" id="edit_description"></textarea>
+
+            <label for="edit_local">Local:</label>
+            <input type="text" name="local" id="edit_local">
+
+            <h3 class="step-section-title">Datas</h3>
+            <label for="edit_date_init">Início do evento:</label>
+            <input type="date" name="date_init" id="edit_date_init">
+            <label for="edit_date_end">Fim do evento:</label>
+            <input type="date" name="date_end" id="edit_date_end">
+            <label for="edit_enrollment_init">Início das inscrições:</label>
+            <input type="datetime-local" name="enrollment_init" id="edit_enrollment_init">
+            <label for="edit_enrollment_end">Fim das inscrições:</label>
+            <input type="datetime-local" name="enrollment_end" id="edit_enrollment_end">
+
+            <h3 class="step-section-title">Faixa etária</h3>
+            <label for="edit_age">Idade mínima:</label>
+            <input type="number" name="age" id="edit_age">
+            <label for="edit_age_max">Idade máxima:</label>
+            <input type="number" name="age_max" id="edit_age_max">
+
+            <h3 class="step-section-title">Arquivos</h3>
             <label for="edit_logo">Trocar logo (opcional):</label>
             <input type="file" name="logo" id="edit_logo">
+            <label for="edit_logo_badge">Trocar logo crachá (opcional):</label>
+            <input type="file" name="logo_badge" id="edit_logo_badge">
+            <label for="edit_regulation">Trocar regulamento (opcional):</label>
+            <input type="file" name="regulation" id="edit_regulation">
+            <label for="edit_tutorial">Link do vídeo tutorial:</label>
+            <input type="url" name="tutorial" id="edit_tutorial">
+
+            <h3 class="step-section-title">Textos dos termos</h3>
+            <label for="edit_upload_intro_text">Texto do envio de documento:</label>
+            <textarea name="upload_intro_text" id="edit_upload_intro_text" rows="3"></textarea>
+            <label for="edit_terms_intro_text">Introdução dos termos de uso:</label>
+            <textarea name="terms_intro_text" id="edit_terms_intro_text" rows="3"></textarea>
+            <label for="edit_terms_declaration_text">Declaração dos termos de uso:</label>
+            <textarea name="terms_declaration_text" id="edit_terms_declaration_text" rows="4"></textarea>
 
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <h3 class="step-section-title">Status e módulos</h3>
 
-            <div class="toggle-label">
-                <span>Evento ativo</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" name="active" id="edit_active">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <div class="toggle-label"><span>Evento ativo</span><label class="toggle-switch"><input type="checkbox" name="active" id="edit_active"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Módulo de Crachás</span><label class="toggle-switch"><input type="checkbox" name="badge_module_enabled" id="edit_badge_module"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Módulo de Figurinhas</span><label class="toggle-switch"><input type="checkbox" name="sticker_module_enabled" id="edit_sticker_module"><span class="slider"></span></label></div>
+            <p class="help-text">Desativar um módulo bloqueia o acesso à página, mesmo por URL direta — dados já gerados não são apagados.</p>
 
-            <div class="toggle-label">
-                <span>Módulo de Crachás</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" name="badge_module_enabled" id="edit_badge_module">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <h3 class="step-section-title">Requisitos gerais</h3>
+            <div class="toggle-label"><span>Termos</span><label class="toggle-switch"><input type="checkbox" name="general_need_terms" id="edit_general_need_terms"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Autorização</span><label class="toggle-switch"><input type="checkbox" name="general_need_authorization" id="edit_general_need_authorization"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Unidade</span><label class="toggle-switch"><input type="checkbox" name="general_need_unit" id="edit_general_need_unit"><span class="slider"></span></label></div>
 
-            <div class="toggle-label">
-                <span>Módulo de Figurinhas</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" name="sticker_module_enabled" id="edit_sticker_module">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <h3 class="step-section-title">Requisitos dos times</h3>
+            <div class="toggle-label"><span>Descrição</span><label class="toggle-switch"><input type="checkbox" name="team_need_description" id="edit_team_need_description"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Cor</span><label class="toggle-switch"><input type="checkbox" name="team_need_color" id="edit_team_need_color"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Técnico</span><label class="toggle-switch"><input type="checkbox" name="team_need_technician" id="edit_team_need_technician"><span class="slider"></span></label></div>
 
-            <p class="help-text">Desativar um módulo o esconde do menu Configurações e bloqueia a geração — dados já gerados não são apagados.</p>
+            <h3 class="step-section-title">Requisitos dos jogadores</h3>
+            <div class="toggle-label"><span>Instagram</span><label class="toggle-switch"><input type="checkbox" name="player_need_instagram" id="edit_player_need_instagram"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Foto</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo" id="edit_player_need_photo"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Foto gol</span><label class="toggle-switch"><input type="checkbox" name="player_need_photo_goal" id="edit_player_need_photo_goal"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Boletim</span><label class="toggle-switch"><input type="checkbox" name="player_need_bulletin" id="edit_player_need_bulletin"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>RG</span><label class="toggle-switch"><input type="checkbox" name="player_need_rg" id="edit_player_need_rg"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Sexo</span><label class="toggle-switch"><input type="checkbox" name="player_need_sexo" id="edit_player_need_sexo"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Matrícula</span><label class="toggle-switch"><input type="checkbox" name="player_need_registration" id="edit_player_need_registration"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>CPF</span><label class="toggle-switch"><input type="checkbox" name="player_need_cpf" id="edit_player_need_cpf"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Data de nascimento</span><label class="toggle-switch"><input type="checkbox" name="player_need_date_nasc" id="edit_player_need_date_nasc"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Endereço</span><label class="toggle-switch"><input type="checkbox" name="player_need_address" id="edit_player_need_address"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Curso</span><label class="toggle-switch"><input type="checkbox" name="player_need_course" id="edit_player_need_course"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>CEP</span><label class="toggle-switch"><input type="checkbox" name="player_need_cep" id="edit_player_need_cep"><span class="slider"></span></label></div>
+            <div class="toggle-label"><span>Município/UF</span><label class="toggle-switch"><input type="checkbox" name="player_need_municipality" id="edit_player_need_municipality"><span class="slider"></span></label></div>
 
-            <button type="submit">Salvar alterações</button>
+            <button type="submit" style="margin-top:20px;">Salvar alterações</button>
         </form>
     </div>
 </div>
@@ -1021,17 +1064,96 @@
         }
     });
 
-    function openEditModal(id, name, stickerEnabled, badgeEnabled, active) {
+        const eventsData = {
+        {% for event in events %}
+        {{ event.id }}: {
+            name: "{{ event.name|escapejs }}",
+            description: "{{ event.description|default:''|escapejs }}",
+            local: "{{ event.local|default:''|escapejs }}",
+            date_init: "{{ event.date_init|date:'Y-m-d'|default:'' }}",
+            date_end: "{{ event.date_end|date:'Y-m-d'|default:'' }}",
+            enrollment_init: "{{ event.enrollment_init|date:'Y-m-d\\TH:i'|default:'' }}",
+            enrollment_end: "{{ event.enrollment_end|date:'Y-m-d\\TH:i'|default:'' }}",
+            age: {{ event.age|default:0 }},
+            age_max: {{ event.age_max|default:99 }},
+            tutorial: "{{ event.tutorial|default:''|escapejs }}",
+            terms_intro_text: "{{ event.terms_intro_text|default:''|escapejs }}",
+            terms_declaration_text: "{{ event.terms_declaration_text|default:''|escapejs }}",
+            upload_intro_text: "{{ event.upload_intro_text|default:''|escapejs }}",
+            active: {{ event.active|yesno:'true,false' }},
+            badge_module_enabled: {{ event.badge_module_enabled|yesno:'true,false' }},
+            sticker_module_enabled: {{ event.sticker_module_enabled|yesno:'true,false' }},
+            general_need_terms: {{ event.general_need_terms|yesno:'true,false' }},
+            general_need_authorization: {{ event.general_need_authorization|yesno:'true,false' }},
+            general_need_unit: {{ event.general_need_unit|yesno:'true,false' }},
+            team_need_description: {{ event.team_need_description|yesno:'true,false' }},
+            team_need_color: {{ event.team_need_color|yesno:'true,false' }},
+            team_need_technician: {{ event.team_need_technician|yesno:'true,false' }},
+            player_need_instagram: {{ event.player_need_instagram|yesno:'true,false' }},
+            player_need_photo: {{ event.player_need_photo|yesno:'true,false' }},
+            player_need_photo_goal: {{ event.player_need_photo_goal|yesno:'true,false' }},
+            player_need_bulletin: {{ event.player_need_bulletin|yesno:'true,false' }},
+            player_need_rg: {{ event.player_need_rg|yesno:'true,false' }},
+            player_need_sexo: {{ event.player_need_sexo|yesno:'true,false' }},
+            player_need_registration: {{ event.player_need_registration|yesno:'true,false' }},
+            player_need_cpf: {{ event.player_need_cpf|yesno:'true,false' }},
+            player_need_date_nasc: {{ event.player_need_date_nasc|yesno:'true,false' }},
+            player_need_address: {{ event.player_need_address|yesno:'true,false' }},
+            player_need_course: {{ event.player_need_course|yesno:'true,false' }},
+            player_need_cep: {{ event.player_need_cep|yesno:'true,false' }},
+            player_need_municipality: {{ event.player_need_municipality|yesno:'true,false' }},
+        },
+        {% endfor %}
+    };
+
+    function openEditModal(id) {
+        const d = eventsData[id];
+        if (!d) return;
         document.getElementById('editEventForm').action = `/edit/event/${id}`;
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_active').checked = active;
-        document.getElementById('edit_badge_module').checked = badgeEnabled;
-        document.getElementById('edit_sticker_module').checked = stickerEnabled;
+
+        document.getElementById('edit_name').value = d.name;
+        document.getElementById('edit_description').value = d.description;
+        document.getElementById('edit_local').value = d.local;
+        document.getElementById('edit_date_init').value = d.date_init;
+        document.getElementById('edit_date_end').value = d.date_end;
+        document.getElementById('edit_enrollment_init').value = d.enrollment_init;
+        document.getElementById('edit_enrollment_end').value = d.enrollment_end;
+        document.getElementById('edit_age').value = d.age;
+        document.getElementById('edit_age_max').value = d.age_max;
+        document.getElementById('edit_tutorial').value = d.tutorial;
+        document.getElementById('edit_terms_intro_text').value = d.terms_intro_text;
+        document.getElementById('edit_terms_declaration_text').value = d.terms_declaration_text;
+        document.getElementById('edit_upload_intro_text').value = d.upload_intro_text;
+
+        document.getElementById('edit_active').checked = d.active;
+        document.getElementById('edit_badge_module').checked = d.badge_module_enabled;
+        document.getElementById('edit_sticker_module').checked = d.sticker_module_enabled;
+        document.getElementById('edit_general_need_terms').checked = d.general_need_terms;
+        document.getElementById('edit_general_need_authorization').checked = d.general_need_authorization;
+        document.getElementById('edit_general_need_unit').checked = d.general_need_unit;
+        document.getElementById('edit_team_need_description').checked = d.team_need_description;
+        document.getElementById('edit_team_need_color').checked = d.team_need_color;
+        document.getElementById('edit_team_need_technician').checked = d.team_need_technician;
+        document.getElementById('edit_player_need_instagram').checked = d.player_need_instagram;
+        document.getElementById('edit_player_need_photo').checked = d.player_need_photo;
+        document.getElementById('edit_player_need_photo_goal').checked = d.player_need_photo_goal;
+        document.getElementById('edit_player_need_bulletin').checked = d.player_need_bulletin;
+        document.getElementById('edit_player_need_rg').checked = d.player_need_rg;
+        document.getElementById('edit_player_need_sexo').checked = d.player_need_sexo;
+        document.getElementById('edit_player_need_registration').checked = d.player_need_registration;
+        document.getElementById('edit_player_need_cpf').checked = d.player_need_cpf;
+        document.getElementById('edit_player_need_date_nasc').checked = d.player_need_date_nasc;
+        document.getElementById('edit_player_need_address').checked = d.player_need_address;
+        document.getElementById('edit_player_need_course').checked = d.player_need_course;
+        document.getElementById('edit_player_need_cep').checked = d.player_need_cep;
+        document.getElementById('edit_player_need_municipality').checked = d.player_need_municipality;
+
         document.getElementById('editEventModal').style.display = 'block';
     }
 
     function closeEditModal() {
         document.getElementById('editEventModal').style.display = 'none';
     }
+
 </script>
 {% endblock content %}
