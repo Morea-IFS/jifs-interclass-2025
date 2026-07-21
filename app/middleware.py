@@ -75,3 +75,30 @@ class AccessLogMiddleware:
         if x_forwarded_for:
             return x_forwarded_for.split(",")[0].strip()
         return request.META.get("REMOTE_ADDR")
+
+# event filter persistence middleware
+EVENT_FILTER_PARAM = 'e'
+EVENT_FILTER_SESSION_KEY = 'selected_event_id'
+ 
+class EventFilterPersistenceMiddleware:
+ 
+    def __init__(self, get_response):
+        self.get_response = get_response
+ 
+    def __call__(self, request):
+        if (
+            request.method == 'GET'
+            and request.user.is_authenticated
+            and (request.user.is_staff or getattr(request.user, 'type', None) == 0)
+        ):
+            e = request.GET.get(EVENT_FILTER_PARAM)
+            if e:
+                request.session[EVENT_FILTER_SESSION_KEY] = e
+            else:
+                saved = request.session.get(EVENT_FILTER_SESSION_KEY)
+                if saved:
+                    mutable_get = request.GET.copy()
+                    mutable_get[EVENT_FILTER_PARAM] = saved
+                    request.GET = mutable_get
+ 
+        return self.get_response(request)

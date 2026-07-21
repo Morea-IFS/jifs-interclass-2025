@@ -60,6 +60,13 @@ def _acesso_evento(user, evento):
         return True
     return getattr(user, 'event_user', None) == evento
 
+def _module_blocked(request, event, module_field, module_label):
+    """Retorna True (e já manda a mensagem) se o módulo estiver desativado para o evento."""
+    if event and not getattr(event, module_field, True):
+        messages.error(request, f"O módulo de {module_label} está desativado para este evento.")
+        return True
+    return False
+
 def _acesso_team(user, team):
     """type 0: livre | type 1: evento | type 2: apenas o próprio time."""
     if user.type == 0 or user.is_superuser:
@@ -429,12 +436,61 @@ def event_edit(request, id):
         return redirect('event_manage')
 
     event.name = request.POST.get('name', event.name)
+    event.description = request.POST.get('description', event.description)
+    event.local = request.POST.get('local', event.local)
+
+    if request.POST.get('date_init'):
+        event.date_init = request.POST.get('date_init')
+    if request.POST.get('date_end'):
+        event.date_end = request.POST.get('date_end')
+    if request.POST.get('enrollment_init'):
+        event.enrollment_init = request.POST.get('enrollment_init')
+    if request.POST.get('enrollment_end'):
+        event.enrollment_end = request.POST.get('enrollment_end')
+
+    if request.POST.get('age') not in (None, ''):
+        event.age = request.POST.get('age')
+    if request.POST.get('age_max') not in (None, ''):
+        event.age_max = request.POST.get('age_max')
+
     if request.FILES.get('logo'):
         event.logo = request.FILES.get('logo')
+    if request.FILES.get('logo_badge'):
+        event.logo_badge = request.FILES.get('logo_badge')
+    if request.FILES.get('regulation'):
+        event.regulation = request.FILES.get('regulation')
+
+    event.tutorial = request.POST.get('tutorial', '').strip() or None
+    event.terms_intro_text = request.POST.get('terms_intro_text', '').strip() or None
+    event.terms_declaration_text = request.POST.get('terms_declaration_text', '').strip() or None
+    event.upload_intro_text = request.POST.get('upload_intro_text', '').strip() or None
 
     event.active = 'active' in request.POST
     event.badge_module_enabled = 'badge_module_enabled' in request.POST
     event.sticker_module_enabled = 'sticker_module_enabled' in request.POST
+
+    event.general_need_terms = 'general_need_terms' in request.POST
+    event.general_need_authorization = 'general_need_authorization' in request.POST
+    event.general_need_unit = 'general_need_unit' in request.POST
+
+    event.team_need_description = 'team_need_description' in request.POST
+    event.team_need_color = 'team_need_color' in request.POST
+    event.team_need_technician = 'team_need_technician' in request.POST
+
+    event.player_need_instagram = 'player_need_instagram' in request.POST
+    event.player_need_photo = 'player_need_photo' in request.POST
+    event.player_need_photo_goal = 'player_need_photo_goal' in request.POST
+    event.player_need_bulletin = 'player_need_bulletin' in request.POST
+    event.player_need_rg = 'player_need_rg' in request.POST
+    event.player_need_sexo = 'player_need_sexo' in request.POST
+    event.player_need_registration = 'player_need_registration' in request.POST
+    event.player_need_cpf = 'player_need_cpf' in request.POST
+    event.player_need_date_nasc = 'player_need_date_nasc' in request.POST
+    event.player_need_address = 'player_need_address' in request.POST
+    event.player_need_course = 'player_need_course' in request.POST
+    event.player_need_cep = 'player_need_cep' in request.POST
+    event.player_need_municipality = 'player_need_municipality' in request.POST
+
     event.save()
 
     messages.success(request, f"Evento '{event.name}' atualizado com sucesso!")
@@ -697,6 +753,7 @@ def login(request):
                 user = authenticate(username=username, password=password)
                 if user:
                     auth_login(request, user)
+                    request.session.pop('selected_event_id', None) # Remove o evento selecionado da sessão, se existir
                     if user.team:
                         messages.success(request, f"Seja bem-vindo time {user.team.name}! para navegar, acesse o menu.")
                     else:
@@ -3577,12 +3634,16 @@ def generator_badge(request):
             context['events'] = Event.objects.all()
             if 'e' in request.GET and request.GET.get('e') != '':
                 event = Event.objects.get(id=request.GET.get('e'))
+                if _module_blocked(request, event, 'badge_module_enabled', 'Crachás'):
+                    return redirect('Home')
                 context['event'] = event
                 context['teams'] = Team.objects.filter(event=event).order_by('name')
                 context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
                 context['event_sports'] = Event_sport.objects.filter(event=event)
         else:
             event = user.event_user
+            if _module_blocked(request, event, 'badge_module_enabled', 'Crachás'):
+                return redirect('Home')
             context['event'] = event
             if user.type == 1:
                 context['teams'] = Team.objects.filter(event=event).order_by('name')
@@ -3594,10 +3655,14 @@ def generator_badge(request):
         return render(request, 'badge.html', context)
 
     # POST
+    # POST
     try:
         event = Event.objects.get(id=request.POST.get('event_data'))
     except (Event.DoesNotExist, ValueError, TypeError):
         messages.error(request, "Evento não encontrado.")
+        return redirect_badge()
+
+    if _module_blocked(request, event, 'badge_module_enabled', 'Crachás'):
         return redirect_badge()
 
     if not (user.is_staff or user.type == 0):
@@ -3852,18 +3917,23 @@ def sticker_manage(request):
                 return tpl
         return qs.filter(is_default=True).first() or qs.first()
  
+    # ── GET ─────────────────────────────────────────────────────────────
     if request.method == "GET":
         context = {}
         if user.is_staff or user.type == 0:
             context['events'] = Event.objects.all()
             if 'e' in request.GET and request.GET.get('e') != '':
                 event = Event.objects.get(id=request.GET.get('e'))
+                if _module_blocked(request, event, 'sticker_module_enabled', 'Figurinhas'):
+                    return redirect('Home')
                 context['event'] = event
                 context['teams'] = Team.objects.filter(event=event).order_by('name')
                 context['teams_sport'] = Team_sport.objects.filter(event=event).order_by('team', 'sport', '-sexo')
                 context['templates'] = _templates_for(event)
         else:
             event = user.event_user
+            if _module_blocked(request, event, 'sticker_module_enabled', 'Figurinhas'):
+                return redirect('Home')
             context['event'] = event
             if user.type == 1:
                 context['teams'] = Team.objects.filter(event=event).order_by('name')

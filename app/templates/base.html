@@ -107,10 +107,10 @@
                                 <i class="fa-solid fa-compass"></i>OUTROS
                             </button>
                             <div class="dropdown-menu">
-                                {% if user.type != 3 %}
+                                {% if user.type != 3 and user.type == 0 or user.type != 3 and user.event_user.badge_module_enabled %}
                                 <a href="{% url 'badge' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-id-badge"></i>CRACHÁS</a>
                                 {% endif %}
-                                {% if user.type != 3 %}
+                                {% if user.type != 3 and user.type == 0 or user.type != 3 and user.event_user.sticker_module_enabled %}
                                 <a href="{% url 'sticker' %}"><span class="submenu-marker">└─</span><i class="fa-solid fa-icons"></i>FIGURINHAS</a>
                                 {% endif %}
                                 {% if user.type == 1 %}
