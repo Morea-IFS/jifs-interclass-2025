@@ -4260,6 +4260,17 @@ def generator_data(request):
         cont['qnt_voluntary_4'] = Voluntary.objects.filter(type_voluntary=4, event=event).count()
         cont['qnt_voluntary_5'] = Voluntary.objects.filter(type_voluntary=5, event=event).count()
         cont['qnt_voluntary_6'] = Voluntary.objects.filter(type_voluntary=6, event=event).count()
+        cont['participantes_por_campus'] = (
+            Team.objects.filter(event=event)
+            .annotate(total_atletas=Count('team_sport__players__player', distinct=True))
+            .order_by('name')
+        )
+
+        cont['participantes_por_modalidade'] = (
+            Event_sport.objects.filter(event=event)
+            .annotate(total_atletas=Count('team_sport__players__player', distinct=True))
+            .order_by('sport')
+        )
 
         if qnt_players > 0:
             cont['porcent_fem'] = (qnt_players_fem * 100) / qnt_players

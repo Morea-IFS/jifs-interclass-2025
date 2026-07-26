@@ -69,7 +69,6 @@
         <p>INSTITUTO FEDERAL DE SERGIPE</p>
         <p><b>RELATÓRIO GERAL</b></p>
         <p style="font-size: 12px;">Gerado por {{ user.username }} em {{ now }}</p>
-
     </div>
     <br><br>
     <table>
@@ -120,9 +119,45 @@
                 <td>QUANTIDADE DE CHEFES DE DELEGAÇÃO: </td>
                 <td style="text-align: center;">{{ qnt_voluntary_4}}</td>
             </tr>
-
         </tbody>
     </table>
-</table>
+    <br><br>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 75%;">CAMPUS</th>
+                <th style="width: 25%;">QUANTIDADE DE ATLETAS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in participantes_por_campus %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td style="text-align: center;">{{ item.total_atletas }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" style="text-align:center;">Nenhum campus cadastrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br><br>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 75%;">MODALIDADE</th>
+                <th style="width: 25%;">QUANTIDADE DE ATLETAS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in participantes_por_modalidade %}
+            <tr>
+                <td>{{ item.get_sport_display }}</td>
+                <td style="text-align: center;">{{ item.total_atletas }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" style="text-align:center;">Nenhuma modalidade cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
