@@ -5,6 +5,63 @@
     <title>PLANILHAS — ATUM ADMIN</title>
     <link rel="stylesheet" href="{% static 'css/relatorios.css' %}">
     <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+    <style>
+        /* ── Só o necessário pras abas. Não redefine .badge-section,
+           .badge-section-title, .relatorios-grid ou .relatorio-btn —
+           essas seguem 100% controladas pelo relatorios.css original.
+           A barra de abas usa o MESMO fundo escuro de .badge-section
+           (var(--global-nav-color)) para funcionar em qualquer tema
+           (claro, escuro, verde, etc). ── */
+        .sheets-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: var(--global-nav-color);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .sheets-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.85);
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            margin:0;
+        }
+        .sheets-tab:hover {
+            background: rgba(255,255,255,0.16);
+            color: #fff;
+        }
+        .sheets-tab.active {
+            background: var(--global-eighth-color);
+            border-color: var(--global-eighth-color);
+            color: #fff;
+        }
+        .sheets-tab:focus-visible {
+            outline: 2px solid var(--global-eighth-color);
+            outline-offset: 2px;
+        }
+        .sheets-panel-hidden {
+            display: none;
+        }
+        .sheets-panel-desc {
+            color: rgba(255,255,255,0.65);
+            font-size: 12.5px;
+            line-height: 1.5;
+            margin: -6px 0 14px 0;
+        }
+        .sheets-highlight {
+            border: 1px solid var(--global-eighth-color);
+        }
+        
+    </style>
 {% endblock head %}
 
 {% block navbar %}{% endblock navbar %}
@@ -24,7 +81,6 @@
                 </h1>
 
                 <div class="title-buttons">
-                    {# Seletor de evento — apenas superusuário #}
                     {% if user.type == 0 %}
                     <form method="get">
                         <select name="e" onchange="this.form.submit();">
@@ -56,11 +112,47 @@
                 {% csrf_token %}
                 <input type="hidden" name="event_data" value="{{ event.id }}">
 
-                <div class="badge-section">
+                <!-- Planilha Dados Geral — mesma estrutura badge-section de sempre -->
+                <div class="badge-section sheets-highlight">
                     <h3 class="badge-section-title">
-                        <i class="fas fa-layer-group"></i> Geral
-                        {% if user.type == 2 %} — {{ my_team.name }}{% endif %}
+                        <i class="fas fa-list-check"></i> Planilha de Dados Geral
                     </h3>
+                    <p class="sheets-panel-desc">
+                        Uma única planilha com atletas, comissão técnica
+                        {% if user.type != 2 %}e coordenadores{% endif %}
+                        — nome, CPF, cargo, matrícula/SIAPE e e-mail. Campos sem
+                        informação aparecem como "NÃO DISPONÍVEL NO SISTEMA".
+                    </p>
+                    <div class="relatorios-grid">
+                        <button name="p_geral" type="submit" class="relatorio-btn">
+                            <i class="fas fa-file-export"></i>
+                            <p>Gerar Planilha de Dados</p>
+                            <span class="btn-badge">xlsx</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abas -->
+                <div class="sheets-tabs" role="tablist" aria-label="Tipos de planilha">
+                    <button type="button" class="sheets-tab active" data-tab="atletas" role="tab" aria-selected="true">
+                        <i class="fas fa-running"></i> Atletas
+                    </button>
+                    {% if user.type == 0 or user.type == 1 %}
+                    <button type="button" class="sheets-tab" data-tab="campus" role="tab" aria-selected="false">
+                        <i class="fas fa-university"></i> Por campus
+                    </button>
+                    {% endif %}
+                    <button type="button" class="sheets-tab" data-tab="modalidade" role="tab" aria-selected="false">
+                        <i class="fas fa-medal"></i> Por modalidade
+                    </button>
+                </div>
+
+                <!-- Aba: Atletas -->
+                <div class="badge-section" data-panel="atletas">
+                    <h3 class="badge-section-title">
+                        <i class="fas fa-users"></i> Atletas{% if user.type == 2 %} — {{ my_team.name }}{% endif %}
+                    </h3>
+                    <p class="sheets-panel-desc">Separadas por sexo ou o grupo completo. Cada arquivo sai com abas de pagamento e endereço.</p>
                     <div class="relatorios-grid">
                         <button name="p_todos" type="submit" class="relatorio-btn">
                             <i class="fas fa-users"></i>
@@ -80,9 +172,11 @@
                     </div>
                 </div>
 
+                <!-- Aba: Campus -->
                 {% if user.type == 0 or user.type == 1 %}
-                <div class="badge-section">
+                <div class="badge-section sheets-panel-hidden" data-panel="campus">
                     <h3 class="badge-section-title"><i class="fas fa-university"></i> Por campus</h3>
+                    <p class="sheets-panel-desc">Uma planilha por campus/unidade, só com os atletas cadastrados nele.</p>
                     <div class="relatorios-grid">
                         {% for team in teams %}
                         <button name="p_team" value="{{ team.id }}" type="submit" class="relatorio-btn">
@@ -97,8 +191,16 @@
                 </div>
                 {% endif %}
 
-                <div class="badge-section">
+                <!-- Aba: Modalidade -->
+                <div class="badge-section sheets-panel-hidden" data-panel="modalidade">
                     <h3 class="badge-section-title"><i class="fas fa-running"></i> Por modalidade</h3>
+                    <p class="sheets-panel-desc">
+                        {% if user.type == 0 or user.type == 1 %}
+                            Uma planilha por modalidade esportiva do evento.
+                        {% else %}
+                            Uma planilha para cada modalidade em que o seu time está inscrito.
+                        {% endif %}
+                    </p>
                     <div class="relatorios-grid">
                         {% if user.type == 0 or user.type == 1 %}
                             {% for es in event_sports %}
@@ -137,3 +239,29 @@
     </div>
 </div>
 {% endblock content %}
+
+{% block scripts %}
+<script>
+(function () {
+    var tabs = document.querySelectorAll('.sheets-tab');
+    var panels = document.querySelectorAll('[data-panel]');
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var target = tab.getAttribute('data-tab');
+
+            tabs.forEach(function (t) {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            panels.forEach(function (p) {
+                p.classList.toggle('sheets-panel-hidden', p.getAttribute('data-panel') !== target);
+            });
+        });
+    });
+})();
+</script>
+{% endblock scripts %}

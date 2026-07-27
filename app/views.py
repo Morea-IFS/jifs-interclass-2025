@@ -4725,6 +4725,158 @@ def generate_spreadsheet(players, event_name, label):
     response['Content-Disposition'] = f'attachment; filename="planilha_{safe_label}.xlsx"'
     return response
 
+def generate_general_spreadsheet(rows, event_name, label):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'RELATÓRIO GERAL'
+
+    thin = Side(style='thin', color='000000')
+    medium = Side(style='medium', color='000000')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    header_font = Font(name='Arial', size=10, bold=True)
+    body_font = Font(name='Arial', size=10)
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    fill_header = PatternFill(fill_type='solid', fgColor='BDBDBD')
+    fill_white = PatternFill(fill_type='solid', fgColor='FFFFFF')
+
+    headers = ['SEQ', 'NOME', 'CPF', 'CARGO', 'MATRÍCULA/SIAPE', 'E-MAIL']
+    widths = [6.86, 42.0, 20.0, 26.0, 20.0, 34.0]
+
+    ws.row_dimensions[1].height = 35
+    for i, (header, width) in enumerate(zip(headers, widths), start=1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+        cell = ws.cell(row=1, column=i, value=header)
+        cell.font = header_font
+        cell.fill = fill_header
+        cell.alignment = center
+        cell.border = Border(left=thin, right=thin, top=medium, bottom=thin)
+
+    for seq, row in enumerate(rows, start=1):
+        ws.append([
+            seq,
+            row['name'],
+            row['cpf'],
+            row['cargo'],
+            row['registration'],
+            row['email'],
+        ])
+        row_num = ws.max_row
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_num, column=col)
+            cell.font = body_font
+            cell.fill = fill_white
+            cell.border = border
+            cell.alignment = center if col in (1, 3, 5) else left
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    safe_label = label.replace(' ', '_').replace('/', '_').replace('\\', '_').lower()
+
+    response = HttpResponse(
+        buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="relatorio_geral_{safe_label}.xlsx"'
+    return response
+
+NAO_DISPONIVEL = "NÃO DISPONÍVEL NO SISTEMA"
+
+
+def _clean_or_na(value):
+    """Retorna o valor limpo, ou NAO_DISPONIVEL se vazio/None/só zeros (valor padrão não preenchido)."""
+    if value is None:
+        return NAO_DISPONIVEL
+    text = str(value).strip()
+    if not text or text.strip('0') == '':
+        return NAO_DISPONIVEL
+    return text
+
+
+def _coordinator_registration(coord_user):
+    """
+    Coordenadores (type=1) não têm campo de matrícula próprio no CustomUser.
+    A matrícula/SIAPE deles é guardada num Voluntary(type_voluntary=4) vinculado
+    via admin=user, o mesmo padrão já usado em user_manage/terms_use.
+    """
+    reg = (
+        Voluntary.objects
+        .filter(admin=coord_user, type_voluntary=4)
+        .exclude(registration__isnull=True)
+        .exclude(registration__exact='')
+        .values_list('registration', flat=True)
+        .first()
+    )
+    return _clean_or_na(reg)
+
+
+def _build_general_report_rows(event, user):
+    """
+    Consolida Atletas + Comissão técnica + Coordenadores de evento num único
+    conjunto de linhas (Nome, CPF, Cargo, Matrícula/SIAPE, E-mail).
+
+    Hierarquia:
+      - type 0 (admin) / staff / type 1 (coordenador): acesso completo aos
+        dados do evento.
+      - type 2 (usuário comum): só vê atletas do próprio time e membros da
+        própria unidade — mesmo filtro usado em _base_voluntarys/team_sport
+        no restante do sistema. Coordenadores não aparecem pra ele.
+    """
+    rows = []
+
+    # ── Atletas ──────────────────────────────────────────────────────────
+    if user.type == 2:
+        if user.team:
+            players = Player.objects.filter(
+                event=event, player_team_sport__team_sport__team=user.team
+            ).distinct()
+        else:
+            players = Player.objects.none()
+    else:
+        players = Player.objects.filter(event=event)
+
+    for p in players.order_by('name'):
+        rows.append({
+            'name': p.name or NAO_DISPONIVEL,
+            'cpf': _clean_or_na(p.cpf),
+            'cargo': 'Atleta',
+            'registration': _clean_or_na(p.registration),
+            'email': NAO_DISPONIVEL,  # Player não tem campo de e-mail
+        })
+
+    # ── Comissão técnica ─────────────────────────────────────────────────
+    if user.type == 2:
+        unit = user.unit or (user.team.unit if user.team else None)
+        voluntarys = Voluntary.objects.filter(event=event, unit=unit) if unit else Voluntary.objects.none()
+    else:
+        voluntarys = Voluntary.objects.filter(event=event)
+
+    for v in voluntarys.order_by('name'):
+        rows.append({
+            'name': v.name or NAO_DISPONIVEL,
+            'cpf': NAO_DISPONIVEL,  # Voluntary não tem campo de CPF
+            'cargo': v.get_type_voluntary_display(),
+            'registration': _clean_or_na(v.registration),
+            'email': NAO_DISPONIVEL,  # Voluntary não tem campo de e-mail
+        })
+
+    # ── Coordenadores de evento (só visível pra type 0/1) ───────────────
+    if user.type != 2:
+        coordinators = get_user_model().objects.filter(event_user=event, type=1)
+        for c in coordinators.order_by('username'):
+            full_name = (c.get_full_name() or c.username).strip()
+            rows.append({
+                'name': full_name,
+                'cpf': NAO_DISPONIVEL,  # CustomUser não tem campo de CPF
+                'cargo': 'Coordenador de Evento',
+                'registration': _coordinator_registration(c),
+                'email': _clean_or_na(c.email),
+            })
+
+    return rows
 
 @login_required(login_url="login")
 @terms_accept_required
@@ -4919,7 +5071,12 @@ def generator_spreadsheet(request):
             f'{team_sport_obj.get_sexo_display()}_'
             f'{event.name}'
         )
-
+    elif 'p_geral' in request.POST:
+        rows = _build_general_report_rows(event, user)
+        if not rows:
+            messages.error(request, "Não há registros disponíveis para gerar o relatório geral.")
+            return _redirect()
+        return generate_general_spreadsheet(rows, event.name, f'geral_{event.name}')
     else:
         messages.error(request, "Nenhum filtro de planilha foi enviado.")
         return _redirect()
