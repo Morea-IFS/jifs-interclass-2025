@@ -4268,7 +4268,19 @@ def generator_data(request):
 
         cont['participantes_por_modalidade'] = (
             Event_sport.objects.filter(event=event)
-            .annotate(total_atletas=Count('team_sport__players__player', distinct=True))
+            .annotate(
+                total_masc=Count(
+                    'team_sport__players__player',
+                    filter=Q(team_sport__players__player__sexo=0),
+                    distinct=True
+                ),
+                total_fem=Count(
+                    'team_sport__players__player',
+                    filter=Q(team_sport__players__player__sexo=1),
+                    distinct=True
+                ),
+                total_atletas=Count('team_sport__players__player', distinct=True),
+            )
             .order_by('sport')
         )
 

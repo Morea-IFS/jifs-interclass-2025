@@ -144,18 +144,22 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 75%;">MODALIDADE</th>
-                <th style="width: 25%;">QUANTIDADE DE ATLETAS</th>
+                <th style="width: 55%;">MODALIDADE</th>
+                <th style="width: 15%;">MASCULINO</th>
+                <th style="width: 15%;">FEMININO</th>
+                <th style="width: 15%;">TOTAL</th>
             </tr>
         </thead>
         <tbody>
             {% for item in participantes_por_modalidade %}
             <tr>
                 <td>{{ item.get_sport_display }}</td>
+                <td style="text-align: center;">{{ item.total_masc }}</td>
+                <td style="text-align: center;">{{ item.total_fem }}</td>
                 <td style="text-align: center;">{{ item.total_atletas }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="2" style="text-align:center;">Nenhuma modalidade cadastrada.</td></tr>
+            <tr><td colspan="4" style="text-align:center;">Nenhuma modalidade cadastrada.</td></tr>
             {% endfor %}
         </tbody>
     </table>
